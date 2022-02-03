@@ -75,7 +75,7 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
 
 	std::vector< std::pair<std::vector<coord>, std::vector<coord>>> finalSet;
 	//line up in pairs 
-	for (int i = 0; i < coordinateSet.size(); i+=2) {
+	for (int i = 0; i < coordinateSet.size(); i += 2) {
 		finalSet.push_back(std::pair<std::vector<coord>, std::vector<coord>>(coordinateSet[i], coordinateSet[i + 1]));
 	}
 	
