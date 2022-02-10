@@ -5,6 +5,8 @@
 #include <strstream>
 #include <functional>
 #include <iostream>
+#include <algorithm>
+#include <limits>
 using std::vector;
 using std::string;
 #define tissueConstant "1"
@@ -26,7 +28,7 @@ std::vector<string> splitString(string s, string delimiter) {
 
 }
 
-std::vector<coord> extractCoordinateSet(std::vector<int> top, std::vector<int> bottom) {
+std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<float> bottom) {
 	if (top.size() != bottom.size()) throw("Size Mismatch");
 	std::vector<coord> a;
 	for (int i = 0; i < top.size(); i++) {
@@ -34,6 +36,24 @@ std::vector<coord> extractCoordinateSet(std::vector<int> top, std::vector<int> b
 	}
 	return a;
 }
+
+
+/// <summary>
+/// Any impossible fields default to inf
+/// </summary>
+std::function<vector<float>(vector<string>)> convertRowToFloat([](vector<string> input) {
+	return input << std::function<float(string)>([](string s) {
+		try {
+			return std::stof(s);
+		}
+		catch (...) {
+			std::cerr << "WARNING: Invalid STOI attempt. Please check data: " << s << std::endl;
+		}
+		return std::numeric_limits<float>::infinity();
+		}
+	);
+	}
+);
 
 std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(string alignmentFile)
 {
@@ -61,23 +81,10 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
 	csvCells = vector<vector<string>>(csvCells.begin() + 1, csvCells.end());
 
 
-	std::function<vector<int>(vector<string>)> convertRowToInt([](vector<string> input) {
-		return input << std::function<int(string)>(
-			[](string s) {
-				try {
-					return std::stoi(s);
-				}
-				catch (...) {
-					std::cerr << "WARNING: Invalid STOI attempt. Please check data: " << s << std::endl;
-				}
-				return 0;
-			}
-		);
-		}
-	);
+
 
 	// Transform cells into ints
-	auto transformCells = csvCells << convertRowToInt;
+	auto transformCells = csvCells << convertRowToFloat;
 
 	//Now we have n columns and m*4 rows of ints
 	//This part transforms that into an m by 2 by n structure of coords
@@ -107,12 +114,18 @@ bool canStof(std::string s) {
 	}
 }
 
-void loadTSV(std::string tsvFile)
+void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>> srctrgts)
 {
 	//Defining Constants
 	//TODO: make this dynamic
+	int clusterInd = 7;
 	int minFeatureColumn = 8;
+	int widBuffer = 2;
+	int ransacNum = 8;
+	unsigned int zDist = 60;
+
 	vector<string> sliceNames({ "CRC_HT112C1_1", "CRC_HT112C1_2" });
+
 	//Import raw file data
 	std::ifstream aFile(tsvFile);
 	string line;
@@ -145,5 +158,97 @@ void loadTSV(std::string tsvFile)
 		});
 
 	auto records = sliceNames << transformSliceNames;
+	std::pair<int, int> rowColInds({ 2,3 }); //TODO: Make Parameter and ensure this is exactly 2 length
+	std::pair<int, int> xyInds({ rowColInds.second, rowColInds.first });
+	vector<vector<coord>> slices; //Slice, Row, Coordinate
+	for (int i = 0; i < sliceNames.size(); i++) {
+		auto sliceCoordinates = records[i]
+			<< convertRowToFloat //Row, Column, value
+			<< std::function<coord(vector<float>)>([&](vector<float> v) {return coord({ v[xyInds.first], v[xyInds.second] }); });
+		if (i == 0) {
+			slices.push_back(sliceCoordinates);
+		}
+		else {
+			auto adjustor = getTransSVD(srctrgts[i - 1]); //TODO: make this do the transform
+			slices.push_back(adjustor(sliceCoordinates));
+		}
+	}
 
+	auto nclusters = filter(
+		//Get the cluster index as a float
+		rawData << convertRowToFloat << std::function<float(vector<float>)>([&](vector<float> v) {return v[clusterInd]; }),
+		//We only want the ones with a 0 at that index
+		std::function<bool(float)>([](float f) {return f == 0; })
+	).size();//How many was that?
+
+	auto clusters = records
+		<< std::function<vector<vector<float>>(vector<vector<string>> v)>([&](vector<vector<string>> v) {
+		return v
+			<< convertRowToFloat
+			<< std::function<vector<float>(vector<float>)>([&](vector<float> row) {
+			if (row[tissueIndex] == 0) {
+				return getClusterArray(nclusters + 1, nclusters);
+			}
+			else {
+				return getClusterArray(nclusters + 1, row[clusterInd]);
+			}
+				});
+			});
+	auto vals = records
+		<< std::function<vector<vector<float>>(vector<vector<string>> v)>([&](vector<vector<string>> slice) {
+		return slice
+			<< convertRowToFloat
+			<< std::function<vector<float>(vector<float>)>([&](vector<float> row) {
+			auto nfeatures = row.size() - minFeatureColumn;
+			if (row[tissueIndex] == 0) {
+				return getClusterArray(nfeatures + 1, nfeatures);
+			}
+			else {
+				vector<float>features(row.begin() + minFeatureColumn, row.end());
+				features.push_back(0);
+				return features;
+			}
+				});
+			});
+
+	//add buffer to each slice and cover neighbors
+
+	auto nslices = table(slices.size(), std::function<vector<coord>(size_t)>([&](size_t i) {
+		auto boundingCoord = (i == 0) 
+			? slices[i + 1] 
+			: (i == slices.size() - 1 
+				? slices[i - 1] 
+				: concat(slices[i - 1], slices[i + 1]));
+
+		return growAndCover(slices[i], boundingCoord, widBuffer, ransacNum);
+		}));
+
+	//Slices of sets of 3d coordinates
+	auto horizBuffSlices = table(slices.size(), std::function<vector<coord3D>(size_t)>([&](size_t i) {
+		return concat(slices[i], nslices[i]) << std::function<coord3D(coord)>([&](coord c) {
+			coord3D temp;
+			temp.x = getX(c);
+			temp.y = getY(c);
+			temp.z = i * zDist; //Each slice should be zDist apart, building upwards
+			return temp;
+			});
+		}));
+
+	//TODO: Add slices/clusters length check
+	// One is cell type and the other is some type of marker (probably vals are markers, each number is the strength of a marker)(clusters are vector that takes the marker strength, and clustered all the dots based on the values of the vals (many less clusters) and give each dot a value based on the id
+	auto arrayClusters = table(clusters.size(), std::function<void(size_t)>([&](size_t i) {
+		auto sliceClusters = vector<vector<float>>(slices.size(), getClusterArray(nclusters + 1, nclusters));
+		return concat(clusters[i], sliceClusters);
+		}));
+
+	auto arrayVals = table(vals.size(), std::function<void(size_t)>([&](size_t i) {
+		auto sliceClusters = vector<vector<float>>(slices.size(), getClusterArray(nclusters + 1, nclusters));
+		return concat(vals[i], sliceClusters);
+		}));
+
+	//Then buffer the top and bottom of both of them
+	horizBuffSlices.push_back(horizBuffSlices[horizBuffSlices.size()-1] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0, 1.0 * zDist); }));
+	horizBuffSlices.insert(horizBuffSlices.begin(), horizBuffSlices[0] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0, -1.0 * zDist); }));
+
+	
 }
