@@ -7,7 +7,7 @@
 template<typename T, typename G>
 std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) {
 	std::vector<G> c;
-	for (T& item : vec) {
+	for (const T& item : vec) {
 		c.push_back(op(item));
 	}
 	return c;
@@ -17,7 +17,7 @@ template<typename T, typename G>
 std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op) {
 	std::vector<G> c;
 	for (size_t i = 0; i < vec.size(); i++) {
-		c.push_back(op(item, i));
+		c.push_back(op(vec[i], i));
 	}
 	return c;
 }
@@ -26,7 +26,7 @@ template<typename T, typename G>
 std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, int, const std::vector<T>&)>& op) {
 	std::vector<G> c;
 	for (int i = 0; i < vec.size(); i++) {
-		c.push_back(op(item, i, vec));
+		c.push_back(op(vec[i], i, vec));
 	}
 	return c;
 }
@@ -34,7 +34,7 @@ std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, in
 template<typename T>
 std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op) {
 	std::vector<T> res;
-	for (T& item : vec) {
+	for (const T& item : vec) {
 		if (op(item)) { 
 			res.push_back(item); 
 		}
@@ -58,5 +58,5 @@ std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b) {
 template<typename T>
 std::vector<T> table(size_t length, std::function<T(size_t)> op) {
 	return std::vector<int>(0, length) << std::function<size_t(int, size_t)>([](int, size_t i) {return i; })
-		<< std::function<vector<coord>(size_t)>
+		<< op;
 }

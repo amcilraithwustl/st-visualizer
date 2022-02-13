@@ -2,14 +2,23 @@
 #include "UtilityFunctions.h"
 #include <fstream>
 #include <iostream>
-#include <strstream>
 #include <functional>
 #include <iostream>
 #include <algorithm>
 #include <limits>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 using std::vector;
 using std::string;
+
 #define tissueConstant "1"
+
+float getX(coord c) {
+	return c.first;
+}
+float getY(coord c) {
+	return c.second;
+}
 
 //From https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 std::vector<string> splitString(string s, string delimiter) {
@@ -169,11 +178,12 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 			slices.push_back(sliceCoordinates);
 		}
 		else {
-			auto adjustor = getTransSVD(srctrgts[i - 1]); //TODO: make this do the transform
+			auto adjustor = getTransSVD(srctrgts[i - 1].first, srctrgts[i-1].second); //TODO: make this do the transform
 			slices.push_back(adjustor(sliceCoordinates));
 		}
 	}
 
+	/*
 	auto nclusters = filter(
 		//Get the cluster index as a float
 		rawData << convertRowToFloat << std::function<float(vector<float>)>([&](vector<float> v) {return v[clusterInd]; }),
@@ -214,10 +224,10 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 	//add buffer to each slice and cover neighbors
 
 	auto nslices = table(slices.size(), std::function<vector<coord>(size_t)>([&](size_t i) {
-		auto boundingCoord = (i == 0) 
-			? slices[i + 1] 
-			: (i == slices.size() - 1 
-				? slices[i - 1] 
+		auto boundingCoord = (i == 0)
+			? slices[i + 1]
+			: (i == slices.size() - 1
+				? slices[i - 1]
 				: concat(slices[i - 1], slices[i + 1]));
 
 		return growAndCover(slices[i], boundingCoord, widBuffer, ransacNum);
@@ -226,11 +236,7 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 	//Slices of sets of 3d coordinates
 	auto horizBuffSlices = table(slices.size(), std::function<vector<coord3D>(size_t)>([&](size_t i) {
 		return concat(slices[i], nslices[i]) << std::function<coord3D(coord)>([&](coord c) {
-			coord3D temp;
-			temp.x = getX(c);
-			temp.y = getY(c);
-			temp.z = i * zDist; //Each slice should be zDist apart, building upwards
-			return temp;
+			return coord3D(getX(c), getY(c), i*zDist); //Each slice should be zDist apart, building upwards
 			});
 		}));
 
@@ -247,8 +253,82 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 		}));
 
 	//Then buffer the top and bottom of both of them
-	horizBuffSlices.push_back(horizBuffSlices[horizBuffSlices.size()-1] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0, 1.0 * zDist); }));
-	horizBuffSlices.insert(horizBuffSlices.begin(), horizBuffSlices[0] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0, -1.0 * zDist); }));
+	horizBuffSlices.push_back(horizBuffSlices[horizBuffSlices.size() - 1] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0,(float) zDist); }));
+	horizBuffSlices.insert(horizBuffSlices.begin(), horizBuffSlices[0] << std::function<coord3D(coord3D)>([&](coord3D i) {return i + coord3D(0, 0, -1.0 *(float)zDist); }));
+	//TODO: The final few lines of the mathematica
+	*/
+
+}
+
+std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
+{
+	//Convert to matrixes
+
+	auto vectorToMatrix = [&](std::vector<coord> source) {
+		//Row 0 is x, row 1 is y
+		Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix(2, source.size());
+		for (int i = 0; i < source.size(); i++) {
+			sourceMatrix(0, i) = source[i].first;
+			sourceMatrix(1, i) = source[i].second;
+		}
+		return sourceMatrix;
+	};
+
+	auto matrixToVector = [&](Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix) {
+		//Row 0 is x, row 1 is y
+		std::vector<coord> source(sourceMatrix.cols(), coord());
+		for (int i = 0; i < sourceMatrix.cols(); i++) {
+			source[i].first = sourceMatrix(0, i);
+			source[i].second = sourceMatrix(1, i);
+		}
+		return source;
+	};
 
 	
+
+	//Row 0 is x, row 1 is y
+	Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix = vectorToMatrix(source);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix = vectorToMatrix(target);
+
+	//(* getting the centroid *)
+	auto sourceCentroid = Eigen::Vector<float, 2>( { sourceMatrix(0, Eigen::all).mean(), sourceMatrix(1, Eigen::all).mean() });
+	auto targetCentroid = Eigen::Vector<float, 2>( { targetMatrix(0, Eigen::all).mean(), targetMatrix(1, Eigen::all).mean() });
+
+	//(* forming the cross-covariance matrix *) Shifting both centroids to center
+	Eigen::Translation<float, 2> sourceTranslation(-1 * sourceCentroid);
+	//TODO: Ask about Affine vs Projective transforms
+	Eigen::Transform<float, 2, Eigen::Affine> sourceTransform(sourceTranslation);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = (sourceTransform * sourceMatrix);
+
+
+	Eigen::Translation<float, 2> targetTranslation(-1 * targetCentroid);
+	//TODO: Ask about Affine vs Projective transforms
+	Eigen::Transform<float, 2, Eigen::Affine> targetTransform(targetTranslation);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = (targetTransform * targetMatrix);
+
+
+	auto mat = zeroSource * zeroTarget.transpose(); //Opposite of the mathematica b/c I'm using column coordinates
+	//We are verified correct up to this point
+
+	//(* SVD decomposition *)
+	auto decomposition = Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>>(mat);
+	Eigen::MatrixXf m = Eigen::MatrixXf::Random(3, 2);
+	Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>> svd(mat,Eigen:: ComputeThinU | Eigen::ComputeThinV);
+	
+	//(* obtaining the rotation *)
+	Eigen::Matrix<float, 2,2> r = svd.matrixU() * svd.matrixV().transpose(); //This is definitely a rotation matrix
+	std::cout << "ROTATION " << r << std::endl;
+	//(* transform *) Creating the function
+	return std::function<std::vector<coord>(std::vector<coord>)>([&](std::vector<coord> points) {
+		return matrixToVector(r * vectorToMatrix(points));
+		});
+}
+
+std::vector<float> getClusterArray(size_t length, size_t i)
+{
+	std::vector<float>ret(length, 0);
+	if (i < length) {
+		ret[i] = 1;
+	}
+	return ret;
 }
