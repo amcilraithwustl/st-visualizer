@@ -29,6 +29,7 @@ std::vector<float>getClusterArray(size_t length, size_t i);
 
 Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix);
 
+Eigen::Matrix<float, 2, Eigen::Dynamic> translateToZeroCentroid(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix);
 
 std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int);
 

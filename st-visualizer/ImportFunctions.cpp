@@ -261,41 +261,37 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 }
 
 
+Eigen::Matrix<float, 2, Eigen::Dynamic> translateToZeroCentroid(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix) {
+	//Get the average of each row
+	auto centroid = sourceMatrix.rowwise().mean();
+
+	//Subtract the centroid from each column;
+	return sourceMatrix.colwise() - centroid;
+}
 Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix) {
 	//Row 0 is x, row 1 is y
-	std::cout << sourceMatrix << std::endl << targetMatrix << std::endl;
+	//std::cout << sourceMatrix << std::endl << targetMatrix << std::endl;
 
 	//(* getting the centroid *)
-	auto sourceCentroid = Eigen::Vector<float, 2>({ sourceMatrix(0, Eigen::all).mean(), sourceMatrix(1, Eigen::all).mean() });
-	auto targetCentroid = Eigen::Vector<float, 2>({ targetMatrix(0, Eigen::all).mean(), targetMatrix(1, Eigen::all).mean() });
-	
-	//(* forming the cross-covariance matrix *) Shifting both centroids to center
-	Eigen::Translation<float, 2> sourceTranslation(-1 * sourceCentroid);
-	//TODO: Ask about Affine vs Projective transforms
-	Eigen::Transform<float, 2, Eigen::Affine> sourceTransform(sourceTranslation);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = (sourceTransform * sourceMatrix);
-
-
-	Eigen::Translation<float, 2> targetTranslation(-1 * targetCentroid);
-	//TODO: Ask about Affine vs Projective transforms
-	Eigen::Transform<float, 2, Eigen::Affine> targetTransform(targetTranslation);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = (targetTransform * targetMatrix);
-
-	std::cout << zeroSource << std::endl << zeroTarget << std::endl;
-
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = translateToZeroCentroid(sourceMatrix);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = translateToZeroCentroid(targetMatrix);
 	auto mat = zeroSource * zeroTarget.transpose();
+
 	//We are verified correct up to this point
-	std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
+	//std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
 	//(* SVD decomposition *)
 	Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>> svd(mat, Eigen::ComputeThinU | Eigen::ComputeThinV);
-	std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
+	//std::cout << "VECTOR" << std::endl << svd.singularValues() << std::endl << std::endl;
+
+	//std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
 
 	//(* obtaining the rotation *)
 	Eigen::Matrix<float, 2, 2> r = svd.matrixU()*svd.matrixV().transpose(); //This is definitely a rotation matrix
-	std::cout << "ROTATION " << r << std::endl;
+	//std::cout << "ROTATION " << r << std::endl;
 
 	return r;
 }
+
 std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
 {
 	//Convert to matrixes
