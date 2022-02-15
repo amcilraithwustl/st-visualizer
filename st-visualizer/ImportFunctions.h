@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <Eigen/Dense>
 
 typedef std::pair<float, float> coord;
 //TODO: make this hold the data directly
@@ -25,6 +26,9 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 
 //this helper function produces an array of length n, which is all zero except a 1 in the i-th spot.
 std::vector<float>getClusterArray(size_t length, size_t i);
+
+Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix);
+
 
 std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int);
 

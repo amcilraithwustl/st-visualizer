@@ -8,9 +8,16 @@
 #include <Eigen/Dense>
 
 int main(int argc, char** argv) {
-
-	std::vector<std::string> arguments(argv, argv + argc);
+	typedef Eigen::Matrix<float, 2, Eigen::Dynamic> mat;
+	getSVDRotation(
+		mat({ {1,2,0},{0,3,0} }),
+		mat({ {1,2,0},{0,3,0} })
+	).isApprox(
+		mat({ {1,0}, {0,1} })
+	);
+	
+	/*std::vector<std::string> arguments(argv, argv + argc);
 	auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
 	getTransSVD(alignmentValues[0].first, alignmentValues[0].second);
-	//loadTSV("../CRC_112C1_cell_type_coord_allspots.tsv", alignmentValues);
+	loadTSV("../CRC_112C1_cell_type_coord_allspots.tsv", alignmentValues);*/
 }

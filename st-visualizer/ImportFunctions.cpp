@@ -260,6 +260,42 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 
 }
 
+
+Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix) {
+	//Row 0 is x, row 1 is y
+	std::cout << sourceMatrix << std::endl << targetMatrix << std::endl;
+
+	//(* getting the centroid *)
+	auto sourceCentroid = Eigen::Vector<float, 2>({ sourceMatrix(0, Eigen::all).mean(), sourceMatrix(1, Eigen::all).mean() });
+	auto targetCentroid = Eigen::Vector<float, 2>({ targetMatrix(0, Eigen::all).mean(), targetMatrix(1, Eigen::all).mean() });
+	
+	//(* forming the cross-covariance matrix *) Shifting both centroids to center
+	Eigen::Translation<float, 2> sourceTranslation(-1 * sourceCentroid);
+	//TODO: Ask about Affine vs Projective transforms
+	Eigen::Transform<float, 2, Eigen::Affine> sourceTransform(sourceTranslation);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = (sourceTransform * sourceMatrix);
+
+
+	Eigen::Translation<float, 2> targetTranslation(-1 * targetCentroid);
+	//TODO: Ask about Affine vs Projective transforms
+	Eigen::Transform<float, 2, Eigen::Affine> targetTransform(targetTranslation);
+	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = (targetTransform * targetMatrix);
+
+	std::cout << zeroSource << std::endl << zeroTarget << std::endl;
+
+	auto mat = zeroSource * zeroTarget.transpose();
+	//We are verified correct up to this point
+	std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
+	//(* SVD decomposition *)
+	Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>> svd(mat, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
+
+	//(* obtaining the rotation *)
+	Eigen::Matrix<float, 2, 2> r = svd.matrixU()*svd.matrixV().transpose(); //This is definitely a rotation matrix
+	std::cout << "ROTATION " << r << std::endl;
+
+	return r;
+}
 std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
 {
 	//Convert to matrixes
@@ -284,40 +320,8 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 		return source;
 	};
 
-	
+	auto r = getSVDRotation(vectorToMatrix(source), vectorToMatrix(target));
 
-	//Row 0 is x, row 1 is y
-	Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix = vectorToMatrix(source);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix = vectorToMatrix(target);
-
-	//(* getting the centroid *)
-	auto sourceCentroid = Eigen::Vector<float, 2>( { sourceMatrix(0, Eigen::all).mean(), sourceMatrix(1, Eigen::all).mean() });
-	auto targetCentroid = Eigen::Vector<float, 2>( { targetMatrix(0, Eigen::all).mean(), targetMatrix(1, Eigen::all).mean() });
-
-	//(* forming the cross-covariance matrix *) Shifting both centroids to center
-	Eigen::Translation<float, 2> sourceTranslation(-1 * sourceCentroid);
-	//TODO: Ask about Affine vs Projective transforms
-	Eigen::Transform<float, 2, Eigen::Affine> sourceTransform(sourceTranslation);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = (sourceTransform * sourceMatrix);
-
-
-	Eigen::Translation<float, 2> targetTranslation(-1 * targetCentroid);
-	//TODO: Ask about Affine vs Projective transforms
-	Eigen::Transform<float, 2, Eigen::Affine> targetTransform(targetTranslation);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = (targetTransform * targetMatrix);
-
-
-	auto mat = zeroSource * zeroTarget.transpose(); //Opposite of the mathematica b/c I'm using column coordinates
-	//We are verified correct up to this point
-
-	//(* SVD decomposition *)
-	auto decomposition = Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>>(mat);
-	Eigen::MatrixXf m = Eigen::MatrixXf::Random(3, 2);
-	Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>> svd(mat,Eigen:: ComputeThinU | Eigen::ComputeThinV);
-	
-	//(* obtaining the rotation *)
-	Eigen::Matrix<float, 2,2> r = svd.matrixU() * svd.matrixV().transpose(); //This is definitely a rotation matrix
-	std::cout << "ROTATION " << r << std::endl;
 	//(* transform *) Creating the function
 	return std::function<std::vector<coord>(std::vector<coord>)>([&](std::vector<coord> points) {
 		return matrixToVector(r * vectorToMatrix(points));
