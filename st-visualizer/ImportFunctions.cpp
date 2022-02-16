@@ -286,7 +286,7 @@ Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic
 	//std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
 
 	//(* obtaining the rotation *)
-	Eigen::Matrix<float, 2, 2> r = svd.matrixU()*svd.matrixV().transpose(); //This is definitely a rotation matrix
+	Eigen::Matrix<float, 2, 2> r = (svd.matrixU()*svd.matrixV().transpose()).transpose(); //This is definitely a rotation matrix
 	//std::cout << "ROTATION " << r << std::endl;
 
 	return r;
