@@ -8,44 +8,57 @@
 #include <Eigen/Dense>
 
 int main(int argc, char** argv) {
-	typedef Eigen::Matrix<float, Eigen::Dynamic, 2> mat;
 
-	//Generic Rotation Testing Function
-	auto genRotTest = [](mat source, mat target) {
-		// Send centroids to zero
-		auto a = translateToZeroCentroid(source.transpose());
-		auto b = translateToZeroCentroid(target.transpose());
+	//Row coordinate matrix
+	typedef Eigen::Matrix<float, Eigen::Dynamic, 2> rowMat;
+	typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colMat;
 
-		//Test their rotations
-		auto rotation = getSVDRotation(a, b);
+	auto i = 0;
 
-		std::cout << std::endl << "START" << std::endl << a
-			<< std::endl << std::endl
-			<< b << std::endl << std::endl << rotation * a << std::endl;
+
+	int maxI = 1000;
+	float pi = 3.1415926535;
+
+	auto genRotTest = [&i](std::vector<coord> source, std::vector<coord> target, std::vector<coord> finalSource, std::vector<coord> finalTest) {
+		i++;
+
+		auto func = getTransSVD(source, target);
+		auto a = func(finalSource);
+
+
+		/*std::stringstream failStream;
+		failStream << i << std::endl << std::endl;
+		std::string failString = failStream.str();
+		std::wstring widestr = std::wstring(failString.begin(), failString.end());
+		const wchar_t* widecstr = widestr.c_str();*/
+		std::cout << std::endl;
+		std::cout << std::endl;
+
+		for (int j = 0; j < a.size(); j++) {
+			std::cout << a[j].first << " " << a[j].second << "       " << finalTest[j].first <<" "<< finalTest[j].second << std::endl;
+
+			/*Assert::AreEqual(a[j].first, finalTest[j].first);
+			Assert::AreEqual(a[j].second, finalTest[j].second);*/
+		}
+		std::cout << std::endl;
 	};
 
-	genRotTest(
-		mat({ {1,1},{2,2} }),
-		mat({ {1,-1},{2,-2} })
-	);
-
-	genRotTest(
-		mat({ {1,1},{2,2}, {3,3},{4,4},{5,5} }),
-		mat({ {-1,-1},{-2,-2}, {-3,-3},{-4,-4},{-5,-5} })
-	);
-
-	//Try 100 random tests with large length
-	int maxI = 100;
-	int pi = 3.1415926535;
-	Eigen::Matrix<float, 2, Eigen::Dynamic> m = mat::Random(10, 2).transpose();
-	for (int i = 0; i < maxI; i++) {
-		auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI).toRotationMatrix();
-		genRotTest(
-			m.transpose(),
-
-			//Test random values against all radians possible
-			(rotation * m).transpose()
-		);
+	//Number of different matrixes to try
+	for (int j = 0; j < 5; j++) {
+		//Try 100 random tests with large length and a centroid of zero
+		colMat m = translateToZeroCentroid(colMat::Random(2, 3) * 100);
+		colMat m2 = colMat::Random(2, 3) * 100;
+		for (int i = 200; i < maxI; i++) {
+			auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI);
+			auto translatoin = Eigen::Translation2f(1, 1);
+			Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin*rotation;
+			genRotTest(
+				matrixToVector(m),
+				matrixToVector(trans * m),
+				matrixToVector(m2),
+				matrixToVector(trans * m2)
+			);
+		}
 	}
 
 	/*std::vector<std::string> arguments(argv, argv + argc);

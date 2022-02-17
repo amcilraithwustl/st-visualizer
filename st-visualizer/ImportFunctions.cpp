@@ -261,32 +261,32 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 }
 
 
-Eigen::Matrix<float, 2, Eigen::Dynamic> translateToZeroCentroid(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix) {
+colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix) {
 	//Get the average of each row
 	auto centroid = sourceMatrix.rowwise().mean();
 
 	//Subtract the centroid from each column;
 	return sourceMatrix.colwise() - centroid;
 }
-Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix) {
+Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatrix) {
 	//Row 0 is x, row 1 is y
 	//std::cout << sourceMatrix << std::endl << targetMatrix << std::endl;
 
 	//(* getting the centroid *)
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroSource = translateToZeroCentroid(sourceMatrix);
-	Eigen::Matrix<float, 2, Eigen::Dynamic> zeroTarget = translateToZeroCentroid(targetMatrix);
-	auto mat = zeroSource * zeroTarget.transpose();
+	colCoordMat zeroSource = translateToZeroCentroid(sourceMatrix);
+	colCoordMat zeroTarget = translateToZeroCentroid(targetMatrix);
+	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
 
 	//We are verified correct up to this point
 	//std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
 	//(* SVD decomposition *)
-	Eigen::JacobiSVD<Eigen::Matrix<float, 2, Eigen::Dynamic>> svd(mat, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	Eigen::JacobiSVD<colCoordMat> svd(mat, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	//std::cout << "VECTOR" << std::endl << svd.singularValues() << std::endl << std::endl;
 
 	//std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
 
 	//(* obtaining the rotation *)
-	Eigen::Matrix<float, 2, 2> r = (svd.matrixU()*svd.matrixV().transpose()).transpose(); //This is definitely a rotation matrix
+	Eigen::Matrix2f r = (svd.matrixU()*svd.matrixV().transpose()).transpose(); //This is definitely a rotation matrix
 	//std::cout << "ROTATION " << r << std::endl;
 
 	return r;
@@ -295,32 +295,19 @@ Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic
 std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
 {
 	//Convert to matrixes
-
-	auto vectorToMatrix = [&](std::vector<coord> source) {
-		//Row 0 is x, row 1 is y
-		Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix(2, source.size());
-		for (int i = 0; i < source.size(); i++) {
-			sourceMatrix(0, i) = source[i].first;
-			sourceMatrix(1, i) = source[i].second;
-		}
-		return sourceMatrix;
-	};
-
-	auto matrixToVector = [&](Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix) {
-		//Row 0 is x, row 1 is y
-		std::vector<coord> source(sourceMatrix.cols(), coord());
-		for (int i = 0; i < sourceMatrix.cols(); i++) {
-			source[i].first = sourceMatrix(0, i);
-			source[i].second = sourceMatrix(1, i);
-		}
-		return source;
-	};
-
 	auto r = getSVDRotation(vectorToMatrix(source), vectorToMatrix(target));
+	Eigen::Vector2f targetCentroidTransform = vectorToMatrix(target).rowwise().mean() - vectorToMatrix(source).rowwise().mean();
 
 	//(* transform *) Creating the function
-	return std::function<std::vector<coord>(std::vector<coord>)>([&](std::vector<coord> points) {
-		return matrixToVector(r * vectorToMatrix(points));
+	return std::function<std::vector<coord>(std::vector<coord>)>([r, targetCentroidTransform](std::vector<coord> points) {
+		//Translate to zero, rotate around origin, then translate relative centroid to the target's centroid
+		colCoordMat zeroCentroid = translateToZeroCentroid(vectorToMatrix(points));
+		colCoordMat rotated = r * zeroCentroid;
+		Eigen::Vector2f translation = (targetCentroidTransform + vectorToMatrix(points).rowwise().mean());
+		//std::cout << translation << std::endl;
+		std::cout << std::endl;
+		std::cout << translation << std::endl;
+		return matrixToVector(rotated.colwise() + translation);
 		});
 }
 
@@ -332,3 +319,23 @@ std::vector<float> getClusterArray(size_t length, size_t i)
 	}
 	return ret;
 }
+
+std::vector<coord> matrixToVector(colCoordMat sourceMatrix) {
+	//Row 0 is x, row 1 is y
+	std::vector<coord> source(sourceMatrix.cols(), coord());
+	for (int i = 0; i < sourceMatrix.cols(); i++) {
+		source[i].first = sourceMatrix(0, i);
+		source[i].second = sourceMatrix(1, i);
+	}
+	return source;
+};
+
+colCoordMat vectorToMatrix(std::vector<coord> source) {
+	//Row 0 is x, row 1 is y
+	colCoordMat sourceMatrix(2, source.size());
+	for (int i = 0; i < source.size(); i++) {
+		sourceMatrix(0, i) = source[i].first;
+		sourceMatrix(1, i) = source[i].second;
+	}
+	return sourceMatrix;
+};

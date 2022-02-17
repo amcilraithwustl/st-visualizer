@@ -4,6 +4,8 @@
 #include <functional>
 #include <Eigen/Dense>
 
+typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colCoordMat;
+
 typedef std::pair<float, float> coord;
 //TODO: make this hold the data directly
 struct coord3D {
@@ -27,12 +29,16 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 //this helper function produces an array of length n, which is all zero except a 1 in the i-th spot.
 std::vector<float>getClusterArray(size_t length, size_t i);
 
-Eigen::Matrix<float, 2, 2> getSVDRotation(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix, Eigen::Matrix<float, 2, Eigen::Dynamic> targetMatrix);
+Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatrix);
 
-Eigen::Matrix<float, 2, Eigen::Dynamic> translateToZeroCentroid(Eigen::Matrix<float, 2, Eigen::Dynamic> sourceMatrix);
+colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix);
 
 std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int);
 
+colCoordMat vectorToMatrix(std::vector<coord> source);
+
+std::vector<coord> matrixToVector(colCoordMat sourceMatrix);
+
 //TODO: Eigen -> Modern c++ svd linear algebra operations
 
-//Ransac -> initial guess, then refined version
+//Ransac ->initial guess, then refined version
