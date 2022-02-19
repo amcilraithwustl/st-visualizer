@@ -275,6 +275,10 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 	//(* getting the centroid *)
 	colCoordMat zeroSource = translateToZeroCentroid(sourceMatrix);
 	colCoordMat zeroTarget = translateToZeroCentroid(targetMatrix);
+	std::cout << std::endl;
+	std::cout << zeroSource << std::endl; 
+	std::cout << std::endl;
+	std::cout << zeroTarget << std::endl;
 	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
 
 	//We are verified correct up to this point
@@ -295,19 +299,16 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
 {
 	//Convert to matrixes
-	auto r = getSVDRotation(vectorToMatrix(source), vectorToMatrix(target));
 	Eigen::Vector2f targetCentroidTransform = vectorToMatrix(target).rowwise().mean() - vectorToMatrix(source).rowwise().mean();
+	Eigen::Rotation2D<float> rotation(getSVDRotation(translateToZeroCentroid(vectorToMatrix(source)), translateToZeroCentroid(vectorToMatrix(target))));
+    Eigen::Translation2f translation(targetCentroidTransform);
+	Eigen::Transform<float, 2, Eigen::Affine> finalTransform = translation * rotation; //Translate after rotate
 
 	//(* transform *) Creating the function
-	return std::function<std::vector<coord>(std::vector<coord>)>([r, targetCentroidTransform](std::vector<coord> points) {
-		//Translate to zero, rotate around origin, then translate relative centroid to the target's centroid
-		colCoordMat zeroCentroid = translateToZeroCentroid(vectorToMatrix(points));
-		colCoordMat rotated = r * zeroCentroid;
-		Eigen::Vector2f translation = (targetCentroidTransform + vectorToMatrix(points).rowwise().mean());
-		//std::cout << translation << std::endl;
+	return std::function<std::vector<coord>(std::vector<coord>)>([finalTransform](std::vector<coord> points) {
 		std::cout << std::endl;
-		std::cout << translation << std::endl;
-		return matrixToVector(rotated.colwise() + translation);
+		std::cout << finalTransform.matrix() << std::endl;
+		return matrixToVector(finalTransform * vectorToMatrix(points));
 		});
 }
 

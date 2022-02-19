@@ -48,7 +48,6 @@ namespace ImportTests
 					auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI).toRotationMatrix();
 					genRotTest(
 						m.transpose(),
-
 						//Test random values against all radians possible within range
 						(rotation * m).transpose()
 					);

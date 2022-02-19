@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	//Number of different matrixes to try
 	for (int j = 0; j < 5; j++) {
 		//Try 100 random tests with large length and a centroid of zero
-		colMat m = translateToZeroCentroid(colMat::Random(2, 3) * 100);
+		colMat m = colMat::Random(2, 3) * 100;
 		colMat m2 = colMat::Random(2, 3) * 100;
 		for (int i = 200; i < maxI; i++) {
 			auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI);
