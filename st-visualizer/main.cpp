@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
 
 	int maxI = 1000;
-	float pi = 3.1415926535;
+	float pi = 3.14159265358979323846264338327950288419716939937510;
 
 	auto genRotTest = [&i](std::vector<coord> source, std::vector<coord> target, std::vector<coord> finalSource, std::vector<coord> finalTest) {
 		i++;
@@ -43,6 +43,21 @@ int main(int argc, char** argv) {
 		std::cout << std::endl;
 	};
 
+	{
+		colMat m({ { 1,0,-1 },{0,1,-1} });
+		colMat m2({ { 1,0,-1 },{0,1,-1} });
+		
+			auto rotation = Eigen::Rotation2D<float>(2 * pi *0.5);
+			auto translatoin = Eigen::Translation2f(1, 1);
+			Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin * rotation;
+			genRotTest(
+				matrixToVector(m),
+				matrixToVector(trans * m),
+				matrixToVector(m2),
+				matrixToVector(trans * m2)
+			);
+		
+	}
 	//Number of different matrixes to try
 	for (int j = 0; j < 5; j++) {
 		//Try 100 random tests with large length and a centroid of zero

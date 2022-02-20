@@ -259,11 +259,13 @@ void loadTSV(std::string tsvFile, vector<std::pair<vector<coord>, vector<coord>>
 	*/
 
 }
-
+Eigen::Vector2f getCentroid(colCoordMat sourceMatrix) {
+	return sourceMatrix.rowwise().mean();
+}
 
 colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix) {
 	//Get the average of each row
-	auto centroid = sourceMatrix.rowwise().mean();
+	auto centroid = getCentroid(sourceMatrix);
 
 	//Subtract the centroid from each column;
 	return sourceMatrix.colwise() - centroid;
@@ -275,12 +277,8 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 	//(* getting the centroid *)
 	colCoordMat zeroSource = translateToZeroCentroid(sourceMatrix);
 	colCoordMat zeroTarget = translateToZeroCentroid(targetMatrix);
-	std::cout << std::endl;
-	std::cout << zeroSource << std::endl; 
-	std::cout << std::endl;
-	std::cout << zeroTarget << std::endl;
-	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
 
+	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
 	//We are verified correct up to this point
 	//std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
 	//(* SVD decomposition *)
@@ -298,12 +296,32 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 
 std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target)
 {
-	//Convert to matrixes
-	Eigen::Vector2f targetCentroidTransform = vectorToMatrix(target).rowwise().mean() - vectorToMatrix(source).rowwise().mean();
-	Eigen::Rotation2D<float> rotation(getSVDRotation(translateToZeroCentroid(vectorToMatrix(source)), translateToZeroCentroid(vectorToMatrix(target))));
-    Eigen::Translation2f translation(targetCentroidTransform);
-	Eigen::Transform<float, 2, Eigen::Affine> finalTransform = translation * rotation; //Translate after rotate
+	auto sourceMatrix = vectorToMatrix(source);
+	auto targetMatrix = vectorToMatrix(target);
 
+	std::cout << std::endl;
+	std::cout << sourceMatrix << std::endl;
+	std::cout << std::endl;
+	std::cout << targetMatrix << std::endl;
+
+	//Convert to matrixes
+	Eigen::Vector2f sourceCentroid = getCentroid(sourceMatrix);
+	Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
+	Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
+	Eigen::Rotation2D<float> rotation(getSVDRotation(sourceMatrix, targetMatrix));
+    Eigen::Translation2f netTranslation(targetCentroidTransform);
+    Eigen::Translation2f toZero(-1*targetCentroid);
+    Eigen::Translation2f fromZero(targetCentroid);
+	Eigen::Transform<float, 2, Eigen::Affine> finalTransform = netTranslation * fromZero * rotation * toZero; //Translate after rotate
+
+	
+	
+
+	std::cout << std::endl;
+	std::cout << sourceCentroid << std::endl;
+
+	std::cout << std::endl;
+	std::cout << targetCentroid << std::endl;
 	//(* transform *) Creating the function
 	return std::function<std::vector<coord>(std::vector<coord>)>([finalTransform](std::vector<coord> points) {
 		std::cout << std::endl;
