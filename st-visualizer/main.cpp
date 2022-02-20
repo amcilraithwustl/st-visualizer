@@ -31,38 +31,14 @@ int main(int argc, char** argv) {
 		std::string failString = failStream.str();
 		std::wstring widestr = std::wstring(failString.begin(), failString.end());
 		const wchar_t* widecstr = widestr.c_str();*/
-		std::cout << std::endl;
-		std::cout << std::endl;
 
-		for (int j = 0; j < a.size(); j++) {
-			std::cout << a[j].first << " " << a[j].second << "       " << finalTest[j].first <<" "<< finalTest[j].second << std::endl;
-
-			/*Assert::AreEqual(a[j].first, finalTest[j].first);
-			Assert::AreEqual(a[j].second, finalTest[j].second);*/
-		}
-		std::cout << std::endl;
 	};
 
-	{
-		colMat m({ { 2,0,1},{2,0,2} });
-		colMat m2({ { 2,0,1 },{2,0,2} });
-		
-			auto rotation = Eigen::Rotation2D<float>(2 * pi *0.25);
-			auto translatoin = Eigen::Translation2f(1, 1);
-			Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin * rotation;
-			genRotTest(
-				matrixToVector(m),
-				matrixToVector(trans * m),
-				matrixToVector(m2),
-				matrixToVector(trans * m2)
-			);
-		
-	}
 	//Number of different matrixes to try
 	for (int j = 0; j < 5; j++) {
 		//Try 100 random tests with large length and a centroid of zero
-		colMat m = colMat::Random(2, 3) * 100;
-		colMat m2 = colMat::Random(2, 3) * 100;
+		colMat m = colMat::Random(2, 10) * 100;
+		colMat m2 = colMat::Random(2, 30) * 100;
 		for (int i = 200; i < maxI; i++) {
 			auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI);
 			auto translatoin = Eigen::Translation2f(1, 1);

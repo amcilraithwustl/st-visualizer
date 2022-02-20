@@ -59,43 +59,46 @@ namespace ImportTests
 			//The main purpose to this set of tests is to make sure this works with cases of scaling, translation, and rotation
 
 			//Row coordinate matrix
+			//Row coordinate matrix
 			typedef Eigen::Matrix<float, Eigen::Dynamic, 2> rowMat;
 			typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colMat;
 
 			auto i = 0;
-			//Generic Rotation Testing Function
+
+
+			int maxI = 1000;
+			float pi = 3.14159265358979323846264338327950288419716939937510;
+
 			auto genRotTest = [&i](std::vector<coord> source, std::vector<coord> target, std::vector<coord> finalSource, std::vector<coord> finalTest) {
 				i++;
-				
+
 				auto func = getTransSVD(source, target);
-				auto a = func(finalSource);
+				auto a = vectorToMatrix(func(finalSource));
+
+
 				std::stringstream failStream;
-				failStream << i << std::endl << std::endl;
+				failStream << i << std::endl << a << std::endl << std::endl << vectorToMatrix(finalTest) << std::endl << std::endl << vectorToMatrix(source) << std::endl << std::endl << vectorToMatrix(target);
+
 				std::string failString = failStream.str();
 				std::wstring widestr = std::wstring(failString.begin(), failString.end());
 				const wchar_t* widecstr = widestr.c_str();
-				for (int j = 0; j < a.size(); j++) {
-					Assert::AreEqual(a[i].first, finalTest[i].first);
-					Assert::AreEqual(a[i].second, finalTest[i].second);
-				}
-			};
 
-			int maxI = 1000;
-			float pi = 3.1415926535;
+				Assert::IsTrue(a.isApprox(vectorToMatrix(finalTest)), widecstr);
+
+			};
 
 			//Number of different matrixes to try
 			for (int j = 0; j < 5; j++) {
-				//Try 100 random tests with large length
-				colMat m = colMat::Random(2,20) * 100;
-				colMat m2 = colMat::Random(2, 20) * 100;
-				for (int i = 0; i < maxI; i++) {
-					auto rotation = Eigen::Rotation2Df(2 * pi * i / maxI).toRotationMatrix();
-					Eigen::Transform<float, 2, Eigen::Affine> trans;
-					trans.rotate(rotation);
-					trans.translate(Eigen::Translation2f(100, 100).vector());
+				//Try 100 random tests with large length and a centroid of zero
+				colMat m = colMat::Random(2, 10) * 100;
+				colMat m2 = colMat::Random(2, 30) * 100;
+				for (int i = 200; i < maxI; i++) {
+					auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI);
+					auto translatoin = Eigen::Translation2f(Eigen::Vector2f::Random() * 100);
+					Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin * rotation;
 					genRotTest(
 						matrixToVector(m),
-						matrixToVector(trans * m), 
+						matrixToVector(trans * m),
 						matrixToVector(m2),
 						matrixToVector(trans * m2)
 					);
