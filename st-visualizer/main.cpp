@@ -44,10 +44,10 @@ int main(int argc, char** argv) {
 	};
 
 	{
-		colMat m({ { 1,0,-1 },{0,1,-1} });
-		colMat m2({ { 1,0,-1 },{0,1,-1} });
+		colMat m({ { 2,0,1 },{0,2,1} });
+		colMat m2({ { 2,0,1 },{0,2,1} });
 		
-			auto rotation = Eigen::Rotation2D<float>(2 * pi *0.5);
+			auto rotation = Eigen::Rotation2D<float>(2 * pi *0);
 			auto translatoin = Eigen::Translation2f(1, 1);
 			Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin * rotation;
 			genRotTest(

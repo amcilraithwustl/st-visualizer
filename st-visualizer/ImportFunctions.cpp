@@ -310,18 +310,18 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 	Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
 	Eigen::Rotation2D<float> rotation(getSVDRotation(sourceMatrix, targetMatrix));
     Eigen::Translation2f netTranslation(targetCentroidTransform);
-    Eigen::Translation2f toZero(-1*targetCentroid);
-    Eigen::Translation2f fromZero(targetCentroid);
+    Eigen::Translation2f toZero(-1*sourceCentroid);
+    Eigen::Translation2f fromZero(sourceCentroid);
 	Eigen::Transform<float, 2, Eigen::Affine> finalTransform = netTranslation * fromZero * rotation * toZero; //Translate after rotate
 
 	
 	
 
-	std::cout << std::endl;
-	std::cout << sourceCentroid << std::endl;
+	/*std::cout << std::endl;
+	std::cout << toZero.vector() << std::endl;
 
 	std::cout << std::endl;
-	std::cout << targetCentroid << std::endl;
+	std::cout << fromZero.vector() << std::endl;*/
 	//(* transform *) Creating the function
 	return std::function<std::vector<coord>(std::vector<coord>)>([finalTransform](std::vector<coord> points) {
 		std::cout << std::endl;
