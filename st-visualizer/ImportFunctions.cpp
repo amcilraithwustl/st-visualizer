@@ -277,6 +277,8 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 	//(* getting the centroid *)
 	colCoordMat zeroSource = translateToZeroCentroid(sourceMatrix);
 	colCoordMat zeroTarget = translateToZeroCentroid(targetMatrix);
+	std::cout << "SOURCE " << std::endl << zeroSource << std::endl << std::endl;
+	std::cout << "TARGET " << std::endl << zeroTarget << std::endl << std::endl;
 
 	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
 	//We are verified correct up to this point
@@ -289,7 +291,7 @@ Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatri
 
 	//(* obtaining the rotation *)
 	Eigen::Matrix2f r = (svd.matrixU()*svd.matrixV().transpose()).transpose(); //This is definitely a rotation matrix
-	//std::cout << "ROTATION " << r << std::endl;
+	std::cout << "ROTATION " << std::endl << r << std::endl <<std::endl;
 
 	return r;
 }
@@ -299,16 +301,17 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 	auto sourceMatrix = vectorToMatrix(source);
 	auto targetMatrix = vectorToMatrix(target);
 
-	std::cout << std::endl;
-	std::cout << sourceMatrix << std::endl;
-	std::cout << std::endl;
-	std::cout << targetMatrix << std::endl;
+	//std::cout << std::endl;
+	//std::cout << sourceMatrix << std::endl;
+	//std::cout << std::endl;
+	//std::cout << targetMatrix << std::endl;
 
 	//Convert to matrixes
 	Eigen::Vector2f sourceCentroid = getCentroid(sourceMatrix);
 	Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
 	Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
-	Eigen::Rotation2D<float> rotation(getSVDRotation(sourceMatrix, targetMatrix));
+	auto r = getSVDRotation(sourceMatrix, targetMatrix);
+	Eigen::Rotation2D<float> rotation(r);
     Eigen::Translation2f netTranslation(targetCentroidTransform);
     Eigen::Translation2f toZero(-1*sourceCentroid);
     Eigen::Translation2f fromZero(sourceCentroid);
@@ -317,11 +320,11 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 	
 	
 
-	/*std::cout << std::endl;
-	std::cout << toZero.vector() << std::endl;
+	std::cout << std::endl;
+	std::cout << rotation.toRotationMatrix() << std::endl;
 
 	std::cout << std::endl;
-	std::cout << fromZero.vector() << std::endl;*/
+	std::cout << r << std::endl;
 	//(* transform *) Creating the function
 	return std::function<std::vector<coord>(std::vector<coord>)>([finalTransform](std::vector<coord> points) {
 		std::cout << std::endl;
