@@ -1,7 +1,9 @@
 #include "pch.h"
+#include "../st-visualizer/JSONParser.h"
 #include "CppUnitTest.h"
 #include "../st-visualizer/ImportFunctions.h"
 #include <math.h>;
+#include <fstream>;
 #include <sstream>;
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -104,6 +106,14 @@ namespace ImportTests
 					);
 				}
 			}
+		}
+		TEST_METHOD(SVDMathematica) {
+			using json = nlohmann::json;
+			// read a JSON file
+			std::ifstream i("./svd.json");
+			json j;
+			i >> j;
+
 		}
 
 	};
