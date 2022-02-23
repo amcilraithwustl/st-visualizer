@@ -26,8 +26,8 @@ namespace ImportTests
 			auto genRotTest = [&i](rowMat source, rowMat target) {
 				i++;
 				// Send centroids to zero
-				auto a = translateToZeroCentroid(source.transpose());
-				auto b = translateToZeroCentroid(target.transpose());
+				auto a = source.transpose();
+				auto b = target.transpose();
 
 				//Test their rotations
 				auto rotation = getSVDRotation(a, b);
@@ -107,12 +107,56 @@ namespace ImportTests
 				}
 			}
 		}
+
 		TEST_METHOD(SVDMathematica) {
 			using json = nlohmann::json;
+			int i = 0;
+			auto genRotTest = [&i](std::vector<coord> source, std::vector<coord> target, std::vector<coord> finalSource, std::vector<coord> finalTest) {
+				i++;
+
+				auto func = getTransSVD(source, target);
+				auto a = vectorToMatrix(func(finalSource));
+
+
+				std::stringstream failStream;
+				failStream << i << std::endl << a << std::endl << std::endl << vectorToMatrix(finalTest) << std::endl << std::endl << vectorToMatrix(source) << std::endl << std::endl << vectorToMatrix(target);
+				failStream << i << std::endl << a-vectorToMatrix(finalTest) << std::endl << std::endl;
+
+				std::string failString = failStream.str();
+				std::wstring widestr = std::wstring(failString.begin(), failString.end());
+				const wchar_t* widecstr = widestr.c_str();
+
+				Assert::IsTrue(a.isApprox(vectorToMatrix(finalTest)), widecstr);
+
+			};
+			auto jsonToMatrix = [](const json& source) {
+				//This should only be used for testing. Not logic safe.
+
+				Eigen::Matrix2Xf a(2, source.size());
+
+				for (int i = 0; i < source.size(); i++) {
+					a(0, i) = source[i][0];
+					a(1, i) = source[i][1];
+				}
+				return a;
+			};
 			// read a JSON file
-			std::ifstream i("./svd.json");
-			json j;
-			i >> j;
+			std::ifstream file("C:\\Users\\Aiden McIlraith\\ Documents \\ GitHub \\ st-visualizer \\ UnitTest \\ svd.json");
+						auto a = file.is_open();
+			json j = json::parse(file);
+
+			for (json& test : j) {
+				auto alignSource = jsonToMatrix(test[0]);
+				auto alignTarget = jsonToMatrix(test[1]);
+				auto mapSource = jsonToMatrix(test[2]);
+				auto mapTarget = jsonToMatrix(test[3]);
+				genRotTest(
+					matrixToVector(alignSource),
+					matrixToVector(alignTarget),
+					matrixToVector(mapTarget),
+					matrixToVector(mapSource)
+				);
+			}
 
 		}
 

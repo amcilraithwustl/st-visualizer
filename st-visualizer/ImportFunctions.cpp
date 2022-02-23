@@ -272,27 +272,18 @@ colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix) {
 }
 Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatrix) {
 	//Row 0 is x, row 1 is y
-	//std::cout << sourceMatrix << std::endl << targetMatrix << std::endl;
 
 	//(* getting the centroid *)
 	colCoordMat zeroSource = translateToZeroCentroid(sourceMatrix);
 	colCoordMat zeroTarget = translateToZeroCentroid(targetMatrix);
-	//std::cout << "SOURCE " << std::endl << zeroSource << std::endl << std::endl;
-	//std::cout << "TARGET " << std::endl << zeroTarget << std::endl << std::endl;
 
 	Eigen::Matrix2f mat = zeroSource * zeroTarget.transpose();
-	//We are verified correct up to this point
-	//std::cout << "MAT" << std::endl << mat << std::endl << std::endl;
+
 	//(* SVD decomposition *)
 	Eigen::JacobiSVD<colCoordMat> svd(mat, Eigen::ComputeThinU | Eigen::ComputeThinV);
-	//std::cout << "VECTOR" << std::endl << svd.singularValues() << std::endl << std::endl;
-
-	//std::cout << svd.matrixU() << std::endl << svd.matrixV() << std::endl;
-
 	//(* obtaining the rotation *)
 	Eigen::Matrix2f r = (svd.matrixU()*svd.matrixV().transpose()).transpose(); //This is definitely a rotation matrix
-	//std::cout << "ROTATION " << std::endl << r << std::endl <<std::endl;
-
+	
 	return r;
 }
 
@@ -301,34 +292,23 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 	auto sourceMatrix = vectorToMatrix(source);
 	auto targetMatrix = vectorToMatrix(target);
 
-	//std::cout << std::endl;
-	//std::cout << sourceMatrix << std::endl;
-	//std::cout << std::endl;
-	//std::cout << targetMatrix << std::endl;
-
 	//Convert to matrixes
+	auto r = getSVDRotation(sourceMatrix, targetMatrix);
+	Eigen::Rotation2D<float> rotation(r);
+
 	Eigen::Vector2f sourceCentroid = getCentroid(sourceMatrix);
 	Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
 	Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
-	auto r = getSVDRotation(sourceMatrix, targetMatrix);
-	Eigen::Rotation2D<float> rotation(r);
+
     Eigen::Translation2f netTranslation(targetCentroidTransform);
     Eigen::Translation2f toZero(-1*sourceCentroid);
     Eigen::Translation2f fromZero(sourceCentroid);
 	Eigen::Transform<float, 2, Eigen::Affine> finalTransform = netTranslation * fromZero * rotation * toZero; //Translate after rotate
 
 	
-	
-
-	//std::cout << std::endl;
-	//std::cout << rotation.toRotationMatrix() << std::endl;
-
-	//std::cout << std::endl;
-	//std::cout << r << std::endl;
 	//(* transform *) Creating the function
 	return std::function<std::vector<coord>(std::vector<coord>)>([finalTransform](std::vector<coord> points) {
-		//std::cout << std::endl;
-		//std::cout << finalTransform.matrix() << std::endl;
+
 		return matrixToVector(finalTransform * vectorToMatrix(points));
 		});
 }
