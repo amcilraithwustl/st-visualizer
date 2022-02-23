@@ -300,6 +300,8 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 	Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
 	Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
 
+	
+
     Eigen::Translation2f netTranslation(targetCentroidTransform);
     Eigen::Translation2f toZero(-1*sourceCentroid);
     Eigen::Translation2f fromZero(sourceCentroid);

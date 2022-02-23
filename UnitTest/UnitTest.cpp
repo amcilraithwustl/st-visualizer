@@ -36,7 +36,7 @@ namespace ImportTests
 				std::string failString = failStream.str();
 				std::wstring widestr = std::wstring(failString.begin(), failString.end());
 				const wchar_t* widecstr = widestr.c_str();
-				Assert::IsTrue((rotation * a).isApprox(b), widecstr);
+				Assert::IsTrue(translateToZeroCentroid(rotation * a).isApprox(translateToZeroCentroid(b)), widecstr);
 			};
 
 			int maxI = 1000;
@@ -48,10 +48,14 @@ namespace ImportTests
 				colMat m = colMat::Random(2, 20) * 100;
 				for (int i = 0; i < maxI; i++) {
 					auto rotation = Eigen::Rotation2D<float>(2 * pi * i / maxI).toRotationMatrix();
+					auto translatoin = Eigen::Translation2f(Eigen::Vector2f::Random() * 100);
+					Eigen::Transform<float, 2, Eigen::Affine> trans = translatoin * rotation;
+					
+
 					genRotTest(
 						m.transpose(),
 						//Test random values against all radians possible within range
-						(rotation * m).transpose()
+						(trans * m).transpose()
 					);
 				}
 			}
@@ -108,6 +112,7 @@ namespace ImportTests
 			}
 		}
 
+		//Right now this should fail. To make it not fail, change centroid transform to use the centroid of the finalSource, not the source as the toZero, fromZero points
 		TEST_METHOD(SVDMathematica) {
 			using json = nlohmann::json;
 			int i = 0;
@@ -142,7 +147,7 @@ namespace ImportTests
 			};
 			// read a JSON file
 			std::ifstream file("C:\\Users\\Aiden McIlraith\\ Documents \\ GitHub \\ st-visualizer \\ UnitTest \\ svd.json");
-						auto a = file.is_open();
+			auto a = file.is_open();
 			json j = json::parse(file);
 
 			for (json& test : j) {
