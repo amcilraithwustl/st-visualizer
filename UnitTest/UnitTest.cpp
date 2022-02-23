@@ -112,7 +112,6 @@ namespace ImportTests
 			}
 		}
 
-		//Right now this should fail. To make it not fail, change centroid transform to use the centroid of the finalSource, not the source as the toZero, fromZero points
 		TEST_METHOD(SVDMathematica) {
 			using json = nlohmann::json;
 			int i = 0;
@@ -125,13 +124,18 @@ namespace ImportTests
 
 				std::stringstream failStream;
 				failStream << i << std::endl << a << std::endl << std::endl << vectorToMatrix(finalTest) << std::endl << std::endl << vectorToMatrix(source) << std::endl << std::endl << vectorToMatrix(target);
-				failStream << i << std::endl << a-vectorToMatrix(finalTest) << std::endl << std::endl;
 
 				std::string failString = failStream.str();
 				std::wstring widestr = std::wstring(failString.begin(), failString.end());
 				const wchar_t* widecstr = widestr.c_str();
 
-				Assert::IsTrue(a.isApprox(vectorToMatrix(finalTest)), widecstr);
+				/*if (!a.isApprox(vectorToMatrix(finalTest))) {
+					std::cout << "FIRST" << std::endl << a - vectorToMatrix(finalTest) << std::endl << std::endl;
+					std::cout << "Result" << std::endl << vectorToMatrix(finalSource).rowwise().mean() << std::endl << std::endl;
+					std::cout << "Test" << std::endl << vectorToMatrix(finalTest).rowwise().mean() << std::endl << std::endl;
+
+				}*/
+				Assert::IsTrue(a.isApprox(vectorToMatrix(finalTest)));
 
 			};
 			auto jsonToMatrix = [](const json& source) {
@@ -146,7 +150,7 @@ namespace ImportTests
 				return a;
 			};
 			// read a JSON file
-			std::ifstream file("C:\\Users\\Aiden McIlraith\\ Documents \\ GitHub \\ st-visualizer \\ UnitTest \\ svd.json");
+			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\svd.json");
 			auto a = file.is_open();
 			json j = json::parse(file);
 
@@ -158,8 +162,8 @@ namespace ImportTests
 				genRotTest(
 					matrixToVector(alignSource),
 					matrixToVector(alignTarget),
-					matrixToVector(mapTarget),
-					matrixToVector(mapSource)
+					matrixToVector(mapSource),
+					matrixToVector(mapTarget)
 				);
 			}
 
