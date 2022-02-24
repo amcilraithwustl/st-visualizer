@@ -21,6 +21,15 @@
     <ClCompile Include="ImportFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GrowAndCover.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GrowAndCover.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilityFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImportFunctions.h">

@@ -144,8 +144,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GrowAndCover.cpp" />
+    <ClCompile Include="GrowAndCover.h" />
     <ClCompile Include="ImportFunctions.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="UtilityFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImportFunctions.h" />

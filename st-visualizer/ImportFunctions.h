@@ -3,21 +3,7 @@
 #include <vector>
 #include <functional>
 #include <Eigen/Dense>
-
-typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colCoordMat;
-
-typedef std::pair<float, float> coord;
-//TODO: make this hold the data directly
-struct coord3D {
-	float x = 0;
-	float y = 0;
-	float z = 0;
-
-	coord3D(float x, float y, float z):x(x), y(y), z(z) {};
-	coord3D operator+(const coord3D& other)const {
-		return coord3D(x + other.x, y + other.y, z + other.z);
-	}
-};
+#include "UtilityFunctions.h"
 
 std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(std::string alignmentFile);
 
@@ -32,12 +18,6 @@ std::vector<float>getClusterArray(size_t length, size_t i);
 Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatrix);
 
 colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix);
-
-std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int);
-
-colCoordMat vectorToMatrix(std::vector<coord> source);
-
-std::vector<coord> matrixToVector(colCoordMat sourceMatrix);
 
 //TODO: Eigen -> Modern c++ svd linear algebra operations
 

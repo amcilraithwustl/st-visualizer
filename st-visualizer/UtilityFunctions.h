@@ -3,6 +3,51 @@
 #include <functional>
 #include "UtilityFunctions.h"
 
+#include <string>
+#include <vector>
+#include <functional>
+#include <Eigen/Dense>
+
+//Conventient typedefs
+
+typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colCoordMat;
+
+typedef std::pair<float, float> coord;
+//TODO: make this hold the data directly
+struct coord3D {
+	float x = 0;
+	float y = 0;
+	float z = 0;
+
+	coord3D(float x, float y, float z) :x(x), y(y), z(z) {};
+	coord3D operator+(const coord3D& other)const {
+		return coord3D(x + other.x, y + other.y, z + other.z);
+	}
+};
+
+
+inline colCoordMat vectorToMatrix(std::vector<coord> source) {
+	//Row 0 is x, row 1 is y
+	colCoordMat sourceMatrix(2, source.size());
+	for (int i = 0; i < source.size(); i++) {
+		sourceMatrix(0, i) = source[i].first;
+		sourceMatrix(1, i) = source[i].second;
+	}
+	return sourceMatrix;
+}
+
+inline std::vector<coord> matrixToVector(colCoordMat sourceMatrix) {
+	//Row 0 is x, row 1 is y
+	std::vector<coord> source(sourceMatrix.cols(), coord());
+	for (int i = 0; i < sourceMatrix.cols(); i++) {
+		source[i].first = sourceMatrix(0, i);
+		source[i].second = sourceMatrix(1, i);
+	}
+	return source;
+}
+
+
+
 //Vector Mapping Functions and overloads
 template<typename T, typename G>
 std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) {

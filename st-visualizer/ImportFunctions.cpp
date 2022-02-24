@@ -324,22 +324,6 @@ std::vector<float> getClusterArray(size_t length, size_t i)
 	return ret;
 }
 
-std::vector<coord> matrixToVector(colCoordMat sourceMatrix) {
-	//Row 0 is x, row 1 is y
-	std::vector<coord> source(sourceMatrix.cols(), coord());
-	for (int i = 0; i < sourceMatrix.cols(); i++) {
-		source[i].first = sourceMatrix(0, i);
-		source[i].second = sourceMatrix(1, i);
-	}
-	return source;
-};
+;
 
-colCoordMat vectorToMatrix(std::vector<coord> source) {
-	//Row 0 is x, row 1 is y
-	colCoordMat sourceMatrix(2, source.size());
-	for (int i = 0; i < source.size(); i++) {
-		sourceMatrix(0, i) = source[i].first;
-		sourceMatrix(1, i) = source[i].second;
-	}
-	return sourceMatrix;
-};
+;
