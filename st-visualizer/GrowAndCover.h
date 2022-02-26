@@ -1,0 +1,9 @@
+#pragma once
+
+#include "UtilityFunctions.h"
+
+std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int);
+
+Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1, const Eigen::Vector2f& v2);
+
+Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const  Eigen::Vector2f& origin, const Eigen::Vector2f& v1, const Eigen::Vector2f& v2);

@@ -8,6 +8,9 @@
 #include <functional>
 #include <Eigen/Dense>
 
+
+#define PI (float)3.1415926535
+
 //Conventient typedefs
 
 typedef Eigen::Matrix<float, 2, Eigen::Dynamic> colCoordMat;
