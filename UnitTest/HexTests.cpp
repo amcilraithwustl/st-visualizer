@@ -10,7 +10,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace ImportTests
 {
-	TEST_CLASS(SVDTests)
+	TEST_CLASS(HexTests)
 	{
 	public:
 		TEST_METHOD(conversionTests)
@@ -35,26 +35,23 @@ namespace ImportTests
 				std::string failString = failStream.str();
 				std::wstring widestr = std::wstring(failString.begin(), failString.end());
 				const wchar_t* widecstr = widestr.c_str();
-				Assert::IsTrue(testHexCoord.isApprox(hexCoord), widecstr);
+				Assert::IsTrue(hexCoord.isApprox(testHexCoord, 0.005), widecstr);
 				Assert::IsTrue(testCartPt.isApprox(cartPt), widecstr);
 				i++;
 
 			};
 
-			int maxI = 1000;
+			int maxI = 5000;
 
 			//Number of different sets of coordinates to try
 
 			for (int i = 0; i < maxI; i++) {
 				//auto v1 = Eigen::Vector2f::Random();
-				auto v2 = Eigen::Vector2f::Random();
-				auto v1 = Eigen::Vector2f({ 1,0 });
-				//auto v2 = Eigen::Vector2f({ 0,1 });
-				auto origin = Eigen::Vector2f({0,0});
-				//Eigen::Vector2f hexCoord({ (rand() % 1000),(rand() % 1000) });
-				Eigen::Vector2f hexCoord({ 1,1 });
-				Eigen::Vector2f cartPoint = origin + v1 * 1 + v2 * 1;
-
+				Eigen::Vector2f v1 = Eigen::Vector2f::Random();
+				Eigen::Vector2f v2 = Eigen::Vector2f::Random();
+				Eigen::Vector2f origin = Eigen::Vector2f::Random();
+				Eigen::Vector2f hexCoord({ (rand() % 1000),(rand() % 1000) });
+				Eigen::Vector2f cartPoint = origin + v1 * hexCoord(0) + v2 * hexCoord(1);
 
 				genTest(cartPoint, hexCoord, origin, v1, v2);
 			}
