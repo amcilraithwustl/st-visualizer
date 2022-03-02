@@ -18,6 +18,8 @@ Eigen::Vector2f getCoords(const Eigen::Vector2f& pt,const  Eigen::Vector2f& orig
 
 }
 
+//Pull out all of the points which lie on the grid. Only works in hex space. 
+// v2 is pi/3 radians from v1 counterclockwise with the same magnitude.
 std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, Eigen::Vector2f origin, Eigen::Vector2f v1)
 {
 	Eigen::Vector2f v2 = hexM * v1;
