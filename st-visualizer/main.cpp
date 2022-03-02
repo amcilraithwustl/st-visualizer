@@ -14,6 +14,8 @@
 
 int main(int argc, char** argv) {
 
+	
+
 	/*std::vector<std::string> arguments(argv, argv + argc);
 	auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
 	getTransSVD(alignmentValues[0].first, alignmentValues[0].second);

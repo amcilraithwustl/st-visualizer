@@ -61,27 +61,29 @@ namespace ImportTests
 		TEST_METHOD(getInliersTest)
 		{
 			//Generic Rotation Testing Function
-			
+
 			int maxI = 500;
 
 			//Number of different sets of coordinates to try
 
 			for (int j = 0; j < maxI; j++) {
 				//Generate random hex coordinate system
-				Eigen::Vector2f v1 = Eigen::Vector2f::Random();
-				Eigen::Vector2f v2 = Eigen::Rotation2D(PI/3)*v1;
+				Eigen::Vector2f v1({ 1,0 });
+				Eigen::Vector2f v2 = Eigen::Rotation2D(PI / 3) * v1;
 				Eigen::Vector2f origin = Eigen::Vector2f::Random();
-				
+
 				//Generate a random set of good coordinates
-				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Random(2, 1000);
+				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Random(2, 10);
 				Eigen::Matrix2Xf badPoints = Eigen::Matrix2Xf::Zero(2, goodPoints.cols());
 				//Generate a list to perturb
 				std::vector < bool> editedLocations(goodPoints.cols(), false);
 				for (int i = 0; i < editedLocations.size(); i++) {
 					auto intermediate = getPoint(goodPoints.col(i).cast<float>(), origin, v1, v2);
 					if (rand() % 3 == 0) {
-						//Make Wrong by between 0.3 and 0.7 of a unit in a random direction
-						intermediate += Eigen::Vector2f::Random().normalized() * v1.norm() * ((rand() % 50)*0.01 + HEX_ROUNDING_ERROR);
+						//Make Wrong by up to twice the rounding error
+						float errorMargin = HEX_ROUNDING_ERROR + ((rand() % 9) + 1) * 0.1 * HEX_ROUNDING_ERROR;
+						Eigen::Vector2f change = Eigen::Vector2f::Random().normalized() * v1.norm() * errorMargin;
+						intermediate += change;
 						editedLocations[i] = true;
 					}
 					else {
@@ -89,6 +91,7 @@ namespace ImportTests
 						intermediate += Eigen::Vector2f::Random().normalized() * v1.norm() * ((rand() % 10) * 0.1 * HEX_ROUNDING_ERROR);
 
 					}
+					badPoints.col(i) = intermediate;
 				}
 
 				auto results = getInliers(badPoints, origin, v1);
@@ -101,7 +104,7 @@ namespace ImportTests
 				for (int i = 0; i < editedLocations.size(); i++) {
 					if (editedLocations[i]) {
 						//If that location should be bad, it shouldn't be included
-						Assert::IsFalse(caughtLocations[i]);
+						Assert::IsTrue(!caughtLocations[i]);
 					}
 					else {
 						//If the point is there, make sure it should be there and that it was inferred correctly
