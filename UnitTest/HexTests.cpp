@@ -76,7 +76,7 @@ namespace ImportTests
 				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Random(2, 1000);
 				Eigen::Matrix2Xf badPoints = Eigen::Matrix2Xf::Zero(2, goodPoints.cols());
 				//Generate a list to perturb
-				std::vector < bool> editedLocations(false, goodPoints.cols());
+				std::vector < bool> editedLocations(goodPoints.cols(), false);
 				for (int i = 0; i < editedLocations.size(); i++) {
 					auto intermediate = getPoint(goodPoints.col(i).cast<float>(), origin, v1, v2);
 					if (rand() % 3 == 0) {
@@ -92,7 +92,7 @@ namespace ImportTests
 				}
 
 				auto results = getInliers(badPoints, origin, v1);
-				std::vector<bool> caughtLocations(false, editedLocations.size());
+				std::vector<bool> caughtLocations(editedLocations.size(), false);
 				for (auto a : results.first) {
 					caughtLocations[a] = true;
 				}
