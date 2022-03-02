@@ -62,7 +62,7 @@ namespace ImportTests
 		{
 			//Generic Rotation Testing Function
 			
-			int maxI = 5;
+			int maxI = 500;
 
 			//Number of different sets of coordinates to try
 
@@ -73,7 +73,7 @@ namespace ImportTests
 				Eigen::Vector2f origin = Eigen::Vector2f::Random();
 				
 				//Generate a random set of good coordinates
-				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Random(2, 100);
+				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Random(2, 1000);
 				Eigen::Matrix2Xf badPoints = Eigen::Matrix2Xf::Zero(2, goodPoints.cols());
 				//Generate a list to perturb
 				std::vector < bool> editedLocations(false, goodPoints.cols());
@@ -99,17 +99,19 @@ namespace ImportTests
 
 				int resLoc = 0;
 				for (int i = 0; i < editedLocations.size(); i++) {
-					//If that location should be bad, it shouldn't be included
 					if (editedLocations[i]) {
+						//If that location should be bad, it shouldn't be included
 						Assert::IsFalse(caughtLocations[i]);
 					}
 					else {
+						//If the point is there, make sure it should be there and that it was inferred correctly
 						Assert::IsTrue(caughtLocations[i]);
 						Assert::IsTrue(results.second.col(resLoc).isApprox(goodPoints.col(i)));
 						resLoc++;
 					}
-
 				}
+				//Make sure we checked all of the returned points
+				Assert::IsTrue(resLoc == results.second.cols());
 			}
 
 		}
