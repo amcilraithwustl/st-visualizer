@@ -73,7 +73,7 @@ namespace ImportTests
 
 
 			int maxI = 1000;
-			float pi = 3.14159265358979323846264338327950288419716939937510;
+			float pi = 3.14159265358979323846264338327950288419716939937510f;
 
 			auto genRotTest = [&i](std::vector<coord> source, std::vector<coord> target, std::vector<coord> finalSource, std::vector<coord> finalTest) {
 				i++;

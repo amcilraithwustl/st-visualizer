@@ -1,8 +1,6 @@
 #include "GrowAndCover.h"
 #include <iostream>
 
-float roundingError = 0.2f;
-
 Eigen::Rotation2Df rotM(float a) {
 	return Eigen::Rotation2D(a);
 }
@@ -35,7 +33,7 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, E
 	for (int i = 0; i < pts.cols(); i++) {
 		Eigen::Vector2f pt = pts.col(i);
 		Eigen::Vector2f returnPt = getPoint(intcoords.col(i).cast<float>(), origin, v1, v2);
-		if (pt.isApprox(returnPt, roundingError * v1.norm())) {
+		if (pt.isApprox(returnPt, HEX_ROUNDING_ERROR * v1.norm())) {
 			indices.push_back(i);
 		}
 	}
