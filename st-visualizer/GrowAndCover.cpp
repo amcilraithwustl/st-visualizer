@@ -52,6 +52,52 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, E
 	return std::pair<std::vector<int>, Eigen::Matrix2Xi>(indices, revisedCoords);
 }
 
+//returns {best origin, best v1},resulting inliers
+std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int>, Eigen::Matrix2Xi>> initGridInliers(Eigen::Matrix2Xf pts, int num) {
+	if (pts.cols() < 2) throw("Need more points to test");
+
+	std::pair<std::vector<int>, Eigen::Matrix2Xi> bestInliers;
+	Eigen::Vector2f bestOrigin({ 0,0 });
+	Eigen::Vector2f bestV1({ 1,0 });
+
+	for (int i = 0; i < num; i++) {
+		//Pick a random point
+		size_t originIndex = rand() % pts.cols();
+		Eigen::Vector2f randOri = pts.col(originIndex);
+
+		//Get the next closest point
+		Eigen::Matrix2Xf adjustedPoints = pts.colwise() - randOri;
+		int selectedPoint = originIndex > 0 ? 0 : 1; //I am assuming that there are more than two points. TODO: Add edge case checking.
+		float minNorm = adjustedPoints.col(selectedPoint).norm();
+		for (int j = 0; j < adjustedPoints.cols(); j++) {
+			float testNorm = adjustedPoints.col(j).norm();
+			if (j != originIndex && testNorm < minNorm) {
+				selectedPoint = j;
+				minNorm = testNorm;
+			}
+		}
+
+		Eigen::Vector2f v1 = adjustedPoints.col(selectedPoint);
+
+
+		//See how many inliers there are with the resulting grid
+		auto inliers = getInliers(pts, randOri, v1);
+
+		//If its a better fit, save it
+		if (inliers.first.size() > bestInliers.first.size()) {
+			bestInliers = inliers;
+			bestOrigin = randOri;
+			bestV1 = v1;
+		}
+
+	}
+
+	return std::pair<
+		std::pair<Eigen::Vector2f, Eigen::Vector2f>,
+		std::pair<std::vector<int>, Eigen::Matrix2Xi>
+	>(std::pair<Eigen::Vector2f, Eigen::Vector2f>(bestOrigin, bestV1), bestInliers);
+}
+
 
 
 //To Cartesian Space

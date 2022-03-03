@@ -13,6 +13,8 @@
 
 
 int main(int argc, char** argv) {
+	int num = 10;
+	Eigen::Matrix2Xf pts = Eigen::Matrix2Xf::Random(2,10);
 
 	
 
