@@ -128,12 +128,12 @@ namespace ImportTests
 
 			for (int j = 0; j < maxI; j++) {
 				//Generate random hex coordinate system
-				Eigen::Vector2f v1 = Eigen::Vector2f::Random() * 10;
+				Eigen::Vector2f v1 = Eigen::Vector2f::Random().normalized();
 				Eigen::Vector2f v2 = Eigen::Rotation2D(PI / 3) * v1;
 				Eigen::Vector2f origin = Eigen::Vector2f::Random();
 
 				//Generate a random set of good coordinates
-				int gridSize = 20;
+				int gridSize = 4;
 
 				//The grid should be full
 				Eigen::Matrix2Xi goodPoints = Eigen::Matrix2Xi::Zero(2, gridSize * gridSize);
@@ -145,18 +145,18 @@ namespace ImportTests
 				std::vector < bool> editedLocations(goodPoints.cols(), false);
 				for (int i = 0; i < editedLocations.size(); i++) {
 					auto intermediate = getPoint(goodPoints.col(i).cast<float>(), origin, v1, v2);
-					if (rand() % 3 == -1) {
-						//Make Wrong by up to twice the rounding error
-						float errorMargin = HEX_ROUNDING_ERROR + ((rand() % 9) + 1) * 0.1 * HEX_ROUNDING_ERROR;
-						Eigen::Vector2f change = Eigen::Vector2f::Random().normalized() * v1.norm() * errorMargin;
-						intermediate += change;
-						editedLocations[i] = true;
-					}
-					else {
-						//Purturb slightly in a random direction
-						intermediate += Eigen::Vector2f::Random().normalized() * v1.norm() * ((rand() % 10) * 0.1 * HEX_ROUNDING_ERROR);
+					//if (rand() % 3 == -1) {
+					//	//Make Wrong by up to twice the rounding error
+					//	float errorMargin = HEX_ROUNDING_ERROR + ((rand() % 9) + 1) * 0.1 * HEX_ROUNDING_ERROR;
+					//	Eigen::Vector2f change = Eigen::Vector2f::Random().normalized() * v1.norm() * errorMargin;
+					//	intermediate += change;
+					//	editedLocations[i] = true;
+					//}
+					//else {
+					//	//Purturb slightly in a random direction
+					//	intermediate += Eigen::Vector2f::Random().normalized() * v1.norm() * ((rand() % 10) * 0.1 * HEX_ROUNDING_ERROR);
 
-					}
+					//}
 					badPoints.col(i) = intermediate;
 				}
 
