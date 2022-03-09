@@ -219,9 +219,56 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 	return result;
 }
 
-
+#include <map>
 Eigen::Matrix2i growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
 {
+	Eigen::Matrix2Xi ncoords;
+	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int,6,2>({ {1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1} }).transpose();
 
+	//Get the coordinates from pts
+	const auto [grid, coords] = getGridAndCoords(pts, num);
+	auto [origin, v1] = grid;
+	Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
+
+	//Put points in a hash
+	auto getPair = [](Eigen::Vector2i coord) {return std::pair(coord(0), coord(1)); };
+
+	std::map<std::pair<int, int>, bool> hash;
+	for (int i = 0; i < coords.cols(); ++i)
+	{
+		Eigen::Vector2i coord = coords.col(i);
+		hash[getPair(coord)] = true;//TODO: I could probably make this a set rather than a map for speed
+	}
+
+	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the list, add them to the list
+	Eigen::Matrix<int, 2,7> neighbors2;
+	neighbors2 << neighbors, Eigen::Vector2i({ 0, 0 });
+
+	for (int i = 0; i < samples.cols(); i++)
+	{
+		Eigen::Vector2i loc = getCoords(samples.col(i), origin, v1, v2)
+			.unaryExpr(static_cast<float(*)(float)>(std::round))//This selects the float->float version of round
+			.cast<int>();
+
+		//Check the surrounding points (and itself)
+		for(int j = 0; j < neighbors2.cols(); j++)
+		{
+			Eigen::Vector2i neighbor = loc + neighbors2.col(j);
+			auto neighborPair = getPair(neighbor);
+
+			//If the neighbor is not found
+			if(!hash.contains(neighborPair))
+			{
+				//Store it in the hash
+				hash[neighborPair] = true;
+
+				//Append neighbor to ncoords
+				ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
+				ncoords.col(ncoords.cols() - 1)=neighbor;
+			}
+		}
+
+		//TODO: the final loop
+	}
 	return Eigen::Matrix2i();
 }
