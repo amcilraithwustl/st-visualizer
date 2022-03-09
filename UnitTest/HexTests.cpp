@@ -188,7 +188,7 @@ namespace ImportTests
 		TEST_METHOD(HexfitMathematica) {
 			using json = nlohmann::json;
 			int i = 0;
-			
+
 			auto jsonToMatrix = [](const json& source) {
 				//This should only be used for testing. Not logic safe.
 
@@ -201,22 +201,19 @@ namespace ImportTests
 				return a;
 			};
 			// read a JSON file
-			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\growTests.json");
+			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\growTests.json");
 			auto a = file.is_open();
 			json j = json::parse(file);
-			
+			json ret = json::array();
 			for (json& test : j) {
 				Eigen::Matrix2Xf pts = jsonToMatrix(test);
 				auto results = getGridAndCoords(pts, 5);
-				json resJson({json(results.first), json(matrixToVector(results.second.cast<float>()))});
-				
+				json resJson({ json(test), json(results.first), json(matrixToVector(results.second.cast<float>())) });
+				ret.push_back(resJson);
 			}
-			/*nlohmann::jsonf jsonfile;
 
-			jsonfile["foo"] = "bar";
-
-			std::ofstream file("key.json");
-			file << jsonfile;*/
+			std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\hexResults.json");
+			f << ret;
 
 		}
 	};

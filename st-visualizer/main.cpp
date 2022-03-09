@@ -31,15 +31,17 @@ int main(int argc, char** argv) {
 	std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\growTests.json");
 	auto a = file.is_open();
 	json j = json::parse(file);
-
+	json ret = json::array();
 	for (json& test : j) {
 		Eigen::Matrix2Xf pts = jsonToMatrix(test);
 		auto results = getGridAndCoords(pts, 5);
-		std::cout << results.second << std::endl << std::endl;
-		json resJson({ json(results.first), json(matrixToVector(results.second.cast<float>())) });
-		std::cout << resJson <<std::endl;
+		json resJson({ json(test), json(results.first), json(matrixToVector(results.second.cast<float>()))});
+		ret.push_back(resJson);
 	}
 
+	std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\hexResults.json");
+	f << ret;
+	
 	/*std::vector<std::string> arguments(argv, argv + argc);
 	auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
 	getTransSVD(alignmentValues[0].first, alignmentValues[0].second);
