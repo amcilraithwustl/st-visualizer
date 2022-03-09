@@ -118,6 +118,7 @@ namespace ImportTests
 			}
 
 		}
+
 		TEST_METHOD(initGridInliersTest)
 		{
 			//Generic Rotation Testing Function
@@ -181,6 +182,41 @@ namespace ImportTests
 				Assert::IsTrue(trueFlag);
 				
 			}
+
+		}
+
+		TEST_METHOD(HexfitMathematica) {
+			using json = nlohmann::json;
+			int i = 0;
+			
+			auto jsonToMatrix = [](const json& source) {
+				//This should only be used for testing. Not logic safe.
+
+				Eigen::Matrix2Xf a(2, source.size());
+
+				for (int i = 0; i < source.size(); i++) {
+					a(0, i) = source[i][0];
+					a(1, i) = source[i][1];
+				}
+				return a;
+			};
+			// read a JSON file
+			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\growTests.json");
+			auto a = file.is_open();
+			json j = json::parse(file);
+			
+			for (json& test : j) {
+				Eigen::Matrix2Xf pts = jsonToMatrix(test);
+				auto results = getGridAndCoords(pts, 5);
+				json resJson({json(results.first), json(matrixToVector(results.second.cast<float>()))});
+				
+			}
+			/*nlohmann::jsonf jsonfile;
+
+			jsonfile["foo"] = "bar";
+
+			std::ofstream file("key.json");
+			file << jsonfile;*/
 
 		}
 	};

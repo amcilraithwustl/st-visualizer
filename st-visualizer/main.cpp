@@ -13,10 +13,32 @@
 
 
 int main(int argc, char** argv) {
-	int num = 10;
-	Eigen::Matrix2Xf pts = Eigen::Matrix2Xf::Random(2,10);
+	using json = nlohmann::json;
+	int i = 0;
 
-	
+	auto jsonToMatrix = [](const json& source) {
+		//This should only be used for testing. Not logic safe.
+
+		Eigen::Matrix2Xf a(2, source.size());
+
+		for (int i = 0; i < source.size(); i++) {
+			a(0, i) = source[i][0];
+			a(1, i) = source[i][1];
+		}
+		return a;
+	};
+	// read a JSON file
+	std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\growTests.json");
+	auto a = file.is_open();
+	json j = json::parse(file);
+
+	for (json& test : j) {
+		Eigen::Matrix2Xf pts = jsonToMatrix(test);
+		auto results = getGridAndCoords(pts, 5);
+		std::cout << results.second << std::endl << std::endl;
+		json resJson({ json(results.first), json(matrixToVector(results.second.cast<float>())) });
+		std::cout << resJson <<std::endl;
+	}
 
 	/*std::vector<std::string> arguments(argv, argv + argc);
 	auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");

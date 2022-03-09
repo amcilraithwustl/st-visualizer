@@ -180,6 +180,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\growTests.json" />
+    <None Include="..\hexFit.json" />
     <None Include="svd.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
