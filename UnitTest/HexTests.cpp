@@ -207,7 +207,7 @@ namespace ImportTests
 			json ret = json::array();
 			for (json& test : j) {
 				Eigen::Matrix2Xf pts = jsonToMatrix(test);
-				auto results = getGridAndCoords(pts, 5);
+				auto results = getGridAndCoords(pts, 10);
 				json resJson({ json(test), json(results.first), json(matrixToVector(results.second.cast<float>())) });
 				ret.push_back(resJson);
 			}
