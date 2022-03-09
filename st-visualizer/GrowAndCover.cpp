@@ -31,7 +31,7 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, E
 	{
 		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
 		Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i) { return std::round(i); })
-			.cast<int>();
+		                                                               .cast<int>();
 		intcoords.col(i) = rounded;
 	}
 
@@ -143,7 +143,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::v
 		//TODO: Look into Eigenbasis calculations
 		Eigen::Matrix<float, 2, 4> a;
 		a << coord(0) * I2 + coord(1) * hexM, I2;
-		
+
 		//Compare them to each other
 		ata += a.transpose() * a;
 
@@ -175,7 +175,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf pt
 		}
 		else
 		{
-			break; 
+			break;
 		}
 	}
 
@@ -194,15 +194,18 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 	for (size_t i = 0; i < pts.cols(); i++)
 	{
 		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
-		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i) { return std::round(i); })
-		                                                                     .cast<int>();
+		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2)
+		                                .unaryExpr([](float i)
+		                                {
+			                                return std::round(i);
+		                                })
+		                                .cast<int>();
 		int_coords.col(i) = rounded;
 	}
-	
+
 	return std::pair(
 		refinedGrid, int_coords);
 }
-
 
 //To Cartesian Space
 Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
@@ -216,7 +219,9 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 	return result;
 }
 
-std::vector<coord> growAndCover(std::vector<coord> source, std::vector<coord> bounds, unsigned int, unsigned int)
+
+Eigen::Matrix2i growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
 {
-	return {};
+
+	return Eigen::Matrix2i();
 }
