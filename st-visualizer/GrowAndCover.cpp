@@ -143,7 +143,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::v
 		//TODO: Look into Eigenbasis calculations
 		Eigen::Matrix<float, 2, 4> a;
 		a << coord(0) * I2 + coord(1) * hexM, I2;
-
+		
 		//Compare them to each other
 		ata += a.transpose() * a;
 
@@ -175,7 +175,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf pt
 		}
 		else
 		{
-			break; //Not sure I understand why this is used here
+			break; 
 		}
 	}
 
