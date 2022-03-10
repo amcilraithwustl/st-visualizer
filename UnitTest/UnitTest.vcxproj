@@ -180,6 +180,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\growResults.json" />
     <None Include="..\growTests.json" />
     <None Include="..\hexFit.json" />
     <None Include="svd.json" />

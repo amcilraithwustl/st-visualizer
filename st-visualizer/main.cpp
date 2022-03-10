@@ -13,10 +13,7 @@
 
 
 int main(int argc, char** argv) {
-	Eigen::Matrix2Xi a;
-	a.conservativeResize(Eigen::NoChange, a.cols()+1);
-	a.col(a.cols() - 1) = Eigen::Vector2i({ 1,1 });
-	std::cout << a << std::endl;
+	
 	/*std::vector<std::string> arguments(argv, argv + argc);
 	auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
 	getTransSVD(alignmentValues[0].first, alignmentValues[0].second);

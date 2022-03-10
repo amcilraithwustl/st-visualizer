@@ -223,13 +223,14 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 
 Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
 {
-	Eigen::Matrix2Xi ncoords;
+	Eigen::Matrix2Xi ncoords(2, 0);
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
-		transpose();
+		transpose().eval();
 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
-	auto [origin, v1] = grid;
+	Eigen::Vector2f origin = grid.first;
+	Eigen::Vector2f v1 = grid.second;
 	Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
 
 	//Put points in a hash
@@ -245,26 +246,26 @@ Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, un
 	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the list, add them to the list
 	Eigen::Matrix<int, 2, 7> neighbors2;
 	neighbors2 << neighbors, Eigen::Vector2i({0, 0});
-
+	
 	for (int i = 0; i < samples.cols(); i++)
 	{
 		Eigen::Vector2i loc = getCoords(samples.col(i), origin, v1, v2)
 		                      //This selects the float->float version of round
 		                      .unaryExpr(static_cast<float(*)(float)>(std::round))
 		                      .cast<int>();
-
+	
 		//Check the surrounding points (and itself)
 		for (int j = 0; j < neighbors2.cols(); j++)
 		{
 			Eigen::Vector2i neighbor = loc + neighbors2.col(j);
 			auto neighborPair = getPair(neighbor);
-
+	
 			//If the neighbor is not found
 			if (!hash.contains(neighborPair))
 			{
 				//Store it in the hash
 				hash[neighborPair] = true;
-
+	
 				//Append neighbor to ncoords
 				ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
 				ncoords.col(ncoords.cols() - 1) = neighbor;
@@ -318,7 +319,7 @@ Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, un
 	Eigen::Matrix2Xf finalResult(2, ncoords.cols());
 	for (int i = 0; i < ncoords.cols(); i++)
 	{
-		finalResult.col(i) = getPoint(ncoords.col(i), origin, v1, v2);
+		finalResult.col(i) = getPoint(ncoords.col(i).cast<float>(), origin, v1, v2);
 	}
 	return finalResult;
 }

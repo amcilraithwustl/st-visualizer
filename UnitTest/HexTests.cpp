@@ -216,5 +216,43 @@ namespace ImportTests
 			f << ret;
 
 		}
+
+		TEST_METHOD(GrowAndCoverMathematica) {
+			using json = nlohmann::json;
+			int i = 0;
+
+			auto jsonToMatrix = [](const json& source) {
+				//This should only be used for testing. Not logic safe.
+				Eigen::Matrix2Xf a(2, source.size());
+
+				for (int i = 0; i < source.size(); i++) {
+					a(0, i) = source[i][0];
+					a(1, i) = source[i][1];
+				}
+				return a;
+			};
+			// read a JSON file
+			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\growTests.json");
+			auto a = file.is_open();
+			json j = json::parse(file);
+			json ret = json::array();
+			for (int k = 0; k < j.size(); k++) {
+
+				json test = j[k];
+				json sampleJson = k == 0 ? j[k + 1] : j[k - 1];
+
+				Eigen::Matrix2Xf pts = jsonToMatrix(test);
+				Eigen::Matrix2Xf sample = jsonToMatrix(sampleJson);
+				auto results0 = growAndCover(pts, sample, 0, 50);
+				auto results1 = growAndCover(pts, sample, 1, 50);
+				auto results2 = growAndCover(pts, sample, 2, 50);
+				json resJson({ json(test), json(sampleJson), json(matrixToVector(results0)),json(matrixToVector(results1)),json(matrixToVector(results2)) });
+				ret.push_back(resJson);
+			}
+
+			std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\growResults.json)");
+			f << ret;
+
+		}
 	};
 }
