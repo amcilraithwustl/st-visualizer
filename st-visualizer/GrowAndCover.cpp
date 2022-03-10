@@ -220,10 +220,12 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 }
 
 #include <map>
-Eigen::Matrix2i growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
+
+Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
 {
 	Eigen::Matrix2Xi ncoords;
-	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int,6,2>({ {1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1} }).transpose();
+	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
+		transpose();
 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
@@ -231,44 +233,92 @@ Eigen::Matrix2i growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, uns
 	Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
 
 	//Put points in a hash
-	auto getPair = [](Eigen::Vector2i coord) {return std::pair(coord(0), coord(1)); };
+	auto getPair = [](Eigen::Vector2i coord) { return std::pair(coord(0), coord(1)); };
 
 	std::map<std::pair<int, int>, bool> hash;
 	for (int i = 0; i < coords.cols(); ++i)
 	{
 		Eigen::Vector2i coord = coords.col(i);
-		hash[getPair(coord)] = true;//TODO: I could probably make this a set rather than a map for speed
+		hash[getPair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
 	}
 
 	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the list, add them to the list
-	Eigen::Matrix<int, 2,7> neighbors2;
-	neighbors2 << neighbors, Eigen::Vector2i({ 0, 0 });
+	Eigen::Matrix<int, 2, 7> neighbors2;
+	neighbors2 << neighbors, Eigen::Vector2i({0, 0});
 
 	for (int i = 0; i < samples.cols(); i++)
 	{
 		Eigen::Vector2i loc = getCoords(samples.col(i), origin, v1, v2)
-			.unaryExpr(static_cast<float(*)(float)>(std::round))//This selects the float->float version of round
-			.cast<int>();
+		                      //This selects the float->float version of round
+		                      .unaryExpr(static_cast<float(*)(float)>(std::round))
+		                      .cast<int>();
 
 		//Check the surrounding points (and itself)
-		for(int j = 0; j < neighbors2.cols(); j++)
+		for (int j = 0; j < neighbors2.cols(); j++)
 		{
 			Eigen::Vector2i neighbor = loc + neighbors2.col(j);
 			auto neighborPair = getPair(neighbor);
 
 			//If the neighbor is not found
-			if(!hash.contains(neighborPair))
+			if (!hash.contains(neighborPair))
 			{
 				//Store it in the hash
 				hash[neighborPair] = true;
 
 				//Append neighbor to ncoords
 				ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
-				ncoords.col(ncoords.cols() - 1)=neighbor;
+				ncoords.col(ncoords.cols() - 1) = neighbor;
+			}
+		}
+	}
+
+	//Queue of points added in this iteration.
+	std::vector<Eigen::Vector2i> bd;
+	bd.reserve(coords.cols() + ncoords.cols());
+	for (int i = 0; i < coords.cols(); i++)
+	{
+		bd.emplace_back(coords.col(i));
+	}
+
+	for (int i = 0; i < ncoords.cols(); i++)
+	{
+		bd.emplace_back(ncoords.col(i));
+	}
+
+
+	for (unsigned int i = 0; i < wid; i++)
+	{
+		std::vector<Eigen::Vector2i> nbd;
+		for (const Eigen::Vector2i loc : bd)
+		{
+			//Check the surrounding points (and itself)
+			for (int j = 0; j < neighbors.cols(); j++)
+			{
+				Eigen::Vector2i neighbor = loc + neighbors.col(j);
+				auto neighborPair = getPair(neighbor);
+
+				//If the neighbor is not found
+				if (!hash.contains(neighborPair))
+				{
+					//Store it in the hash
+					hash[neighborPair] = true;
+
+					//Append neighbor to ncoords
+					ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
+					ncoords.col(ncoords.cols() - 1) = neighbor;
+
+					//Append neighbor to the next queue
+					nbd.emplace_back(neighbor);
+				}
 			}
 		}
 
-		//TODO: the final loop
+		bd = nbd;
 	}
-	return Eigen::Matrix2i();
+	Eigen::Matrix2Xf finalResult(2, ncoords.cols());
+	for (int i = 0; i < ncoords.cols(); i++)
+	{
+		finalResult.col(i) = getPoint(ncoords.col(i), origin, v1, v2);
+	}
+	return finalResult;
 }

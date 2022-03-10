@@ -4,7 +4,7 @@
 
 #define HEX_ROUNDING_ERROR 0.2f
 
-Eigen::Matrix2i growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num);
+Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num);
 
 Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1, const Eigen::Vector2f& v2);
 
