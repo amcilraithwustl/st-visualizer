@@ -1,17 +1,17 @@
 #include "GrowAndCover.h"
-#include <iostream>
-#include <math.h>
+#include <map>
 
 Eigen::Rotation2Df rotM(float a)
 {
 	return Eigen::Rotation2D(a);
 }
 
+// ReSharper disable once CppInconsistentNaming
 auto hexM = rotM(PI / 3);
 
 //To Hex Space
 Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                          const Eigen::Vector2f& v2)
+						  const Eigen::Vector2f& v2)
 {
 	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
 	mat.col(0) = v1;
@@ -22,17 +22,20 @@ Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& orig
 
 //Pull out all of the points which lie on the grid. Only works in hex space. 
 // v2 is pi/3 radians from v1 counterclockwise with the same magnitude.
-std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, Eigen::Vector2f origin,
-                                                         Eigen::Vector2f v1)
+std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf& pts, const Eigen::Vector2f& origin,
+														 const Eigen::Vector2f& v1)
 {
-	Eigen::Vector2f v2 = hexM * v1;
-	Eigen::Matrix2Xi intcoords = Eigen::Matrix2Xi::Zero(2, pts.cols());
-	for (size_t i = 0; i < pts.cols(); i++)
+	const Eigen::Vector2f v2 = hexM * v1;
+	Eigen::Matrix2Xi int_coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
+	for (long long i = 0; i < pts.cols(); i++)
 	{
 		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
-		Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i) { return std::round(i); })
-		                                                               .cast<int>();
-		intcoords.col(i) = rounded;
+		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i)
+																			 {
+																				 return std::round(i);
+																			 })
+																			 .cast<int>();
+		int_coords.col(i) = rounded;
 	}
 
 	//Check which indices are within the appropriate bounds
@@ -40,19 +43,19 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, E
 	for (int i = 0; i < pts.cols(); i++)
 	{
 		Eigen::Vector2f pt = pts.col(i);
-		Eigen::Vector2f returnPt = getPoint(intcoords.col(i).cast<float>(), origin, v1, v2);
-		float errorMargin = HEX_ROUNDING_ERROR * v1.norm();
-		float realMargin = (pt - returnPt).norm();
+		Eigen::Vector2f returnPt = getPoint(int_coords.col(i).cast<float>(), origin, v1, v2);
+		const float errorMargin = HEX_ROUNDING_ERROR * v1.norm();
+		const float realMargin = (pt - returnPt).norm();
 		if (realMargin < errorMargin)
 		{
 			indices.push_back(i);
 		}
 	}
 
-	Eigen::Matrix2Xi revisedCoords = Eigen::Matrix2Xi::Zero(2, indices.size());
-	for (int i = 0; i < indices.size(); i++)
+	Eigen::Matrix2Xi revisedCoords = Eigen::Matrix2Xi::Zero(2, static_cast<int>(indices.size()));
+	for (long long i = 0; i < indices.size(); i++)
 	{
-		revisedCoords.col(i) = intcoords.col(indices[i]);
+		revisedCoords.col(i) = int_coords.col(indices[i]);
 	}
 
 
@@ -61,88 +64,85 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(Eigen::Matrix2Xf pts, E
 
 Eigen::Matrix2Xi roundPtsToCoords(Eigen::Matrix2Xf pts, Eigen::Vector2f origin, Eigen::Vector2f v1, Eigen::Vector2f v2)
 {
-	Eigen::Matrix2Xi intcoords = Eigen::Matrix2Xi::Zero(2, pts.cols());
-	for (size_t i = 0; i < pts.cols(); i++)
+	Eigen::Matrix2Xi coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
+	for (long long i = 0; i < pts.cols(); i++)
 	{
-		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
-		Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i) { return std::round(i); })
-		                                                               .cast<int>();
-		intcoords.col(i) = rounded;
+		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the int_coords matrix
+		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr(
+			static_cast<float(*)(float)>(std::round)).cast<int>();
+		coords.col(i) = rounded;
 	}
-	return intcoords;
+	return coords;
 }
 
 //returns {best origin, best v1},resulting inliers
 std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int>, Eigen::Matrix2Xi>> initGridInliers(
 	Eigen::Matrix2Xf pts, int num)
 {
-	if (pts.cols() < 2) throw("Need more points to test");
+	if (pts.cols() < 2) throw"Need more points to test";
 
-	std::pair<std::vector<int>, Eigen::Matrix2Xi> bestInliers;
-	Eigen::Vector2f bestOrigin({0, 0});
-	Eigen::Vector2f bestV1({1, 0});
+	std::pair<std::vector<int>, Eigen::Matrix2Xi> best_inliers;
+	Eigen::Vector2f best_origin({0, 0});
+	Eigen::Vector2f best_v1({1, 0});
 
 	for (int i = 0; i < num; i++)
 	{
 		//Pick a random point
-		size_t originIndex = rand() % pts.cols();
-		Eigen::Vector2f randOri = pts.col(originIndex);
+		const long long origin_index = rand() % pts.cols();
+		Eigen::Vector2f rand_ori = pts.col(origin_index);
 
 		//Get the next closest point
-		Eigen::Matrix2Xf adjustedPoints = pts.colwise() - randOri;
-		int selectedPoint = originIndex > 0 ? 0 : 1;
+		Eigen::Matrix2Xf adjusted_points = pts.colwise() - rand_ori;
+		int selected_point = origin_index > 0 ? 0 : 1;
 		//I am assuming that there are more than two points. TODO: Add edge case checking.
-		float minNorm = adjustedPoints.col(selectedPoint).norm();
-		for (int j = 0; j < adjustedPoints.cols(); j++)
+		float min_norm = adjusted_points.col(selected_point).norm();
+		for (int j = 0; j < adjusted_points.cols(); j++)
 		{
-			float testNorm = adjustedPoints.col(j).norm();
-			if (j != originIndex && testNorm < minNorm)
+			const float test_norm = adjusted_points.col(j).norm();
+			if (j != origin_index && test_norm < min_norm)
 			{
-				selectedPoint = j;
-				minNorm = testNorm;
+				selected_point = j;
+				min_norm = test_norm;
 			}
 		}
 
-		Eigen::Vector2f v1 = adjustedPoints.col(selectedPoint);
+		const Eigen::Vector2f v1 = adjusted_points.col(selected_point);
 
 
 		//See how many inliers there are with the resulting grid
-		auto inliers = getInliers(pts, randOri, v1);
+		auto inliers = getInliers(pts, rand_ori, v1);
 
 		//If its a better fit, save it
-		if (inliers.first.size() > bestInliers.first.size())
+		if (inliers.first.size() > best_inliers.first.size())
 		{
-			bestInliers = inliers;
-			bestOrigin = randOri;
-			bestV1 = v1;
+			best_inliers = inliers;
+			best_origin = rand_ori;
+			best_v1 = v1;
 		}
 	}
 
-	return std::pair(std::pair(bestOrigin, bestV1), bestInliers);
+	return std::pair(std::pair(best_origin, best_v1), best_inliers);
 }
 
 std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::vector<int> indices,
-                                                    Eigen::Matrix2Xi intCoords)
+													Eigen::Matrix2Xi intCoords)
 {
 	//My understanding is that we are basically trying to get the average Eigenvalues from the given Eigenvectors(the intcoords)
 	//I don't know that this is actually a good reading of the situation
 
 	Eigen::Matrix4f ata = Eigen::Matrix4f::Zero();
 	Eigen::Vector4f atb = Eigen::Vector4f::Zero();
-	Eigen::Matrix2f I2 = Eigen::Matrix2f::Identity();
+	const Eigen::Matrix2f identity2 = Eigen::Matrix2f::Identity();
 
-	auto hexM = Eigen::Rotation2D(PI / 3).toRotationMatrix();
 
 	for (int i = 0; i < intCoords.cols(); i++)
 	{
 		//For each coordinate
 		Eigen::Vector2i coord = intCoords.col(i);
 
-		//Calculate the (NOT SURE WHAT TO CALL a). It is a hex grid base off the coordinates as each leg of the grid
-		//This is some sort of linear transform based on the hex grid.
-		//TODO: Look into Eigenbasis calculations
+
 		Eigen::Matrix<float, 2, 4> a;
-		a << coord(0) * I2 + coord(1) * hexM, I2;
+		a << coord(0) * identity2 + coord(1) * hexM.toRotationMatrix(), identity2;
 
 		//Compare them to each other
 		ata += a.transpose() * a;
@@ -159,8 +159,8 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::v
 
 //Refine Grid
 std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf pts,
-                                                       const std::pair<Eigen::Vector2f, Eigen::Vector2f> grid,
-                                                       const std::pair<std::vector<int>, Eigen::Matrix2Xi> inliers)
+													   const std::pair<Eigen::Vector2f, Eigen::Vector2f> grid,
+													   const std::pair<std::vector<int>, Eigen::Matrix2Xi> inliers)
 {
 	auto new_grid = grid;
 	auto new_inliers = inliers;
@@ -195,11 +195,11 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 	{
 		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intCoords matrix
 		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2)
-		                                .unaryExpr([](float i)
-		                                {
-			                                return std::round(i);
-		                                })
-		                                .cast<int>();
+										.unaryExpr([](float i)
+										{
+											return std::round(i);
+										})
+										.cast<int>();
 		int_coords.col(i) = rounded;
 	}
 
@@ -208,7 +208,7 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 
 //To Cartesian Space
 Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                         const Eigen::Vector2f& v2)
+						 const Eigen::Vector2f& v2)
 {
 	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
 	mat.col(0) = v1;
@@ -218,47 +218,47 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 	return result;
 }
 
-#include <map>
 
 Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
-                              const unsigned& num)
+							  const unsigned& num)
 {
-	Eigen::Matrix2Xi new_coords(2, 0);
+	
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
-	                                     transpose().eval();
+										 transpose().eval();
 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
+	Eigen::Matrix2Xi new_coords(2, 0);//I think this should start as the current value of coords.s
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
-	Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
+	Eigen::Vector2f v2 = hexM * v1;
 
 	//Put points in a hash
-	auto get_pair = [](Eigen::Vector2i coord) { return std::pair(coord(0), coord(1)); };
+	auto getPair = [](const Eigen::Vector2i& coord) { return std::pair(coord(0), coord(1)); };
 
 	std::map<std::pair<int, int>, bool> hash;
 	for (int i = 0; i < coords.cols(); ++i)
 	{
 		Eigen::Vector2i coord = coords.col(i);
-		hash[get_pair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
+		hash[getPair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
 	}
 
-	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash
+	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash and the new coordinates
 	Eigen::Matrix<int, 2, 7> neighbors_and_self;
 	neighbors_and_self << neighbors, Eigen::Vector2i({0, 0});
 
 	for (int i = 0; i < samples.cols(); i++)
 	{
-		Eigen::Vector2i loc = getCoords(samples.col(i), origin, v1, v2)
-		                      //This selects the float->float version of round
-		                      .unaryExpr(static_cast<float(*)(float)>(std::round))
-		                      .cast<int>();
+		Eigen::Vector2i sample_cast = getCoords(samples.col(i), origin, v1, v2)
+							  //This selects the float->float version of round
+							  .unaryExpr(static_cast<float(*)(float)>(std::round))
+							  .cast<int>();
 
 		//Check the surrounding points (and itself)
 		for (Eigen::Vector2i neighbor_delta : neighbors_and_self.colwise())
 		{
-			Eigen::Vector2i neighbor = loc + neighbor_delta;
-			auto neighbor_pair = get_pair(neighbor);
+			Eigen::Vector2i neighbor = sample_cast + neighbor_delta;
+			auto neighbor_pair = getPair(neighbor);
 
 			//If the neighbor is not found
 			if (!hash.contains(neighbor_pair))
@@ -273,7 +273,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 		}
 	}
 
-	//Queue of points added in this iteration.
+	//Queue of the base points that exist
 	std::vector<Eigen::Vector2i> coordinate_queue;
 	coordinate_queue.reserve(coords.cols() + new_coords.cols());
 	for (int i = 0; i < coords.cols(); i++)
@@ -289,36 +289,36 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 
 	for (unsigned int i = 0; i < wid; i++)
 	{
-		std::vector<Eigen::Vector2i> newQueue;
+		std::vector<Eigen::Vector2i> new_queue;
 		for (const Eigen::Vector2i& loc : coordinate_queue)
 		{
 			//Check the surrounding points (and itself)
 			for (int j = 0; j < neighbors.cols(); j++)
 			{
 				Eigen::Vector2i neighbor = loc + neighbors.col(j);
-				auto neighborPair = get_pair(neighbor);
+				auto neighbor_pair = getPair(neighbor);
 				//If the neighbor is not found
-				if (!hash.contains(neighborPair))
+				if (!hash.contains(neighbor_pair))
 				{
 					//Store it in the hash
-					hash[neighborPair] = true;
+					hash[neighbor_pair] = true;
 
 					//Append neighbor to new_coords
 					new_coords.conservativeResize(Eigen::NoChange, new_coords.cols() + 1);
 					new_coords.col(new_coords.cols() - 1) = neighbor;
 
 					//Append neighbor to the next queue
-					newQueue.emplace_back(neighbor);
+					new_queue.emplace_back(neighbor);
 				}
 			}
 		}
 
-		coordinate_queue = newQueue;
+		coordinate_queue = new_queue;
 	}
-	Eigen::Matrix2Xf finalResult(2, new_coords.cols());
+	Eigen::Matrix2Xf final_result(2, new_coords.cols());
 	for (int i = 0; i < new_coords.cols(); i++)
 	{
-		finalResult.col(i) = getPoint(new_coords.col(i).cast<float>(), origin, v1, v2);
+		final_result.col(i) = getPoint(new_coords.col(i).cast<float>(), origin, v1, v2);
 	}
-	return finalResult;
+	return final_result;
 }
