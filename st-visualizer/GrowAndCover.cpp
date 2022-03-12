@@ -193,7 +193,7 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 	Eigen::Matrix2Xi int_coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
 	for (size_t i = 0; i < pts.cols(); i++)
 	{
-		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
+		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intCoords matrix
 		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2)
 		                                .unaryExpr([](float i)
 		                                {
@@ -203,8 +203,7 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 		int_coords.col(i) = rounded;
 	}
 
-	return std::pair(
-		refinedGrid, int_coords);
+	return std::pair(refinedGrid, int_coords);
 }
 
 //To Cartesian Space
@@ -221,11 +220,12 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 
 #include <map>
 
-Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, unsigned int wid, unsigned int num)
+Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
+                              const unsigned& num)
 {
-	Eigen::Matrix2Xi ncoords(2, 0);
+	Eigen::Matrix2Xi new_coords(2, 0);
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
-		transpose().eval();
+	                                     transpose().eval();
 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
@@ -234,92 +234,91 @@ Eigen::Matrix2Xf growAndCover(Eigen::Matrix2Xf pts, Eigen::Matrix2Xf samples, un
 	Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
 
 	//Put points in a hash
-	auto getPair = [](Eigen::Vector2i coord) { return std::pair(coord(0), coord(1)); };
+	auto get_pair = [](Eigen::Vector2i coord) { return std::pair(coord(0), coord(1)); };
 
 	std::map<std::pair<int, int>, bool> hash;
 	for (int i = 0; i < coords.cols(); ++i)
 	{
 		Eigen::Vector2i coord = coords.col(i);
-		hash[getPair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
+		hash[get_pair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
 	}
 
-	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the list, add them to the list
-	Eigen::Matrix<int, 2, 7> neighbors2;
-	neighbors2 << neighbors, Eigen::Vector2i({0, 0});
-	
+	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash
+	Eigen::Matrix<int, 2, 7> neighbors_and_self;
+	neighbors_and_self << neighbors, Eigen::Vector2i({0, 0});
+
 	for (int i = 0; i < samples.cols(); i++)
 	{
 		Eigen::Vector2i loc = getCoords(samples.col(i), origin, v1, v2)
 		                      //This selects the float->float version of round
 		                      .unaryExpr(static_cast<float(*)(float)>(std::round))
 		                      .cast<int>();
-	
+
 		//Check the surrounding points (and itself)
-		for (int j = 0; j < neighbors2.cols(); j++)
+		for (Eigen::Vector2i neighbor_delta : neighbors_and_self.colwise())
 		{
-			Eigen::Vector2i neighbor = loc + neighbors2.col(j);
-			auto neighborPair = getPair(neighbor);
-	
+			Eigen::Vector2i neighbor = loc + neighbor_delta;
+			auto neighbor_pair = get_pair(neighbor);
+
 			//If the neighbor is not found
-			if (!hash.contains(neighborPair))
+			if (!hash.contains(neighbor_pair))
 			{
 				//Store it in the hash
-				hash[neighborPair] = true;
-	
-				//Append neighbor to ncoords
-				ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
-				ncoords.col(ncoords.cols() - 1) = neighbor;
+				hash[neighbor_pair] = true;
+
+				//Append neighbor to newCoords
+				new_coords.conservativeResize(Eigen::NoChange, new_coords.cols() + 1);
+				new_coords.col(new_coords.cols() - 1) = neighbor;
 			}
 		}
 	}
 
 	//Queue of points added in this iteration.
-	std::vector<Eigen::Vector2i> bd;
-	bd.reserve(coords.cols() + ncoords.cols());
+	std::vector<Eigen::Vector2i> coordinate_queue;
+	coordinate_queue.reserve(coords.cols() + new_coords.cols());
 	for (int i = 0; i < coords.cols(); i++)
 	{
-		bd.emplace_back(coords.col(i));
+		coordinate_queue.emplace_back(coords.col(i));
 	}
 
-	for (int i = 0; i < ncoords.cols(); i++)
+	for (int i = 0; i < new_coords.cols(); i++)
 	{
-		bd.emplace_back(ncoords.col(i));
+		coordinate_queue.emplace_back(new_coords.col(i));
 	}
 
 
 	for (unsigned int i = 0; i < wid; i++)
 	{
-		std::vector<Eigen::Vector2i> nbd;
-		for (const Eigen::Vector2i loc : bd)
+		std::vector<Eigen::Vector2i> newQueue;
+		for (const Eigen::Vector2i& loc : coordinate_queue)
 		{
 			//Check the surrounding points (and itself)
 			for (int j = 0; j < neighbors.cols(); j++)
 			{
 				Eigen::Vector2i neighbor = loc + neighbors.col(j);
-				auto neighborPair = getPair(neighbor);
-
+				auto neighborPair = get_pair(neighbor);
 				//If the neighbor is not found
 				if (!hash.contains(neighborPair))
 				{
 					//Store it in the hash
 					hash[neighborPair] = true;
 
-					//Append neighbor to ncoords
-					ncoords.conservativeResize(Eigen::NoChange, ncoords.cols() + 1);
-					ncoords.col(ncoords.cols() - 1) = neighbor;
+					//Append neighbor to new_coords
+					new_coords.conservativeResize(Eigen::NoChange, new_coords.cols() + 1);
+					new_coords.col(new_coords.cols() - 1) = neighbor;
 
 					//Append neighbor to the next queue
-					nbd.emplace_back(neighbor);
+					newQueue.emplace_back(neighbor);
 				}
 			}
 		}
 
-		bd = nbd;
+		coordinate_queue = newQueue;
 	}
-	Eigen::Matrix2Xf finalResult(2, ncoords.cols());
-	for (int i = 0; i < ncoords.cols(); i++)
+	Eigen::Matrix2Xf finalResult(2, new_coords.cols());
+	for (int i = 0; i < new_coords.cols(); i++)
 	{
-		finalResult.col(i) = getPoint(ncoords.col(i).cast<float>(), origin, v1, v2);
+		finalResult.col(i) = getPoint(new_coords.col(i).cast<float>(), origin, v1, v2);
 	}
 	return finalResult;
 }
