@@ -26,17 +26,7 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf&
 														 const Eigen::Vector2f& v1)
 {
 	const Eigen::Vector2f v2 = hexM * v1;
-	Eigen::Matrix2Xi int_coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
-	for (long long i = 0; i < pts.cols(); i++)
-	{
-		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intcoords matrix
-		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr([](float i)
-																			 {
-																				 return std::round(i);
-																			 })
-																			 .cast<int>();
-		int_coords.col(i) = rounded;
-	}
+	Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
 
 	//Check which indices are within the appropriate bounds
 	std::vector<int> indices;
@@ -53,31 +43,30 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf&
 	}
 
 	Eigen::Matrix2Xi revisedCoords = Eigen::Matrix2Xi::Zero(2, static_cast<int>(indices.size()));
-	for (long long i = 0; i < indices.size(); i++)
+	for (size_t i = 0; i < indices.size(); i++)
 	{
 		revisedCoords.col(i) = int_coords.col(indices[i]);
 	}
 
 
-	return std::pair(indices, revisedCoords);
+	return { indices, revisedCoords };
 }
 
-Eigen::Matrix2Xi roundPtsToCoords(Eigen::Matrix2Xf pts, Eigen::Vector2f origin, Eigen::Vector2f v1, Eigen::Vector2f v2)
+Eigen::Matrix2Xi roundPtsToCoords(const Eigen::Matrix2Xf& pts, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1, const Eigen::Vector2f& v2)
 {
 	Eigen::Matrix2Xi coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
 	for (long long i = 0; i < pts.cols(); i++)
 	{
 		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the int_coords matrix
-		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2).unaryExpr(
+		coords.col(i) = getCoords(pts.col(i), origin, v1, v2).unaryExpr(
 			static_cast<float(*)(float)>(std::round)).cast<int>();
-		coords.col(i) = rounded;
 	}
 	return coords;
 }
 
 //returns {best origin, best v1},resulting inliers
 std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int>, Eigen::Matrix2Xi>> initGridInliers(
-	Eigen::Matrix2Xf pts, int num)
+	const Eigen::Matrix2Xf& pts, const int& num)
 {
 	if (pts.cols() < 2) throw"Need more points to test";
 
@@ -94,7 +83,7 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int
 		//Get the next closest point
 		Eigen::Matrix2Xf adjusted_points = pts.colwise() - rand_ori;
 		int selected_point = origin_index > 0 ? 0 : 1;
-		//I am assuming that there are more than two points. TODO: Add edge case checking.
+		
 		float min_norm = adjusted_points.col(selected_point).norm();
 		for (int j = 0; j < adjusted_points.cols(); j++)
 		{
@@ -127,8 +116,6 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int
 std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::vector<int> indices,
 													Eigen::Matrix2Xi intCoords)
 {
-	//My understanding is that we are basically trying to get the average Eigenvalues from the given Eigenvectors(the intcoords)
-	//I don't know that this is actually a good reading of the situation
 
 	Eigen::Matrix4f ata = Eigen::Matrix4f::Zero();
 	Eigen::Vector4f atb = Eigen::Vector4f::Zero();
@@ -154,24 +141,51 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::v
 	Eigen::Vector2f origin({result(2), result(3)});
 	Eigen::Vector2f v1({result(0), result(1)});
 
-	return std::pair(origin, v1);
+	return { origin, v1 };
 }
 
 //Refine Grid
-std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf pts,
-													   const std::pair<Eigen::Vector2f, Eigen::Vector2f> grid,
-													   const std::pair<std::vector<int>, Eigen::Matrix2Xi> inliers)
+std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& pts,
+                                                       const std::pair<Eigen::Vector2f, Eigen::Vector2f>& grid,
+                                                       const std::pair<std::vector<int>, Eigen::Matrix2Xi>& inliers)
 {
 	auto new_grid = grid;
 	auto new_inliers = inliers;
 	auto num = inliers.first.size();
-	while (num < pts.cols())
+
+	auto getError = [pts](const std::pair<Eigen::Vector2f, Eigen::Vector2f>& grid, const std::pair<std::vector<int>, Eigen::Matrix2Xi>& inliers)
 	{
+		const Eigen::Vector2f& origin = grid.first;
+		const Eigen::Vector2f v1 = grid.second;
+		const Eigen::Vector2f v2 = hexM * v1;
+		float squaredError = 0;
+
+		auto& coords = inliers.second;
+		auto& indices = inliers.first;
+		for(size_t i = 0; i < indices.size(); i++)
+		{
+			auto pt = pts.col(indices[i]);
+			auto coord = coords.col(i).cast<float>();
+			auto deltaPt = getPoint(coord, origin, v1, v2) - pt;
+			auto norm = deltaPt.norm();
+			squaredError += norm * norm;
+		}
+		return squaredError/indices.size();
+	};
+	auto previousError = getError(grid, inliers);
+	while (static_cast<long long>(num) < pts.cols())
+	{
+		//Get the best origin and v1 from the grid
 		new_grid = getGrid(pts, inliers.first, inliers.second);
+
+		//Then get the inliers and grid that results from the origin and v1
 		new_inliers = getInliers(pts, new_grid.first, new_grid.second);
+		const float currentError = getError(new_grid, new_inliers);
+		//If there is an improvement, go again
 		if (new_inliers.first.size() > num)
 		{
 			num = new_inliers.first.size();
+			previousError = currentError;
 		}
 		else
 		{
@@ -183,27 +197,16 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf pt
 	return new_grid;
 }
 
-std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGridAndCoords(Eigen::Matrix2Xf pts, int num)
+std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGridAndCoords(const Eigen::Matrix2Xf& pts, const int& num)
 {
 	const auto grid = initGridInliers(pts, num);
 	auto refinedGrid = refineGrid(pts, grid.first, grid.second);
 	const Eigen::Vector2f origin = refinedGrid.first;
 	const Eigen::Vector2f v1 = refinedGrid.second;
 	const Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
-	Eigen::Matrix2Xi int_coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
-	for (size_t i = 0; i < pts.cols(); i++)
-	{
-		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the intCoords matrix
-		const Eigen::Vector2i rounded = getCoords(pts.col(i), origin, v1, v2)
-										.unaryExpr([](float i)
-										{
-											return std::round(i);
-										})
-										.cast<int>();
-		int_coords.col(i) = rounded;
-	}
+	Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
 
-	return std::pair(refinedGrid, int_coords);
+	return { refinedGrid, int_coords };
 }
 
 //To Cartesian Space
@@ -228,7 +231,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
-	Eigen::Matrix2Xi new_coords(2, 0);//I think this should start as the current value of coords.s
+	Eigen::Matrix2Xi new_coords = coords;//(2, 0);//TODO: Remove this assignment to match the mathematica
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
 	Eigen::Vector2f v2 = hexM * v1;
@@ -240,7 +243,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	for (int i = 0; i < coords.cols(); ++i)
 	{
 		Eigen::Vector2i coord = coords.col(i);
-		hash[getPair(coord)] = true; //TODO: I could probably make this a set rather than a map for speed
+		hash[getPair(coord)] = true;
 	}
 
 	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash and the new coordinates
