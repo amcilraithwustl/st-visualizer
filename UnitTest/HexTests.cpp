@@ -243,8 +243,11 @@ namespace ImportTests
 
 				Eigen::Matrix2Xf pts = jsonToMatrix(test);
 				Eigen::Matrix2Xf sample = jsonToMatrix(sampleJson);
+				std::srand(0);
 				auto results0 = growAndCover(pts, sample, 0, 5);
+				std::srand(0);
 				auto results1 = growAndCover(pts, sample, 1, 5);
+				std::srand(0);
 				auto results2 = growAndCover(pts, sample, 2, 5);
 				json resJson({ json(test), json(sampleJson), json(matrixToVector(results0)),json(matrixToVector(results1)),json(matrixToVector(results2)) });
 				ret.push_back(resJson);

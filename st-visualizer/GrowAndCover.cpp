@@ -1,4 +1,6 @@
 #include "GrowAndCover.h"
+
+#include <iostream>
 #include <map>
 
 Eigen::Rotation2Df rotM(float a)
@@ -153,26 +155,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 	auto new_inliers = inliers;
 	auto num = inliers.first.size();
 
-	auto getError = [pts](const std::pair<Eigen::Vector2f, Eigen::Vector2f>& grid, const std::pair<std::vector<int>, Eigen::Matrix2Xi>& inliers)
-	{
-		const Eigen::Vector2f& origin = grid.first;
-		const Eigen::Vector2f v1 = grid.second;
-		const Eigen::Vector2f v2 = hexM * v1;
-		float squaredError = 0;
-
-		auto& coords = inliers.second;
-		auto& indices = inliers.first;
-		for(size_t i = 0; i < indices.size(); i++)
-		{
-			auto pt = pts.col(indices[i]);
-			auto coord = coords.col(i).cast<float>();
-			auto deltaPt = getPoint(coord, origin, v1, v2) - pt;
-			auto norm = deltaPt.norm();
-			squaredError += norm * norm;
-		}
-		return squaredError/indices.size();
-	};
-	auto previousError = getError(grid, inliers);
+	
 	while (static_cast<long long>(num) < pts.cols())
 	{
 		//Get the best origin and v1 from the grid
@@ -180,12 +163,10 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 
 		//Then get the inliers and grid that results from the origin and v1
 		new_inliers = getInliers(pts, new_grid.first, new_grid.second);
-		const float currentError = getError(new_grid, new_inliers);
 		//If there is an improvement, go again
 		if (new_inliers.first.size() > num)
 		{
 			num = new_inliers.first.size();
-			previousError = currentError;
 		}
 		else
 		{
@@ -228,9 +209,10 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
 										 transpose().eval();
-
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, num);
+	std::cout << grid.first << std::endl;
+	std::cout << grid.second << std::endl;
 	Eigen::Matrix2Xi new_coords = coords;//(2, 0);//TODO: Remove this assignment to match the mathematica
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
