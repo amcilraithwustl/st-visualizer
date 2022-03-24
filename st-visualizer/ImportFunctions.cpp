@@ -47,6 +47,22 @@ std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<floa
 	return a;
 }
 
+/// Any impossible fields default to inf
+vector<float> convertRowToFloat(vector<string> input) {
+	return input << std::function([](string s)
+		{
+			try
+			{
+				return std::stof(s);
+			}
+			catch (...)
+			{
+				std::cerr << "WARNING: Invalid std::stoi attempt. Please check data: " << s << std::endl;
+			}
+			return std::numeric_limits<float>::infinity();
+		}
+	);
+}
 
 std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const string& alignment_file)
 {
@@ -74,27 +90,10 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
 	//Drop the first row
 	csvCells = vector(csvCells.begin() + 1, csvCells.end());
 
-	/// Any impossible fields default to inf
-	std::function<vector<float>(vector<string>)> convertRowToFloat([](const vector<string>& input)
-		{
-			return input << std::function<float(string)>([](const string& s)
-				{
-					try
-					{
-						return std::stof(s);
-					}
-					catch (...)
-					{
-						std::cerr << "WARNING: Invalid std::stoi attempt. Please check data: " << s << std::endl;
-					}
-					return std::numeric_limits<float>::infinity();
-				}
-			);
-		}
-	);
+	
 
 	// Transform cells into ints
-	auto transformCells = csvCells << convertRowToFloat;
+	auto transformCells = csvCells << std::function(convertRowToFloat);
 
 	//Now we have n columns and m*4 rows of ints
 	//This part transforms that into an m by 2 by n structure of coords

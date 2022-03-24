@@ -48,7 +48,6 @@ Eigen::Matrix2Xi roundPtsToCoords(const Eigen::Matrix2Xf& pts, const Eigen::Vect
 	Eigen::Matrix2Xi coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
 	for (long long i = 0; i < pts.cols(); i++)
 	{
-		//Get the coordinate, roundPtToCoord it to the nearest value, cast it to an integer, then save it in the int_coords matrix
 		coords.col(i) = roundPtToCoord(pts.col(i), origin, v1, v2);
 	}
 	return coords;
