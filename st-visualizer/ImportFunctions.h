@@ -4,30 +4,31 @@
 #include <functional>
 #include "UtilityFunctions.h"
 
-std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const std::string& alignmentFile);
+std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const std::string& alignment_file);
 
-struct tsvReturnType {
+struct tsv_return_type
+{
 	std::vector<std::string> names;
 	std::vector<Eigen::Matrix3Xf> slices;
 	std::vector<std::vector<std::vector<float>>> clusters;
-	std::vector<std::vector<std::vector<float>>> vals;
+	std::vector<std::vector<std::vector<float>>> values;
 };
 
 
-tsvReturnType loadTsv(std::string fname, std::vector<std::string> sliceNames, unsigned int sliceInd, unsigned int tissueInd, std::pair<
-             unsigned, unsigned> rowcolInds, unsigned int clusterInd, std
-             ::vector<unsigned> featureInds, unsigned int zDis, std::vector<std::pair<std::vector<coord>, std::vector<coord>>> srctgts);
+tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::string>& slice_names,
+                      unsigned int slice_index, unsigned int tissue_index, std::pair<
+	                      unsigned, unsigned> row_col_indices, unsigned int cluster_ind, const std
+                      ::vector<unsigned>& feature_indices, unsigned int z_distance,
+                      std::vector<std::pair<std::vector<coord>, std::vector<coord>>> source_targets);
 
 
-std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source, const std::vector<coord>& target); //First is the source, second is the target
+std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord>& source,
+                                                                  const std::vector<coord>& target);
+//First is the source, second is the target
 
 //this helper function produces an array of length n, which is all zero except a 1 in the i-th spot.
-std::vector<float>getClusterArray(size_t length, size_t i);
+std::vector<float> getClusterArray(size_t length, size_t i);
 
-Eigen::Matrix2f getSVDRotation(colCoordMat sourceMatrix, colCoordMat targetMatrix);
+Eigen::Matrix2f getSVDRotation(colCoordMat source_matrix, colCoordMat target_matrix);
 
-colCoordMat translateToZeroCentroid(colCoordMat sourceMatrix);
-
-//TODO: Eigen -> Modern c++ svd linear algebra operations
-
-//Ransac ->initial guess, then refined version
+colCoordMat translateToZeroCentroid(colCoordMat source_matrix);
