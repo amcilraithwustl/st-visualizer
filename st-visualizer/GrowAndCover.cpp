@@ -213,7 +213,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	const auto [grid, coords] = getGridAndCoords(pts, num);
 	std::cout << grid.first << std::endl;
 	std::cout << grid.second << std::endl;
-	Eigen::Matrix2Xi new_coords = coords;//(2, 0);//TODO: Remove this assignment to match the mathematica
+	Eigen::Matrix2Xi new_coords(2, 0);
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
 	Eigen::Vector2f v2 = hexM * v1;
