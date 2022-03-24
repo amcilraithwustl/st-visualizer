@@ -15026,7 +15026,7 @@ namespace nlohmann
                     static_assert(kPrecision == 64, "internal error");
 
                     // Computes:
-                    //  f = round((x.f * y.f) / 2^q)
+                    //  f = roundPtToCoord((x.f * y.f) / 2^q)
                     //  e = x.e + y.e + q
 
                     // Emulate the 64-bit * 64-bit multiplication:
@@ -15075,7 +15075,7 @@ namespace nlohmann
                     // Effectively we only need to add the highest bit in p_lo to p_hi (and
                     // Q_hi + 1 does not overflow).
 
-                    Q += std::uint64_t{ 1 } << (64u - 32u - 1u); // round, ties up
+                    Q += std::uint64_t{ 1 } << (64u - 32u - 1u); // roundPtToCoord, ties up
 
                     const std::uint64_t h = p3 + p2_hi + p1_hi + (Q >> 32u);
 
@@ -15171,7 +15171,7 @@ namespace nlohmann
                 //      v+ = v + 2^e
                 //
                 // Let m- = (v- + v) / 2 and m+ = (v + v+) / 2. All real numbers _strictly_
-                // between m- and m+ round to v, regardless of how the input rounding
+                // between m- and m+ roundPtToCoord to v, regardless of how the input rounding
                 // algorithm breaks ties.
                 //
                 //      ---+-------------+-------------+-------------+-------------+---  (A)
@@ -15806,7 +15806,7 @@ namespace nlohmann
                 //  --------+---[---------------(---+---)---------------]---+--------
                 //          w-  M-                  w                   M+  w+
                 //
-                // Now any number in [M-, M+] (bounds included) will round to w when input,
+                // Now any number in [M-, M+] (bounds included) will roundPtToCoord to w when input,
                 // regardless of how the input rounding algorithm breaks ties.
                 //
                 // And digit_gen generates the shortest possible such number in [M-, M+].
@@ -16848,7 +16848,7 @@ namespace nlohmann
 
                 // If number_float_t is an IEEE-754 single or double precision number,
                 // use the Grisu2 algorithm to produce short numbers which are
-                // guaranteed to round-trip, using strtof and strtod, resp.
+                // guaranteed to roundPtToCoord-trip, using strtof and strtod, resp.
                 //
                 // NB: The test below works if <long double> == <double>.
                 static constexpr bool is_ieee_single_or_double
@@ -16868,7 +16868,7 @@ namespace nlohmann
 
             void dump_float(number_float_t x, std::false_type /*is_ieee_single_or_double*/)
             {
-                // get number of digits for a float -> text -> float round-trip
+                // get number of digits for a float -> text -> float roundPtToCoord-trip
                 static constexpr auto d = std::numeric_limits<number_float_t>::max_digits10;
 
                 // the actual conversion

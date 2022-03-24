@@ -69,7 +69,7 @@ namespace ImportTests
 			for (int j = 0; j < maxI; j++) {
 				//Generate random hex coordinate system
 				Eigen::Vector2f v1 = Eigen::Vector2f::Random() * 10;
-				Eigen::Vector2f v2 = Eigen::Rotation2D(PI / 3) * v1;
+				Eigen::Vector2f v2 = Eigen::Rotation2D(pi / 3) * v1;
 				Eigen::Vector2f origin = Eigen::Vector2f::Random();
 
 				//Generate a random set of good coordinates
@@ -130,7 +130,7 @@ namespace ImportTests
 			for (int j = 0; j < maxI; j++) {
 				//Generate random hex coordinate system
 				Eigen::Vector2f v1 = Eigen::Vector2f::Random().normalized();
-				Eigen::Vector2f v2 = Eigen::Rotation2D(PI / 3) * v1;
+				Eigen::Vector2f v2 = Eigen::Rotation2D(pi / 3) * v1;
 				Eigen::Vector2f origin = Eigen::Vector2f::Random();
 
 				//Generate a random set of good coordinates
@@ -175,7 +175,7 @@ namespace ImportTests
 				bool trueFlag = false;
 				Assert::IsTrue(calcV1.norm() - v1.norm() < v1.norm() * HEX_ROUNDING_ERROR);
 				for (int i = 0; i < 6; i++) {
-					Eigen::Vector2f potentialV1 = Eigen::Rotation2Df(PI / 3 * i) * v1;
+					Eigen::Vector2f potentialV1 = Eigen::Rotation2Df(pi / 3 * i) * v1;
 					if ((calcV1 - potentialV1).norm() < HEX_ROUNDING_ERROR* v1.norm())
 						trueFlag = true;
 				}

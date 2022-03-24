@@ -9,18 +9,7 @@ Eigen::Rotation2Df rotM(float a)
 }
 
 // ReSharper disable once CppInconsistentNaming
-auto hexM = rotM(PI / 3);
-
-//To Hex Space
-Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-						  const Eigen::Vector2f& v2)
-{
-	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
-	mat.col(0) = v1;
-	mat.col(1) = v2;
-	Eigen::Vector2f result = mat.inverse() * (pt - origin);
-	return result;
-}
+auto hexM = rotM(pi / 3);
 
 //Pull out all of the points which lie on the grid. Only works in hex space. 
 // v2 is pi/3 radians from v1 counterclockwise with the same magnitude.
@@ -59,9 +48,8 @@ Eigen::Matrix2Xi roundPtsToCoords(const Eigen::Matrix2Xf& pts, const Eigen::Vect
 	Eigen::Matrix2Xi coords = Eigen::Matrix2Xi::Zero(2, pts.cols());
 	for (long long i = 0; i < pts.cols(); i++)
 	{
-		//Get the coordinate, round it to the nearest value, cast it to an integer, then save it in the int_coords matrix
-		coords.col(i) = getCoords(pts.col(i), origin, v1, v2).unaryExpr(
-			static_cast<float(*)(float)>(std::round)).cast<int>();
+		//Get the coordinate, roundPtToCoord it to the nearest value, cast it to an integer, then save it in the int_coords matrix
+		coords.col(i) = roundPtToCoord(pts.col(i), origin, v1, v2);
 	}
 	return coords;
 }
@@ -184,23 +172,13 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 	auto refinedGrid = refineGrid(pts, grid.first, grid.second);
 	const Eigen::Vector2f origin = refinedGrid.first;
 	const Eigen::Vector2f v1 = refinedGrid.second;
-	const Eigen::Vector2f v2 = Eigen::Rotation2Df(PI / 3) * v1;
+	const Eigen::Vector2f v2 = Eigen::Rotation2Df(pi / 3) * v1;
 	Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
 
 	return { refinedGrid, int_coords };
 }
 
-//To Cartesian Space
-Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-						 const Eigen::Vector2f& v2)
-{
-	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
-	mat.col(0) = v1;
-	mat.col(1) = v2;
 
-	Eigen::Vector2f result = (mat * coord) + origin;
-	return result;
-}
 
 
 Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
@@ -234,10 +212,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 
 	for (int i = 0; i < samples.cols(); i++)
 	{
-		Eigen::Vector2i sample_cast = getCoords(samples.col(i), origin, v1, v2)
-							  //This selects the float->float version of round
-							  .unaryExpr(static_cast<float(*)(float)>(std::round))
-							  .cast<int>();
+		Eigen::Vector2i sample_cast = roundPtToCoord(samples.col(i), origin, v1, v2);
 
 		//Check the surrounding points (and itself)
 		for (Eigen::Vector2i neighbor_delta : neighbors_and_self.colwise())

@@ -7,12 +7,6 @@
 Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
                               const unsigned& num);
 
-Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                         const Eigen::Vector2f& v2);
-
-Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                          const Eigen::Vector2f& v2);
-
 std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf& pts, const Eigen::Vector2f& origin,
                                                          const Eigen::Vector2f& v1);
 
