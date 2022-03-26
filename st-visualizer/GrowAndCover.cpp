@@ -110,22 +110,19 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::v
 	Eigen::Vector4f atb = Eigen::Vector4f::Zero();
 	const Eigen::Matrix2f identity2 = Eigen::Matrix2f::Identity();
 
-
 	for (int i = 0; i < intCoords.cols(); i++)
 	{
 		//For each coordinate
-		Eigen::Vector2i coord = intCoords.col(i);
+		const auto coord = intCoords.col(i);
 
 
 		Eigen::Matrix<float, 2, 4> a;
 		a << coord(0) * identity2 + coord(1) * hexM.toRotationMatrix(), identity2;
-
-		//Compare them to each other
 		ata += a.transpose() * a;
-
-		//Compare them to the selected points
 		atb += a.transpose() * pts.col(indices[i]);
+
 	}
+
 	Eigen::Vector4f result = ata.inverse() * atb;
 	Eigen::Vector2f origin({result(2), result(3)});
 	Eigen::Vector2f v1({result(0), result(1)});
@@ -142,18 +139,36 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 	auto new_inliers = inliers;
 	auto num = inliers.first.size();
 
-	
+	const std::function std_dev([](const Eigen::Matrix2Xf& _pts, const std::pair<Eigen::Vector2f, Eigen::Vector2f>& _grid)
+	{
+		
+		Eigen::Matrix2Xf delta = _pts;
+		const auto& origin = _grid.first;
+		const auto& v1 = _grid.second;
+		const auto v2 = hexM * _grid.second;
+		for(int i = 0; i < _pts.cols(); i++)
+		{
+			delta.col(i) -= getPoint(roundPtToCoord(_pts.col(i),origin, v1, v2).cast<float>(), origin, v1, v2);
+		}
+		return delta.colwise().squaredNorm().rowwise().sum().col(0)(0);
+	});
+
+	auto s = std_dev(pts, new_grid);
 	while (static_cast<long long>(num) < pts.cols())
 	{
+
 		//Get the best origin and v1 from the grid
-		new_grid = getGrid(pts, inliers.first, inliers.second);
+		new_grid = getGrid(pts, new_inliers.first, new_inliers.second);
 
 		//Then get the inliers and grid that results from the origin and v1
 		new_inliers = getInliers(pts, new_grid.first, new_grid.second);
 		//If there is an improvement, go again
-		if (new_inliers.first.size() > num)
+		const auto new_s = std_dev(pts, new_grid);
+
+		if (new_inliers.first.size() > num || s > new_s)
 		{
 			num = new_inliers.first.size();
+			s = new_s;
 		}
 		else
 		{
@@ -164,6 +179,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 	new_grid = getGrid(pts, new_inliers.first, new_inliers.second);
 	return new_grid;
 }
+
 
 std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGridAndCoords(const Eigen::Matrix2Xf& pts, const int& num)
 {
@@ -177,24 +193,23 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGrid
 	return { refinedGrid, int_coords };
 }
 
-
-
-
+#define GROW_AND_COVER_NEIGHBORS {1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}
 Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
-							  const unsigned& num)
+                              const unsigned& num)
 {
 	
-	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({{1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}}).
-										 transpose().eval();
+	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({ GROW_AND_COVER_NEIGHBORS }).transpose();
+	Eigen::Matrix<int, 2, 7> neighbors_and_self = Eigen::Matrix<int, 7, 2>({ GROW_AND_COVER_NEIGHBORS, { 0, 0 } }).transpose();
+
 	//Get the coordinates from pts
-	const auto [grid, coords] = getGridAndCoords(pts, num);
-	std::cout << grid.first << std::endl;
-	std::cout << grid.second << std::endl;
+	const auto [grid, coords] = getGridAndCoords(pts, static_cast<int>(num));
 	Eigen::Matrix2Xi new_coords(2, 0);
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
 	Eigen::Vector2f v2 = hexM * v1;
-
+	std::cout << "Start" << std::endl;
+	std::cout << origin << std::endl << std::endl;
+	std::cout << v1 << std::endl << std::endl;
 	//Put points in a hash
 	auto getPair = [](const Eigen::Vector2i& coord) { return std::pair(coord(0), coord(1)); };
 
@@ -205,10 +220,8 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 		hash[getPair(coord)] = true;
 	}
 
-	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash and the new coordinates
-	Eigen::Matrix<int, 2, 7> neighbors_and_self;
-	neighbors_and_self << neighbors, Eigen::Vector2i({0, 0});
 
+	//for each sample, 	if its nearest grid point and or any of its 6 - neighbors are not in the hash, add them to the hash and the new coordinates
 	for (int i = 0; i < samples.cols(); i++)
 	{
 		Eigen::Vector2i sample_cast = roundPtToCoord(samples.col(i), origin, v1, v2);

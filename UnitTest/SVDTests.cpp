@@ -2,9 +2,8 @@
 #include "../st-visualizer/JSONParser.h"
 #include "CppUnitTest.h"
 #include "../st-visualizer/ImportFunctions.h"
-#include <math.h>;
-#include <fstream>;
-#include <sstream>;
+#include <fstream>
+#include <sstream>
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 
