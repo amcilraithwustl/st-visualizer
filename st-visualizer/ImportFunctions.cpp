@@ -143,12 +143,10 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 		rawData.push_back(splitString(line, "\t"));
 	}
 
-	vector<string> names;
-	names.reserve(feature_indices.size());
-	for(auto index : feature_indices)
-	{
-		names.push_back(rawData[0][index]);
-	}
+	vector<string> names = feature_indices << std::function([&](unsigned index)
+		{
+			return rawData[0][index];
+		});
 	names.emplace_back("No Tissue");
 
 	vector tab(rawData.begin() + 1, rawData.end());
