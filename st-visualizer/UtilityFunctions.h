@@ -22,7 +22,9 @@ struct coord3D
 	float y = 0;
 	float z = 0;
 
-	coord3D(float x, float y, float z) : x(x), y(y), z(z){}
+	coord3D(float x, float y, float z) : x(x), y(y), z(z)
+	{
+	}
 
 	coord3D operator+(const coord3D& other) const
 	{
@@ -35,27 +37,58 @@ colCoordMat vectorToMatrix(std::vector<coord> source);
 
 std::vector<coord> matrixToVector(colCoordMat sourceMatrix);
 
+
 //Vector Mapping Functions and overloads
 template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op)
+std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(const T&, size_t)>& op)
 {
 	std::vector<G> c;
-	for (const T& item : vec)
-	{
-		c.push_back(op(item));
-	}
-	return c;
-}
-template <typename T, typename G>
-
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
-{
-	std::vector<G> c;
-	for (size_t i = 0; i < vec.size(); i++)
+	c.reserve(vec.size());
+	for(size_t i = 0; i < vec.size(); i++)
 	{
 		c.push_back(op(vec[i], i));
 	}
 	return c;
+}
+
+template <typename T, typename G>
+std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(const T&)>& op)
+{
+	std::function<G(const T&, size_t)> new_op([op](const T& val, size_t) {return op(val); });
+	return mapVector(vec, new_op);
+}
+
+template <typename T, typename G>
+std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T)>& op)
+{
+	std::function<G(const T&, size_t)> new_op([op](const T& val, size_t){return op(val);});
+	return mapVector(vec, new_op);
+}
+
+template <typename T, typename G>
+std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
+{
+	std::function<G(const T&, size_t)> new_op([op](const T& val, size_t i) {return op(val, i); });
+	return mapVector(vec, new_op);
+}
+
+//Operator overloads. First two are by reference functions, second two are by copy functions
+template <typename T, typename G>
+std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&)>& op){return mapVector(vec, op);}
+
+template <typename T, typename G>
+std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&, size_t)>& op)
+{
+	return mapVector(vec, op);
+}
+
+template <typename T, typename G>
+std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) { return mapVector(vec, op); }
+
+template <typename T, typename G>
+std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
+{
+	return mapVector(vec, op);
 }
 
 //To Cartesian Space
@@ -73,7 +106,7 @@ template <typename T, typename G>
 std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, int, const std::vector<T>&)>& op)
 {
 	std::vector<G> c;
-	for (int i = 0; i < vec.size(); i++)
+	for(int i = 0; i < vec.size(); i++)
 	{
 		c.push_back(op(vec[i], i, vec));
 	}
@@ -84,9 +117,9 @@ template <typename T>
 std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op)
 {
 	std::vector<T> res;
-	for (const T& item : vec)
+	for(const T& item : vec)
 	{
-		if (op(item))
+		if(op(item))
 		{
 			res.push_back(item);
 		}
