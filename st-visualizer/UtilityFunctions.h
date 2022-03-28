@@ -91,6 +91,39 @@ std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, si
 	return mapVector(vec, op);
 }
 
+//mapThread and its overloads
+template <typename A, typename B, typename C>
+std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(const A&, const B&, size_t)>& op)
+{
+	if (vec1.size() != vec2.size()) throw "SIZE MISMATCH";
+
+	std::vector<C> new_vector;
+	new_vector.reserve(vec1.size());
+	for(size_t i = 0; i < vec1.size(); i++)
+	{
+		new_vector.push_back(op(vec1[i], vec2[i], i));
+	}
+	return new_vector;
+}
+
+template <typename A, typename B, typename C>
+std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(A, B, size_t)>& op)
+{
+	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t i) {return op(a, b, i); }));
+}
+
+template <typename A, typename B, typename C>
+std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(const A&, const B&)>& op)
+{
+	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t) {return op(a, b); }));
+}
+
+template <typename A, typename B, typename C>
+std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(A, B)>& op)
+{
+	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t) {return op(a, b); }));
+}
+
 //To Cartesian Space
 Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
                          const Eigen::Vector2f& v2);
@@ -114,7 +147,7 @@ std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, in
 }
 
 template <typename T>
-std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op)
+std::vector<T> filter(const std::vector<T>& vec, std::function<bool(const T&)> op)
 {
 	std::vector<T> res;
 	for(const T& item : vec)
@@ -125,6 +158,14 @@ std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op)
 		}
 	}
 	return res;
+}
+
+template <typename T>
+std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op)
+{
+	return filter(vec, std::function([&](const T& v) {
+		return op(v);
+	}));
 }
 
 template <typename T>
