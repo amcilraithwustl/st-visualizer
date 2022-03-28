@@ -12,7 +12,6 @@ int main(int argc, char** argv)
 {
 	std::vector<std::string> arguments(argv, argv + argc);
 	const auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
-	getTransSVD(alignmentValues[0].first, alignmentValues[0].second);
 	const auto results = loadTsv(
 		"../CRC_112C1_cell_type_coord_allspots.tsv",
 		std::vector<std::string>({ "CRC_HT112C1_1", "CRC_HT112C1_2" }),

@@ -70,15 +70,16 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
     //Import raw file data
     std::ifstream aFile(alignment_file);
     std::vector<string> lines;
-    if(aFile.is_open())
+    if (aFile.is_open())
     {
         string line;
-        while(std::getline(aFile, line))
+        while (std::getline(aFile, line))
         {
             lines.push_back(line);
         }
         aFile.close();
     }
+    else { throw "ALIGNMENT FILE NOT FOUND"; };
 
     //Split into cells
     vector<vector<string>> csvCells;
