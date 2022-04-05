@@ -207,9 +207,6 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	Eigen::Vector2f origin = grid.first;
 	Eigen::Vector2f v1 = grid.second;
 	Eigen::Vector2f v2 = hexM * v1;
-	std::cout << "Start" << std::endl;
-	std::cout << origin << std::endl << std::endl;
-	std::cout << v1 << std::endl << std::endl;
 	//Put points in a hash
 	auto getPair = [](const Eigen::Vector2i& coord) { return std::pair(coord(0), coord(1)); };
 

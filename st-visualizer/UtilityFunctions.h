@@ -33,10 +33,26 @@ struct coord3D
 };
 
 
+colCoordMat listToMatrix(std::list<coord> source);
+
 colCoordMat vectorToMatrix(std::vector<coord> source);
 
 std::vector<coord> matrixToVector(colCoordMat sourceMatrix);
 
+//List Mapping Functions and overloads
+template <typename T, typename G>
+std::list<G> mapList(const std::list<T>& vec, const std::function<G(const T&)>& op)
+{
+	std::list<G> c;
+	for(auto& item : vec)
+	{
+		c.push_back(op(item));
+	}
+	return c;
+}
+
+template <typename T, typename G>
+std::list<G> operator<<(const std::list<T>& vec, const std::function<G(const T&)>& op) { return mapList(vec, op); }
 
 //Vector Mapping Functions and overloads
 template <typename T, typename G>
@@ -150,9 +166,9 @@ template <typename T>
 std::vector<T> filter(const std::vector<T>& vec, std::function<bool(const T&)> op)
 {
 	std::vector<T> res;
-	for(const T& item : vec)
+	for (const T& item : vec)
 	{
-		if(op(item))
+		if (op(item))
 		{
 			res.push_back(item);
 		}
@@ -160,13 +176,20 @@ std::vector<T> filter(const std::vector<T>& vec, std::function<bool(const T&)> o
 	return res;
 }
 
-template <typename T>
-std::vector<T> filter(const std::vector<T>& vec, std::function<bool(T)> op)
+template < typename T>
+std::list<T> filter(const std::list<T>& vec, std::function<bool(const T&)> op)
 {
-	return filter(vec, std::function([&](const T& v) {
-		return op(v);
-	}));
+	std::list<T> res;
+	for (const T& item : vec)
+	{
+		if (op(item))
+		{
+			res.push_back(item);
+		}
+	}
+	return res;
 }
+
 
 template <typename T>
 std::vector<T> concat(const std::vector<T>& a, const std::vector<T>& b)

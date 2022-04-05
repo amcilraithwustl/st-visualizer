@@ -7,6 +7,20 @@
 #include <Eigen/Dense>
 
 
+colCoordMat listToMatrix(std::list<coord> source)
+{
+	//Row 0 is x, row 1 is y
+	colCoordMat sourceMatrix(2, source.size());
+	size_t i = 0;
+	for (const auto& [x, y] : source)
+	{
+		sourceMatrix(0, i) = x;
+		sourceMatrix(1, i) = y;
+		i++;
+	}
+	return sourceMatrix;
+}
+
 colCoordMat vectorToMatrix(std::vector<coord> source)
 {
 	//Row 0 is x, row 1 is y

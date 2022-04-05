@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -116,6 +117,7 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
     return finalSet;
 }
 
+
 tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::string>& slice_names,
                         unsigned int slice_index,
                         unsigned int tissue_index,
@@ -124,33 +126,45 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                         const std::vector<unsigned>& feature_indices, unsigned int z_distance,
                         std::vector<std::pair<std::vector<coord>, std::vector<coord>>> source_targets)
 {
+
     //Import raw file data
     std::ifstream aFile(file_name);
-    std::vector<string> lines;
+    
+
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    auto tock = [begin]()
+    {
+        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds > (std::chrono::steady_clock::now() - begin).count() << "[ms]" << std::endl;
+    };
+
+    tock();
+
+    std::list<std::vector<std::string>> rawData;
+    tock();
     if(aFile.is_open())
     {
         string line;
 
         while(std::getline(aFile, line))
         {
-            lines.push_back(line);
+            rawData.push_back(splitString(line, "\t"));
         }
         aFile.close();
     }
-    std::vector<std::vector<std::string>> rawData = lines << std::function([](const string& line)
-    {
-        return splitString(line, "\t");
-    });
+    tock();
 
     vector<string> names = feature_indices << std::function([rawData](unsigned index)
     {
-        return rawData[0][index];
+        return rawData.front()[index];
     });
     names.emplace_back("No Tissue");
-
-    vector tab(rawData.begin() + 1, rawData.end());
-
+    rawData.pop_front();
+    std::list tab = rawData; //TODO: Slow Process
+    tock();
+    std::cout << "MADE IT HERE 0" << std::endl;
     int max = 0;
+
     for(const auto& row : tab)
     {
         {
@@ -165,13 +179,14 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
             }
         }
     }
+    tock();
 
     unsigned int newClusters = static_cast<unsigned int>(max) + 1;
     auto newFeatures = feature_indices.size();
 
     //Extract the relevant records
     //Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    vector<vector<vector<string>>> sliced_records = slice_names << std::function([&](const string& name)
+    auto sliced_records = slice_names << std::function([&](const string& name)
     {
         return filter(tab, std::function([&](const vector<string>& row)
         {
@@ -184,28 +199,29 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
     std::pair xy_indices(row_col_indices.second, row_col_indices.first);
     vector<Eigen::Matrix2Xf> slices = sliced_records << std::function(
-        [&](const vector<vector<string>>& record, size_t i)
+        [&](const std::list<vector<string>>& record, size_t i)
         {
             const auto raw_slice_coordinates = record << std::function([&](const vector<string>& row)
             {
                 return std::pair(std::stof(row[xy_indices.first]), std::stof(row[xy_indices.second]));
             });
 
+            const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
 
             if(i == 0) //If it's the first slice, no adjustment necessary
             {
-                return vectorToMatrix(raw_slice_coordinates);
+                return vectorToMatrix(raw_slice_coordinates_vector);
             }
 
             //Base the remaining slices coordinate adjustment off of the previous one
             const std::function transform = getTransSVD(source_targets[i - 1].first, source_targets[i - 1].second);
-            return vectorToMatrix(transform(raw_slice_coordinates));
+            return vectorToMatrix(transform(raw_slice_coordinates_vector));
         });
 
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
-    vector<vector<vector<float>>> original_clusters = sliced_records << std::function(
-        [&](const vector<vector<string>>& record)
+    auto original_clusters = sliced_records << std::function(
+        [&](const std::list<vector<string>>& record)
         {
             return record << std::function([&](const vector<string>& row)
                 {
@@ -222,7 +238,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
 
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
-    vector<vector<vector<float>>> values = sliced_records << std::function([&](const vector<vector<string>>& record)
+    auto values = sliced_records << std::function([&](const std::list<vector<string>>& record)
     {
         return record << std::function([&](const vector<string>& row)
         {
@@ -257,7 +273,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         return growAndCover(slices[i], top_and_bottom_slice, wid_buffer, num_ransac);
     });
 
-
+    tock();
     vector<Eigen::Matrix3Xf> slices3d = mapThread(
         new_slice_data, slices, std::function(
             [z_distance](const Eigen::Matrix2Xf& new_slice,
@@ -323,7 +339,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         slices3d.insert(slices3d.begin(), bottom);
         //TODO: Inefficient O(n) call. Consider changing in all three locations.
     }
-
+    tock();
     {
         auto& topSlice = grown_clusters[grown_clusters.size() - 1];
         vector top(topSlice.size(), getClusterArray(newClusters + 1, newClusters));
@@ -344,12 +360,14 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         grown_values.insert(grown_values.begin(), bottom);
     }
 
+    tock();
+
     //TODO: std::move for speed reasons
     tsv_return_type ret;
-    ret.names = names;
-    ret.slices = slices3d;
-    ret.values = grown_values;
-    ret.clusters = grown_clusters;
+    ret.names = std::move(names);
+    ret.slices = std::move(slices3d);
+    ret.values = std::move(grown_values);
+    ret.clusters = std::move(grown_clusters);
     return ret;
 }
 
