@@ -122,11 +122,7 @@ std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2,
 	return new_vector;
 }
 
-template <typename A, typename B, typename C>
-std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(A, B, size_t)>& op)
-{
-	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t i) {return op(a, b, i); }));
-}
+
 
 template <typename A, typename B, typename C>
 std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(const A&, const B&)>& op)
@@ -134,11 +130,6 @@ std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2,
 	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t) {return op(a, b); }));
 }
 
-template <typename A, typename B, typename C>
-std::vector<C> mapThread(const std::vector<A>& vec1, const std::vector<B>& vec2, const std::function<C(A, B)>& op)
-{
-	return mapThread(vec1, vec2, std::function([&](const A& a, const B& b, size_t) {return op(a, b); }));
-}
 
 //To Cartesian Space
 Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,

@@ -10,16 +10,15 @@ using namespace nlohmann;
 
 int main(int argc, char** argv)
 {
-	std::vector<std::string> arguments(argv, argv + argc);
-	const auto alignmentValues = importAlignments("../CRC112_transformation_pt_coord.csv");
+	const auto alignmentValues = importAlignments("C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
 	const auto results = loadTsv(
-		"../CRC_112C1_cell_type_coord_allspots.tsv",
-		std::vector<std::string>({ "CRC_HT112C1_1", "CRC_HT112C1_2" }),
+		"C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",
+		std::vector<std::string>({ "NMK_F_U1","NMK_F_U2","NMK_F_U3","NMK_F_U4" }),
 		1,
 		2,
 		std::pair<unsigned, unsigned>(3, 4),
-		7,
-		std::vector<unsigned>({ 8,9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 }),
+		5,
+		std::vector<unsigned>({ 6,7,8,9, 10, 11, 12, 13, 14, 15 }),
 		60,
 		alignmentValues
 	);
@@ -49,7 +48,7 @@ int main(int argc, char** argv)
 	ret.push_back(results.clusters);
 	ret.push_back(results.values);
 	ret.push_back(results.names);
-	
+
 
 	std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\importTsvResults.json)");
 	f << ret;

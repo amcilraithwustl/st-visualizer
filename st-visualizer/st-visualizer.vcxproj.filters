@@ -41,6 +41,9 @@
     <ClInclude Include="JSONParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="contour2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\CRC_112C1_cell_type_coord_allspots.tsv">

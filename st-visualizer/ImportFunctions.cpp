@@ -140,7 +140,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
     tock();
 
-    std::list<std::vector<std::string>> rawData;
+    std::vector<std::vector<std::string>> rawData;
     tock();
     if(aFile.is_open())
     {
@@ -159,8 +159,8 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         return rawData.front()[index];
     });
     names.emplace_back("No Tissue");
-    rawData.pop_front();
-    std::list tab = rawData; //TODO: Slow Process
+
+    std::vector tab(rawData.begin()+1, rawData.end()) ; //TODO: Slow Process
     tock();
     std::cout << "MADE IT HERE 0" << std::endl;
     int max = 0;
@@ -199,7 +199,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
     std::pair xy_indices(row_col_indices.second, row_col_indices.first);
     vector<Eigen::Matrix2Xf> slices = sliced_records << std::function(
-        [&](const std::list<vector<string>>& record, size_t i)
+        [&](const std::vector<vector<string>>& record, size_t i)
         {
             const auto raw_slice_coordinates = record << std::function([&](const vector<string>& row)
             {
@@ -221,7 +221,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
     auto original_clusters = sliced_records << std::function(
-        [&](const std::list<vector<string>>& record)
+        [&](const std::vector<vector<string>>& record)
         {
             return record << std::function([&](const vector<string>& row)
                 {
@@ -238,7 +238,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
 
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
-    auto values = sliced_records << std::function([&](const std::list<vector<string>>& record)
+    auto values = sliced_records << std::function([&](const std::vector<vector<string>>& record)
     {
         return record << std::function([&](const vector<string>& row)
         {

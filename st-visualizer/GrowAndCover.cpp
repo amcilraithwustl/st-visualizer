@@ -200,7 +200,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({ GROW_AND_COVER_NEIGHBORS }).transpose();
 	Eigen::Matrix<int, 2, 7> neighbors_and_self = Eigen::Matrix<int, 7, 2>({ GROW_AND_COVER_NEIGHBORS, { 0, 0 } }).transpose();
-
+	 
 	//Get the coordinates from pts
 	const auto [grid, coords] = getGridAndCoords(pts, static_cast<int>(num));
 	Eigen::Matrix2Xi new_coords(2, 0);
