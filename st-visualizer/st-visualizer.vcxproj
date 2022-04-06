@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Contour2D.cpp" />
     <ClCompile Include="GrowAndCover.cpp" />
     <ClCompile Include="GrowAndCover.h" />
     <ClCompile Include="ImportFunctions.cpp" />
@@ -151,7 +152,7 @@
     <ClCompile Include="UtilityFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="contour2D.h" />
+    <ClInclude Include="Contour2D.h" />
     <ClInclude Include="ImportFunctions.h" />
     <ClInclude Include="JSONParser.h" />
     <ClInclude Include="UtilityFunctions.h" />

@@ -3,6 +3,8 @@
 #include <vector>
 #include "ImportFunctions.h"
 #include <string>
+
+#include "Contour2D.h"
 #include "JSONParser.h"
 using namespace nlohmann;
 //https://wias-berlin.de/software/tetgen/
@@ -23,33 +25,6 @@ int main(int argc, char** argv)
 		alignmentValues
 	);
 
-	std::cout << "Completed Successfully" << std::endl;
+	getSectionContoursAll(results.slices, results.values, 1);
 
-	json ret = json::array();
-
-	{
-		json slices = json::array();
-		for (Eigen::Matrix3Xf slice : results.slices)
-		{
-			json sliceArray = json::array();
-			for (Eigen::Vector3f coordinate : slice.colwise())
-			{
-				json coordArray = json::array();
-				coordArray.push_back(coordinate(0));
-				coordArray.push_back(coordinate(1));
-				coordArray.push_back(coordinate(2));
-				sliceArray.push_back(coordArray);
-			}
-			slices.push_back(sliceArray);
-		}
-		ret.push_back(slices);
-	}
-
-	ret.push_back(results.clusters);
-	ret.push_back(results.values);
-	ret.push_back(results.names);
-
-
-	std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\importTsvResults.json)");
-	f << ret;
 }

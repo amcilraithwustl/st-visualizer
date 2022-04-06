@@ -30,6 +30,9 @@
     <ClCompile Include="UtilityFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Contour2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImportFunctions.h">
@@ -41,7 +44,7 @@
     <ClInclude Include="JSONParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="contour2D.h">
+    <ClInclude Include="Contour2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
