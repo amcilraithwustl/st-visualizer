@@ -16,7 +16,7 @@ using std::vector;
 using std::string;
 
 constexpr int wid_buffer = 2;
-constexpr int num_ransac = 5;
+constexpr int num_ransac = 20;
 
 //From https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 std::vector<string> splitString(const string& s, const string& delimiter)
@@ -425,6 +425,7 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
     Eigen::Transform<float, 2, Eigen::Affine> finalTransform = netTranslation * fromZero * rotation * toZero;
     //Translate after rotate
 
+    auto a = matrixToVector(finalTransform.matrix());
 
     //(* transform *) Creating the function
     return {

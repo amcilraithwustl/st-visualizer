@@ -165,7 +165,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 		//If there is an improvement, go again
 		const auto new_s = std_dev(pts, new_grid);
 
-		if (new_inliers.first.size() > num || s > new_s)
+		if (new_inliers.first.size() > num)
 		{
 			num = new_inliers.first.size();
 			s = new_s;

@@ -1,10 +1,8 @@
-#include <fstream>
-#include <iostream>
 #include <vector>
 #include "ImportFunctions.h"
 #include <string>
 
-#include "Contour2D.h"
+// #include "Contour2D.h"
 #include "JSONParser.h"
 using namespace nlohmann;
 //https://wias-berlin.de/software/tetgen/
@@ -25,6 +23,6 @@ int main(int argc, char** argv)
 		alignmentValues
 	);
 
-	getSectionContoursAll(results.slices, results.values, 1);
+	// getSectionContoursAll(results.slices, results.values, 1);
 
 }
