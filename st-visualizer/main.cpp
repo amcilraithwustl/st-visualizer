@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     out.pointattributelist = NULL;
     out.trianglelist = NULL;
 
-    // triangulate(&flags[0], &in, &out, nullptr);
+    triangulate(&flags[0], &in, &out, nullptr);
     // const auto alignmentValues = importAlignments("C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
     // const auto results = loadTsv(
     // 	"C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",

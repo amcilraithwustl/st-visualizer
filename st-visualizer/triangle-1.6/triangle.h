@@ -259,7 +259,7 @@
 #define VOID int
 // #include "triangle.h"
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -305,7 +305,7 @@ struct triangulateio
     void trifree();
 #endif/* not ANSI_DECLARATORS */
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 };
 #endif
 #endif
