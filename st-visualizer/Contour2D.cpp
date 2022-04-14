@@ -1,4 +1,3 @@
-/*
 #include "Contour2D.h"
 
 int orientation(Eigen::Vector2f a, Eigen::Vector2f b)
@@ -31,4 +30,3 @@ int getMaxPos(const std::vector<float>& vals)
 }
 
 std::vector<std::vector<std::vector<Eigen::Matrix3Xf>>> getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);
-*/

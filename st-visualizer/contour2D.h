@@ -1,9 +1,7 @@
-/*
 #pragma once
-#include <map>
 #include <vector>
 #include "UtilityFunctions.h"
-
+#include <triangle.h>
 // orientation (not sure if this should be i or f)
 // Returns 1 if left, 0 if none, -1 if right (right hand rule)
 int orientation(Eigen::Vector2f a, Eigen::Vector2f b);
@@ -27,10 +25,13 @@ Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& 
 //Triangle for 2d
 //TetMesh for 3d
 //Returns the indices of all of the points of the triangles in the delauney triangulation
-std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&);
+std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&)
+{
+    
+}
 
 // contourTriMultiDC
-void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris, std::vector<std::vector<float>> vals)
+/*void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris, std::vector<std::vector<float>> vals)
 {
     auto nmat = vals[0].size();
     auto npts = pts.cols();
@@ -74,7 +75,7 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
     }
 
 
-}
+}*/
 // perp
 // getContourByMat2D
 // getContourAllMats2D
@@ -83,4 +84,4 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
 
 // getSectionContoursAll
 void getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);
-*/
+

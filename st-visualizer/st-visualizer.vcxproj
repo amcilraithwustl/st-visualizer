@@ -149,12 +149,14 @@
     <ClCompile Include="GrowAndCover.h" />
     <ClCompile Include="ImportFunctions.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="triangle-1.6\triangle.c" />
     <ClCompile Include="UtilityFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Contour2D.h" />
     <ClInclude Include="ImportFunctions.h" />
     <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="triangle-1.6\triangle.h" />
     <ClInclude Include="UtilityFunctions.h" />
   </ItemGroup>
   <ItemGroup>
