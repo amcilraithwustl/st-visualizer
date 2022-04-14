@@ -1,3 +1,4 @@
+/*
 #pragma once
 #include <vector>
 #include "triangle-1.6/triangle.h"
@@ -25,10 +26,10 @@ Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& 
 //Triangle for 2d
 //TetMesh for 3d
 //Returns the indices of all of the points of the triangles in the delauney triangulation
-std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&)
-{
-    
-}
+// std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&)
+// {
+//     
+// }
 
 // contourTriMultiDC
 /*void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris, std::vector<std::vector<float>> vals)
@@ -75,7 +76,7 @@ std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&)
     }
 
 
-}*/
+}#1#
 // perp
 // getContourByMat2D
 // getContourAllMats2D
@@ -83,5 +84,6 @@ std::vector<std::vector<int>> DelauneyMesh(const Eigen::Matrix2Xf&)
 
 
 // getSectionContoursAll
-void getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);
+// void getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);
+*/
 

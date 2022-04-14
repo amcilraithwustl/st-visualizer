@@ -249,49 +249,52 @@
 /*****************************************************************************/
 
 //Modified by Aiden McIlraith from this link: https://blog.fearcat.in/a?ID=00550-7fd7fc36-57e9-4126-924d-0d52de4c64b2
-#ifndef _TRIANGLE_HEADER_  
+#ifndef _TRIANGLE_HEADER_
 #define _TRIANGLE_HEADER_
 
-#ifdef _cplusplus  
+
+
+#define REAL double
+#define ANSI_DECLARATORS  
+#define VOID int
+// #include "triangle.h"
+
+#ifdef _cplusplus
 extern "C" {
 #endif
 
-#define REAL double  
-#define ANSI_DECLARATORS  
-#define VOID int  
-#include "triangle.h"
+struct triangulateio
+{
+    REAL* pointlist; /* In/out */
+    REAL* pointattributelist; /* In/out */
+    int* pointmarkerlist; /* In/out */
+    int numberofpoints; /* In/out */
+    int numberofpointattributes; /* In/out */
 
+    int* trianglelist; /* In/out */
+    REAL* triangleattributelist; /* In/out */
+    REAL* trianglearealist; /* In only */
+    int* neighborlist; /* Out only */
+    int numberoftriangles; /* In/out */
+    int numberofcorners; /* In/out */
+    int numberoftriangleattributes; /* In/out */
 
-    struct triangulateio {
-        REAL* pointlist;                                              /* In/out */
-        REAL* pointattributelist;                                     /* In/out */
-        int* pointmarkerlist;                                         /* In/out */
-        int numberofpoints;                                           /* In/out */
-        int numberofpointattributes;                                  /* In/out */
+    int* segmentlist; /* In/out */
+    int* segmentmarkerlist; /* In/out */
+    int numberofsegments; /* In/out */
 
-        int* trianglelist;                                            /* In/out */
-        REAL* triangleattributelist;                                  /* In/out */
-        REAL* trianglearealist;                                        /* In only */
-        int* neighborlist;                                            /* Out only */
-        int numberoftriangles;                                        /* In/out */
-        int numberofcorners;                                          /* In/out */
-        int numberoftriangleattributes;                               /* In/out */
+    REAL* holelist; /* In/pointer to array copied out */
+    int numberofholes; /* In/copied out */
 
-        int* segmentlist;                                             /* In/out */
-        int* segmentmarkerlist;                                       /* In/out */
-        int numberofsegments;                                         /* In/out */
+    REAL* regionlist; /* In/pointer to array copied out */
+    int numberofregions; /* In/copied out */
 
-        REAL* holelist;                       /* In/pointer to array copied out */
-        int numberofholes;                                     /* In/copied out */
+    int* edgelist; /* Out only */
+    int* edgemarkerlist; /* Not used with Voronoi diagram; out only */
+    REAL* normlist; /* Used only with Voronoi diagram; out only */
+    int numberofedges; /* Out only */
+};
 
-        REAL* regionlist;                     /* In/pointer to array copied out */
-        int numberofregions;                                   /* In/copied out */
-
-        int* edgelist;                                                /* Out only */
-        int* edgemarkerlist;           /* Not used with Voronoi diagram; out only */
-        REAL* normlist;               /* Used only with Voronoi diagram; out only */
-        int numberofedges;                                            /* Out only */
-    };
 
 #ifdef ANSI_DECLARATORS
     void triangulate(char*, struct triangulateio*, struct triangulateio*,
@@ -302,7 +305,7 @@ extern "C" {
     void trifree();
 #endif/* not ANSI_DECLARATORS */
 
-#ifdef _cplusplus  
-}
+#ifdef _cplusplus
+};
 #endif
 #endif

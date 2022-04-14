@@ -2,6 +2,8 @@
 
 #define NO_TIMER
 #define CPU86
+#define TRILIBRARY
+
 
 /*****************************************************************************/
 /*                                                                           */
@@ -11139,7 +11141,7 @@ FILE *polyfile;
   int attribindex;
 #else /* not TRILIBRARY */
   FILE *elefile;
-  FILE *areafile;
+  FILE *areafile = NULL;
   char inputline[INPUTLINESIZE];
   char *stringptr;
   int areaelements;
@@ -12456,7 +12458,7 @@ char *polyfilename;
       printf("Recovering segments in Delaunay triangulation.\n");
     }
 #ifdef TRILIBRARY
-    strcpy(polyfilename, "input");
+    strcpy(polyfilename,"input");
     m->insegments = numberofsegments;
     segmentmarkers = segmentmarkerlist != (int *) NULL;
     index = 0;
@@ -13902,7 +13904,7 @@ FILE **polyfile;
 #endif /* not ANSI_DECLARATORS */
 
 {
-  FILE *infile;
+  FILE *infile=NULL;
   vertex vertexloop;
   char inputline[INPUTLINESIZE];
   char *stringptr;
@@ -15696,8 +15698,8 @@ char **argv;
 {
   struct mesh m;
   struct behavior b;
-  REAL *holearray;                                        /* Array of holes. */
-  REAL *regionarray;   /* Array of regional attributes and area constraints. */
+  REAL *holearray = NULL;                                        /* Array of holes. */
+  REAL *regionarray =NULL;   /* Array of regional attributes and area constraints. */
 #ifndef TRILIBRARY
   FILE *polyfile;
 #endif /* not TRILIBRARY */

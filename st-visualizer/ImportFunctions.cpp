@@ -1,3 +1,4 @@
+/*
 #include "ImportFunctions.h"
 #include "UtilityFunctions.h"
 #include <fstream>
@@ -217,7 +218,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
             const std::function transform = getTransSVD(source_targets[i - 1].first, source_targets[i - 1].second);
             return vectorToMatrix(transform(raw_slice_coordinates_vector));
         });
-
+    
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
     auto original_clusters = sliced_records << std::function(
@@ -445,3 +446,4 @@ std::vector<float> getClusterArray(size_t length, size_t i)
     }
     return ret;
 }
+*/
