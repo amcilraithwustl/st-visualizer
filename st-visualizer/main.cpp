@@ -1,7 +1,6 @@
 #include <vector>
 #include "ImportFunctions.h"
 #include <string>
-
 // #include "Contour2D.h"
 #include "JSONParser.h"
 using namespace nlohmann;

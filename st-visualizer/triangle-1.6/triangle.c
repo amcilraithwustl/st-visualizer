@@ -1,3 +1,8 @@
+//Added by Aiden McIlraith from this link: https://blog.fearcat.in/a?ID=00550-7fd7fc36-57e9-4126-924d-0d52de4c64b2
+
+#define NO_TIMER
+#define CPU86
+
 /*****************************************************************************/
 /*                                                                           */
 /*      888888888        ,o,                          / 888                  */

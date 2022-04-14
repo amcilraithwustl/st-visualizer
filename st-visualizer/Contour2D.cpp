@@ -29,4 +29,4 @@ int getMaxPos(const std::vector<float>& vals)
     return maxIndex;
 }
 
-std::vector<std::vector<std::vector<Eigen::Matrix3Xf>>> getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);
+// std::vector<std::vector<std::vector<Eigen::Matrix3Xf>>> getSectionContoursAll(std::vector<Eigen::Matrix3Xf>, std::vector<std::vector<std::vector<float>>>, float);

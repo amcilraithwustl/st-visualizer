@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
+#include "triangle-1.6/triangle.h"
 #include "UtilityFunctions.h"
-#include <triangle.h>
 // orientation (not sure if this should be i or f)
 // Returns 1 if left, 0 if none, -1 if right (right hand rule)
 int orientation(Eigen::Vector2f a, Eigen::Vector2f b);
