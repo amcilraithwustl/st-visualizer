@@ -52,7 +52,10 @@ int main(int argc, char** argv)
     
 
     //Print out each triangle's points
-    const auto out = triangulateMatrix(Eigen::Matrix2Xf({ {0,0,1,1,-1},{0,1,0,1,-1} }));
+
+    auto randPoints = Eigen::Matrix2Xf::Random(2, 100) * 10;
+
+    const auto out = triangulateMatrix(randPoints);
     for(int i = 0; i < out.numberoftriangles; i++)
     {
         std::cout << getTriangleMatrix(out, i) << std::endl << std::endl;
