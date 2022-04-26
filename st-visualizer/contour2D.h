@@ -126,50 +126,49 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
     int ct2 = 0;
     for(int i = 0; i < edges.size(); i++)
     {
-        if (ptMats[edges[i][0]]== ptMats[edges[i][1]])
+        if(ptMats[edges[i][0]] == ptMats[edges[i][1]])
         {
             ct2++;
-            segMats[ct2] = { ptMats[edges[i][0]] , ptMats[edges[i][1]] };
+            segMats[ct2] = {ptMats[edges[i][0]], ptMats[edges[i][1]]};
             std::pair newSeg;
-            if(edgeFaces[i].size()==1)
+            if(edgeFaces[i].size() == 1)
             {
                 //Boundary edge, connect edge point and triangle point
                 ct++;
                 verts[ct] = edgePoints[i];
                 edgePtInds[i] = ct;
-                newSeg = { triVertInds[edgeFaces[i][0]], ct };
+                newSeg = {triVertInds[edgeFaces[i][0]], ct};
             }
             else
             {
-                newSeg = { triVertInds[edgeFaces[i][0]],triVertInds[edgeFaces[i][1]] };
+                newSeg = {triVertInds[edgeFaces[i][0]], triVertInds[edgeFaces[i][1]]};
             }
 
-            if(orientation(pts.col(edges[i][0])- pts.col(edges[i][1]), verts[newSeg.first] - pts.col(edges[i][1])) < 0)
+            if(orientation(pts.col(edges[i][0]) - pts.col(edges[i][1]), verts[newSeg.first] - pts.col(edges[i][1])) < 0)
             {
-                newSeg = { newSeg.second, newSeg.first };
+                newSeg = {newSeg.second, newSeg.first};
             }
 
             segs[ct2] = std::move(newSeg);
-
         }
     }
 
     //Remove all elements whose indexes are too large
     for(auto& item : verts)
     {
-       auto& index = item.first;
-       if (index > ct)
-       {
-           verts.erase(index);
-       }
+        auto& index = item.first;
+        if(index > ct)
+        {
+            verts.erase(index);
+        }
     }
 
     segs = std::vector(segs.begin(), segs.begin() + 1 + ct2);
 
-    for (auto& item : segMats)
+    for(auto& item : segMats)
     {
         auto& index = item.first;
-        if (index > ct2)
+        if(index > ct2)
         {
             verts.erase(index);
         }
@@ -196,24 +195,25 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
     for(int i = 0; i < edges.size(); i++)
     {
         //If the materials on either side of an edge don't match
-        if (ptMats[edges[i][0]] !=  ptMats[edges[i][1]]) {
+        if(ptMats[edges[i][0]] != ptMats[edges[i][1]])
+        {
             std::pair<int, int> seg;
-            if (edgeFaces[i].size() == 1) //if interior edge
+            if(edgeFaces[i].size() == 1) //if interior edge
             {
                 /*boundary edge : connect edge point and triangle point*/
-                seg = { triVertInds[edgeFaces[i][0]], edgePtInds[i] };
+                seg = {triVertInds[edgeFaces[i][0]], edgePtInds[i]};
             }
             else
             {
                 /*interior edge : connect two triangle points*/
-                seg = { triVertInds[edgeFaces[i][0]], triVertInds[edgeFaces[i][1]] };
+                seg = {triVertInds[edgeFaces[i][0]], triVertInds[edgeFaces[i][1]]};
             }
             ct3++;
-            fillTris[ct3] = std::vector({ seg.first, seg.second, ct + edges[i][0] });
-            fillMats[ct3] =  triVertInds[edgeFaces[i][0]];
+            fillTris[ct3] = std::vector({seg.first, seg.second, ct + edges[i][0]});
+            fillMats[ct3] = triVertInds[edgeFaces[i][0]];
 
             ct3++;
-            fillTris[ct3] = std::vector({ seg.first, seg.second, ct + edges[i][1] });
+            fillTris[ct3] = std::vector({seg.first, seg.second, ct + edges[i][1]});
             fillMats[ct3] = triVertInds[edgeFaces[i][1]];
         }
     }
@@ -221,26 +221,27 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
 
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
-    for(int i = 0;i < tris.size(); i++)
+    for(int i = 0; i < tris.size(); i++)
     {
-        if (ptMats[tris[i][1]] == ptMats[tris[i][2]] && ptMats[tris[i][2]] == ptMats[tris[i][0]])
+        if(ptMats[tris[i][1]] == ptMats[tris[i][2]] && ptMats[tris[i][2]] == ptMats[tris[i][0]])
         {
             ct3 += 1;
-            fillTris[ct3] = tris[i] << std::function([ct](int item) {return item + ct; });
+            fillTris[ct3] = tris[i] << std::function([ct](int item) { return item + ct; });
             fillMats[ct3] = ptMats[tris[i][0]];
         }
         else
         {
             for(int j = 0; j < 3; j++)
             {
-                if(ptMats [tris [i][edgeMap [j][ 1] ] ] ==
-                    ptMats [tris [i][ edgeMap [j][2] ] ] )
+                if(ptMats[tris[i][edgeMap[j][1]]] ==
+                    ptMats[tris[i][edgeMap[j][2]]])
                 {
                     ct3 += 1;
                     fillTris[ct3] =
                         concat(
-                            edgeMap[j] << std::function([i, tris](int in) {return tris[i][in]; }) << std::function([ct](int item) {return item + ct; })
-                            , { triVertInds[i] });
+                            edgeMap[j] << std::function([i, tris](int in) { return tris[i][in]; }) << std::function(
+                                [ct](int item) { return item + ct; })
+                            , {triVertInds[i]});
                     fillMats[ct3] = ptMats[tris[i][edgeMap[j][1]]];
                 }
             }
@@ -249,7 +250,7 @@ void contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
 }
 
 // perp
-inline Eigen::Vector2f perp(Eigen::Vector2f a) { return { -1 * a[1], a[0] }; }
+inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
 // getContourByMat2D
 // getContourAllMats2D
 // getSectionContours

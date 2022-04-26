@@ -140,7 +140,7 @@ namespace ImportTests
 				ret.push_back(resJson);
 			}
 
-			std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\hexResults.json");
+			std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\hexResults.json)");
 			f << ret;
 		}
 

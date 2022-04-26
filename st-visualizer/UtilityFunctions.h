@@ -202,7 +202,8 @@ std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
 template <typename T>
 std::vector<T> table(size_t length, std::function<T(size_t)> op)
 {
-	return std::vector<int>(0, length) << std::function<size_t(int, size_t)>([](int, size_t i) { return i; })
+	return std::vector(length, 0)
+    << std::function<size_t(int, size_t)>([](int, size_t i) { return i; })
 		<< op;
 }
 
