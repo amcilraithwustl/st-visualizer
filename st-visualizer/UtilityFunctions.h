@@ -8,6 +8,8 @@
 #include "triangle-1.6/triangle.h"
 #include <iostream>
 
+#include "JSONParser.h"
+
 
 constexpr float pi = static_cast<float>(3.1415926535);
 
@@ -234,14 +236,18 @@ inline Eigen::Matrix2Xf getTriangleMatrix(const triangulateio& obj, int triangle
 	return ret;
 }
 
+/**
+ * \brief 
+ * \param mat 
+ * \return 
+ */
 inline triangulateio triangulateMatrix(const Eigen::Matrix2Xf& mat)
 {
-	std::cout << mat << std::endl;
 	//TODO: Investigate flags further
 	std::string flags =
 		std::string("z") //Start arrays at 0
-		+ std::string("") //Verbose
-	// + std::string("Q") //Quiet
+		// + std::string("V") //Verbose
+	+ std::string("Q") //Quiet
 		;
 
 	const auto numPoints = mat.cols();
@@ -269,3 +275,42 @@ inline triangulateio triangulateMatrix(const Eigen::Matrix2Xf& mat)
 
 	return out;
 }
+
+using json = nlohmann::json;
+template<typename T, int G>
+std::vector<T> eigenToVec(Eigen::Vector<T, G> mat) { return std::vector<T>(mat.data(), mat.data() + mat.rows()); }
+
+template<typename T>
+json toJson(std::vector<T> v)
+{
+	auto a = json::array();
+	for (size_t i = 0; i < v.size(); i++)
+	{
+		a.push_back(v[i]);
+	}
+	return a;
+}
+
+inline json extractTriangleMathematicaMesh(const triangulateio& obj)
+{
+	const auto points = table(obj.numberofpoints, std::function([obj](size_t i)
+		{
+			return getCornerVector(obj, i);
+		}));
+	const auto triangles = table(obj.numberoftriangles, std::function([obj](size_t i) {return getTriangleCornerIndices(obj, i); }));
+
+
+	json pointJson = json::array();
+	for (auto& pt : points)
+	{
+		pointJson.push_back(toJson(eigenToVec(pt)));
+	}
+
+	json triangleJson = json::array();
+	for (auto& set : triangles)
+	{
+		triangleJson.push_back(toJson(set));
+	}
+	json ret = json::array({ pointJson ,triangleJson });
+	return ret;
+};

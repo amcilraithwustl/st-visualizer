@@ -1,4 +1,3 @@
-/*
 #include "ImportFunctions.h"
 #include "UtilityFunctions.h"
 #include <fstream>
@@ -410,23 +409,21 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 {
     const auto sourceMatrix = vectorToMatrix(source);
     const auto targetMatrix = vectorToMatrix(target);
-
+    
     //Convert to matrices
     const auto r = getSVDRotation(sourceMatrix, targetMatrix);
     const Eigen::Rotation2D<float> rotation(r);
-
+    
     const Eigen::Vector2f sourceCentroid = getCentroid(sourceMatrix);
     const Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
     const Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
-
-
+    
+    
     const Eigen::Translation2f netTranslation(targetCentroidTransform);
     const Eigen::Translation2f toZero(-1 * sourceCentroid);
     const Eigen::Translation2f fromZero(sourceCentroid);
     Eigen::Transform<float, 2, Eigen::Affine> finalTransform = netTranslation * fromZero * rotation * toZero;
     //Translate after rotate
-
-    auto a = matrixToVector(finalTransform.matrix());
 
     //(* transform *) Creating the function
     return {
@@ -446,4 +443,3 @@ std::vector<float> getClusterArray(size_t length, size_t i)
     }
     return ret;
 }
-*/
