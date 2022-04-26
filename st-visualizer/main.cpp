@@ -52,22 +52,17 @@ int main(int argc, char** argv)
     
 
     //Print out each triangle's points
-
-    auto randPoints = Eigen::Matrix2Xf::Random(2, 100) * 10;
-
-    const auto out = triangulateMatrix(randPoints);
-    for(int i = 0; i < out.numberoftriangles; i++)
+    auto finalJson = json::array();
+    for(int j = 0; j < 10; j++)
     {
-        std::cout << getTriangleMatrix(out, i) << std::endl << std::endl;
+        auto randPoints = Eigen::Matrix2Xf::Random(2, 100) * 10;
+        const auto out = triangulateMatrix(randPoints);
+        finalJson.push_back(extractTriangleMathematicaMesh(out));
     }
-
-   
-    const auto a = extractTriangleMathematicaMesh(out);
-
-    std::cout << a << std::endl;
+    std::cout << finalJson << std::endl;
 
     std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\triangleResults.json)");
-    f << a;
+    f << finalJson;
     
 
 	
