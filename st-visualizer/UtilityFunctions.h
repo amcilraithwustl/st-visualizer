@@ -236,11 +236,6 @@ inline Eigen::Matrix2Xf getTriangleMatrix(const triangulateio& obj, int triangle
 	return ret;
 }
 
-/**
- * \brief 
- * \param mat 
- * \return 
- */
 inline triangulateio triangulateMatrix(const Eigen::Matrix2Xf& mat)
 {
 	//TODO: Investigate flags further
@@ -314,3 +309,9 @@ inline json extractTriangleMathematicaMesh(const triangulateio& obj)
 	json ret = json::array({ pointJson ,triangleJson });
 	return ret;
 };
+
+template <typename T>
+std::vector<T> subset(const std::vector<T>& set, const std::vector<int>& indices)
+{
+	return indices << std::function([set](int i) {return set[i]; });
+}
