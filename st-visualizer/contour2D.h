@@ -11,12 +11,19 @@ int getMaxPos(const std::vector<float>& vals);
 
 // getMassPoint
 // Might need work based on input type
-Eigen::Vector2f inline getMassPoint(Eigen::Matrix2Xf m) { return m.rowwise().mean(); }
-Eigen::Vector2f inline getMassPoint(Eigen::Vector2f a, Eigen::Vector2f b, Eigen::Vector2f c) { return (a + b + c) / 3; }
+Eigen::Vector2f inline getMassPoint(std::vector<Eigen::Vector2f> a)
+{
+    Eigen::Vector2f temp = Eigen::Vector2f::Zero(2);
+    for(auto v : a)
+    {
+        temp += v;
+    }
+    return temp/3;
+}
 
 // InterpEdge2Mat
-//Might be f or i inputs, but must be f output
-Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, std::pair<float, float> p_vals,
+// Does a linear interpolation of two materials to produce the midpoint location where the "cross over"
+inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, std::pair<float, float> p_vals,
                                std::pair<float, float> q_vals)
 {
     const float t = std::abs(p_vals.first - p_vals.second) / (std::abs(p_vals.first - p_vals.second) + std::abs(
@@ -35,14 +42,14 @@ struct contourTriMultiDCStruct
     std::vector<int> fillMats;
 };
 
-contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pts, std::vector<std::vector<int>> tris,
-                                          std::vector<std::vector<float>> vals);
+contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, std::vector<std::vector<int>> triangleIndexToCornerIndices,
+                                          std::vector<std::vector<float>> pointIndexToMaterialValues);
 
 // perp
 inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
 
 // getContourByMat2D returns new verticies, new segments
-std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
+inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
     std::map<int, Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
     std::vector<std::pair<int, int>> segmats, int mat, float shrink)
 {
