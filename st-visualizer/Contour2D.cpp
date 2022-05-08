@@ -1,6 +1,5 @@
 
 #include "Contour2D.h"
-#include <iostream>
 int orientation(Eigen::Vector2f a, Eigen::Vector2f b)
 {
     Eigen::Vector3f intermediateA;
