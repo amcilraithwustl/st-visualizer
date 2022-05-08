@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	std::vector<Eigen::Vector2f> temp;
 	for(auto& vert: first.verts)
 	{
-		temp.push_back(vert.second);
+		temp.push_back(vert);
 	}
 	ret.push_back(temp);
 	ret.push_back(first.segs);

@@ -29,14 +29,13 @@ inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vec
     const auto top = std::abs(p_vals.first - p_vals.second);
     const auto bottom = std::abs(p_vals.first - p_vals.second) + std::abs(q_vals.first - q_vals.second);
     const float t =  top/bottom ;
-    std::cout << p * (1 - t) + q * t << std::endl << std::endl;
     return p*(1 - t) + q*t;
 }
 
 // contourTriMultiDC
 struct contourTriMultiDCStruct
 {
-    std::map<int, Eigen::Vector2f> verts;
+    std::vector<Eigen::Vector2f> verts;
     std::vector<std::pair<int, int>> segs;
     std::vector<std::pair<int, int>> segMats;
     std::vector<Eigen::Vector2f> fillVerts;
@@ -52,7 +51,7 @@ inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
 
 // getContourByMat2D returns new verticies, new segments
 inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
-    std::map<int, Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
+    std::vector< Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
     std::vector<std::pair<int, int>> segmats, int mat, float shrink)
 {
     //select segments by mat
@@ -121,7 +120,7 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
 
 // getContourAllMats2D each index is new vertices, new segments
 inline std::vector<std::pair<std::vector<Eigen::Matrix<float, 2, 1, 0>>, std::vector<std::pair<int, int>>>>
-getContourAllMats2D(const std::map<int, Eigen::Vector2f>& verts, const std::vector<std::pair<int, int>>& segs,
+getContourAllMats2D(const std::vector< Eigen::Vector2f>& verts, const std::vector<std::pair<int, int>>& segs,
                     const std::vector<std::pair<int, int>>& segmats, const int& nmat, const float& shrink)
 {
     return table(

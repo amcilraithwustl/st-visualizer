@@ -120,7 +120,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     std::vector edgeIndexToFacePointIndex(edgeIndexToEndpointIndices.size(), -1);
 
     /*create vertices in faces, one per triangle with material change*/
-    std::map<int, Eigen::Vector2f> facePointByIndex; //VALIDATED
+    std::vector<Eigen::Vector2f> facePointByIndex;
     std::map<int, int> triangleIndexToFacePointIndex;
     for (int triangleIndex = 0; triangleIndex < triangleIndexToCornerIndices.size(); triangleIndex++) {
         auto cornerIndices = triangleIndexToCornerIndices[triangleIndex];
@@ -136,7 +136,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             }
 
             auto centerPoint = getMassPoint(triangleMidpoints);
-            facePointByIndex[triangleIndex] = centerPoint;
+            facePointByIndex.push_back(centerPoint);
 
             //Create a face vertex at that generated center point
             triangleIndexToFacePointIndex[triangleIndex] = static_cast<int>(facePointByIndex.size()) - 1;
@@ -164,7 +164,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             if (edgeIndexToFaceIndices[edge_index].size() == 1)
             {
                 //Boundary edge, connect edge point and triangle point
-                facePointByIndex[facePointByIndex.size()]=(edgeIndexToMidPoints[edge_index]);
+                facePointByIndex.push_back(edgeIndexToMidPoints[edge_index]);
                 std::cout << edgeIndexToMidPoints[edge_index] << std::endl << std::endl;
                 const int facePointIndex = facePointByIndex.size() - 1;
                 edgeIndexToFacePointIndex[edge_index] = facePointIndex;
@@ -192,7 +192,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     //Join both sets of points into all the existing points
     for (const auto& centerPoint : facePointByIndex)
     {
-        resultingPointsByIndex.push_back(centerPoint.second);
+        resultingPointsByIndex.push_back(centerPoint);
     }
     for (const auto& pt : pointIndexToPoint.colwise())
     {
