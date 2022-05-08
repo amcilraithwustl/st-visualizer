@@ -68,7 +68,7 @@ std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(const 
 	{
 		c.push_back(op(vec[i], i));
 	}
-	return c;
+	return std::move(c);
 }
 
 template <typename T, typename G>
