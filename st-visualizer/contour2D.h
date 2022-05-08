@@ -18,7 +18,7 @@ Eigen::Vector2f inline getMassPoint(std::vector<Eigen::Vector2f> a)
     {
         temp += v;
     }
-    return temp/3;
+    return temp/a.size();
 }
 
 // InterpEdge2Mat
@@ -26,9 +26,11 @@ Eigen::Vector2f inline getMassPoint(std::vector<Eigen::Vector2f> a)
 inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, std::pair<float, float> p_vals,
                                std::pair<float, float> q_vals)
 {
-    const float t = std::abs(p_vals.first - p_vals.second) / (std::abs(p_vals.first - p_vals.second) + std::abs(
-        q_vals.first - q_vals.second));
-    return (1 - t) * p + t * q;
+    const auto top = std::abs(p_vals.first - p_vals.second);
+    const auto bottom = std::abs(p_vals.first - p_vals.second) + std::abs(q_vals.first - q_vals.second);
+    const float t =  top/bottom ;
+    std::cout << p * (1 - t) + q * t << std::endl << std::endl;
+    return p*(1 - t) + q*t;
 }
 
 // contourTriMultiDC

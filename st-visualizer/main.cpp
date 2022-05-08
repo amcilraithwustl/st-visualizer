@@ -68,12 +68,13 @@ int main(int argc, char** argv)
 	auto first = contourTriMultiDC(pts, tris, vals);
 
 	json ret = json::array();
-	std::vector<Eigen::Vector2f> verts;
-	for(auto vert:first.verts)
+	
+	std::vector<Eigen::Vector2f> temp;
+	for(auto& vert: first.verts)
 	{
-		verts.push_back(vert.second);
+		temp.push_back(vert.second);
 	}
-	ret.push_back(verts);
+	ret.push_back(temp);
 	ret.push_back(first.segs);
 
 	std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourResults.json");

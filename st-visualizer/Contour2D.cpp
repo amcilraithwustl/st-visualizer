@@ -23,7 +23,7 @@ int getMaxPos(const std::vector<float>& vals)
     {
         if (vals[maxIndex] < vals[i])
         {
-            maxIndex = 1;
+            maxIndex = i;
         }
     }
 
@@ -49,10 +49,9 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
     //Might be good to eventually make this a pair
 
-    auto edgeIndexToEndpointIndices = table(numberOfTriangles * 3, std::function([](size_t) { return std::vector<int>(); }));
+    std::vector<std::vector<int>> edgeIndexToEndpointIndices;
     //Stores which face index an edge belongs to
-    auto edgeIndexToFaceIndices = table(numberOfTriangles * 3, std::function([](size_t) { return std::vector<int>(); }));
-    auto edgeIndex = 0;
+    std::vector<std::vector<int>> edgeIndexToFaceIndices;
 
     //Make connections between edges/faces, edges/endpoints, and endpoints/edges
     for (int triangleSide = 0; triangleSide < 3; triangleSide++)
@@ -65,14 +64,15 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             );
 
 
-            if (endpointIndicesToEdgeIndex.contains(endpointIndices))//If the edge doesn't already exist
+            if (!endpointIndicesToEdgeIndex.contains(endpointIndices))//If the edge doesn't already exist
             {
+                int num_of_edges = edgeIndexToEndpointIndices.size();
                 //here ct is a unique index for an edge which is stored in edges
-                edgeIndexToEndpointIndices[edgeIndex] = triangle_edges[triangleSide] << std::function([triangleIndexToCornerIndices, faceIndex](const int& index) { return triangleIndexToCornerIndices[faceIndex][index]; });
-                edgeIndexToFaceIndices[edgeIndex] = { faceIndex };
-                endpointIndicesToEdgeIndex[{endpointIndices.first, endpointIndices.second}] = edgeIndex;
-                endpointIndicesToEdgeIndex[{endpointIndices.second, endpointIndices.first}] = edgeIndex;
-                edgeIndex++;
+                edgeIndexToEndpointIndices.push_back(triangle_edges[triangleSide] << std::function([triangleIndexToCornerIndices, faceIndex](const int& index) { return triangleIndexToCornerIndices[faceIndex][index]; }));
+                edgeIndexToFaceIndices.push_back({faceIndex});
+                endpointIndicesToEdgeIndex[{endpointIndices.first, endpointIndices.second}] = num_of_edges;
+                endpointIndicesToEdgeIndex[{endpointIndices.second, endpointIndices.first}] = num_of_edges;
+                num_of_edges++;
             }
             else
             {
@@ -82,10 +82,12 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
         }
     }
 
+    int num_of_edges = edgeIndexToFaceIndices.size();
+
     //There should be ct number of elements in the vector now
     //This could be made more efficient by avoiding constructing a new vector
-    edgeIndexToEndpointIndices = std::vector(edgeIndexToEndpointIndices.begin(), edgeIndexToEndpointIndices.begin() + edgeIndex);
-    edgeIndexToFaceIndices = std::vector(edgeIndexToFaceIndices.begin(), edgeIndexToFaceIndices.begin() + edgeIndex);
+    edgeIndexToEndpointIndices = std::vector(edgeIndexToEndpointIndices.begin(), edgeIndexToEndpointIndices.begin() + num_of_edges);
+    edgeIndexToFaceIndices = std::vector(edgeIndexToFaceIndices.begin(), edgeIndexToFaceIndices.begin() + num_of_edges);
 
 
     /*create interpolation points if they exist, one per edge with material change*/
@@ -115,12 +117,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             );
         }
     }
-    std::vector midpointIndexToEdgeIndex(edgeIndexToEndpointIndices.size(), 0);
+    std::vector edgeIndexToFacePointIndex(edgeIndexToEndpointIndices.size(), -1);
 
     /*create vertices in faces, one per triangle with material change*/
-    std::vector<Eigen::Vector2f> centerPointByIndex;
-    int centerPointIndex = 0;
-    std::map<int, int> triangleIndexToCenterPointIndex;
+    std::map<int, Eigen::Vector2f> facePointByIndex; //VALIDATED
+    std::map<int, int> triangleIndexToFacePointIndex;
     for (int triangleIndex = 0; triangleIndex < triangleIndexToCornerIndices.size(); triangleIndex++) {
         auto cornerIndices = triangleIndexToCornerIndices[triangleIndex];
         //If there are material changes in the triangle
@@ -135,10 +136,10 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             }
 
             auto centerPoint = getMassPoint(triangleMidpoints);
-            centerPointByIndex.push_back(centerPoint);
+            facePointByIndex[triangleIndex] = centerPoint;
 
             //Create a face vertex at that generated center point
-            triangleIndexToCenterPointIndex[triangleIndex] = static_cast<int>(centerPointByIndex.size()) - 1;
+            triangleIndexToFacePointIndex[triangleIndex] = static_cast<int>(facePointByIndex.size()) - 1;
         }
     }
 
@@ -148,33 +149,34 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     for (int edge_index = 0; edge_index < edgeIndexToEndpointIndices.size(); edge_index++)
     {
         //If there is a change in material between the edges of the segments
-        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][0]] == primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][1]])
+        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][1]])
         {
             //The index is going to be the size of the list of segments before the push
             const int newSegmentIndex = centerSegmentIndexToEndpointIndices.size();
 
             const auto& endpointIndices = edgeIndexToEndpointIndices[edge_index];
-            centerSegmentToEndpointPrimaryMaterialIndices[newSegmentIndex] = {
+            centerSegmentToEndpointPrimaryMaterialIndices.push_back({
                 primaryMaterialIndexByPointIndex[endpointIndices[0]],
                 primaryMaterialIndexByPointIndex[endpointIndices[1]]
-            };
+            });
 
             std::pair<int, int> newSegmentEndpointIndices;
             if (edgeIndexToFaceIndices[edge_index].size() == 1)
             {
                 //Boundary edge, connect edge point and triangle point
-                centerPointByIndex.push_back(edgeIndexToMidPoints[edge_index]);
-                const int segmentIndex = centerPointByIndex.size() - 1;
-                midpointIndexToEdgeIndex[edge_index] = segmentIndex;
-                newSegmentEndpointIndices = { triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edge_index][0]], segmentIndex };
+                facePointByIndex[facePointByIndex.size()]=(edgeIndexToMidPoints[edge_index]);
+                std::cout << edgeIndexToMidPoints[edge_index] << std::endl << std::endl;
+                const int facePointIndex = facePointByIndex.size() - 1;
+                edgeIndexToFacePointIndex[edge_index] = facePointIndex;
+                newSegmentEndpointIndices = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edge_index][0]], facePointIndex };
             }
             else
             {
-                newSegmentEndpointIndices = { triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edge_index][0]], triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edge_index][1]] };
+                newSegmentEndpointIndices = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edge_index][0]], triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edge_index][1]] };
             }
 
             //Ensure consistent orientation among endpoints
-            if (orientation(pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][0]) - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1]), centerPointByIndex[newSegmentEndpointIndices.first] - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1])) < 0)
+            if (orientation(pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][0]) - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1]), facePointByIndex[newSegmentEndpointIndices.first] - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1])) < 0)
             {
                 newSegmentEndpointIndices = { newSegmentEndpointIndices.second, newSegmentEndpointIndices.first };
             }
@@ -186,11 +188,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
     /*Create Fill Triangles -> Solid fill triangles for displaying areas of material type, not the contour*/
     std::vector<Eigen::Vector2f> resultingPointsByIndex;
-    resultingPointsByIndex.reserve(centerPointByIndex.size() + pointIndexToPoint.cols()); //We know how big this will be
+    resultingPointsByIndex.reserve(facePointByIndex.size() + pointIndexToPoint.cols()); //We know how big this will be
     //Join both sets of points into all the existing points
-    for (const auto& centerPoint : centerPointByIndex)
+    for (const auto& centerPoint : facePointByIndex)
     {
-        resultingPointsByIndex.push_back(centerPoint);
+        resultingPointsByIndex.push_back(centerPoint.second);
     }
     for (const auto& pt : pointIndexToPoint.colwise())
     {
@@ -214,55 +216,63 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             if (edgeIndexToFaceIndices[edgeIndex].size() == 1) //if boundary edge edge
             {
                 /*boundary edge : connect edge point and center point*/
-                segmentEndpoints = { triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edgeIndex][0]], midpointIndexToEdgeIndex[edgeIndex] };
+                segmentEndpoints = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][0]], edgeIndexToFacePointIndex[edgeIndex] };
             }
             else
             {
                 /*interior edge : connect two center points*/
                 //We know both of these will exist b/c there is always a center point if the triangle has any material changes
-                segmentEndpoints = { triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edgeIndex][0]], triangleIndexToCenterPointIndex[edgeIndexToFaceIndices[edgeIndex][1]] };
+                segmentEndpoints = {
+                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][0]],
+                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][1]]
+                };
             }
-            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({ segmentEndpoints.first, segmentEndpoints.second, edgeIndex + edgeIndexToEndpointIndices[edgeIndex][0] }));
+            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
+                segmentEndpoints.first,
+                segmentEndpoints.second,
+                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[edgeIndex][0]
+                }));
             fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][0]]);
 
-            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({ segmentEndpoints.first, segmentEndpoints.second, edgeIndex + edgeIndexToEndpointIndices[edgeIndex][1] }));
+            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
+                segmentEndpoints.first,
+                segmentEndpoints.second,
+                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[edgeIndex][1]
+                }));
             fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][1]]);
         }
     }
 
-    resultingTriangleCurrentSize = fillMats.size();
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
-    for (int i = 0; i < triangleIndexToCornerIndices.size(); i++)
+    for (int currentTriangleIndex = 0; currentTriangleIndex < triangleIndexToCornerIndices.size(); currentTriangleIndex++)
     {
-        if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][1]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][2]] && primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][2]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][0]])
+        if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][1]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] && primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]])
         {
-            resultingTriangleCurrentSize += 1;
-            resultingTriangleIndexToResultingCornerIndices[resultingTriangleCurrentSize] = triangleIndexToCornerIndices[i] << std::function([edgeIndex](int item) { return item + edgeIndex; });
-            fillMats[resultingTriangleCurrentSize] = primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][0]];
+            resultingTriangleIndexToResultingCornerIndices.push_back(triangleIndexToCornerIndices[currentTriangleIndex] << std::function([num_of_edges](int item) { return item + num_of_edges; }));
+            fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]]);
         }
         else
         {
             for (int j = 0; j < 3; j++)
             {
-                if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][triangle_edges[j][0]]] ==
-                    primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][triangle_edges[j][1]]])
+                if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][triangle_edges[j][0]]] ==
+                    primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][triangle_edges[j][1]]])
                 {
-                    resultingTriangleCurrentSize += 1;
-                    resultingTriangleIndexToResultingCornerIndices[resultingTriangleCurrentSize] =
+                    resultingTriangleIndexToResultingCornerIndices.push_back(
                         concat(
-                            triangle_edges[j] << std::function([i, triangleIndexToCornerIndices](int in) { return triangleIndexToCornerIndices[i][in]; }) << std::function(
-                                [edgeIndex](int item) { return item + edgeIndex; })
-                            , { triangleIndexToCenterPointIndex[i] });
-                    fillMats[resultingTriangleCurrentSize] = primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[i][triangle_edges[j][1]]];
+                            triangle_edges[j] << std::function([currentTriangleIndex, triangleIndexToCornerIndices](int in) { return triangleIndexToCornerIndices[currentTriangleIndex][in]; }) << std::function(
+                                [num_of_edges](int item) { return item + num_of_edges; })
+                            , { triangleIndexToFacePointIndex[currentTriangleIndex] }));
+                    fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][triangle_edges[j][1]]]);
                 }
             }
         }
     }
 
-    /*Print[ct3, fillVerts, fillTris, fillMats];*/
     resultingTriangleIndexToResultingCornerIndices = std::vector(resultingTriangleIndexToResultingCornerIndices.begin(), resultingTriangleIndexToResultingCornerIndices.begin() + resultingTriangleCurrentSize);
-    fillMats = std::vector(fillMats.begin(), fillMats.begin() + resultingTriangleCurrentSize);
 
-    return { centerPointByIndex, centerSegmentIndexToEndpointIndices, centerSegmentToEndpointPrimaryMaterialIndices, resultingPointsByIndex, resultingTriangleIndexToResultingCornerIndices, fillMats };
+    //Test on three points, four points, and a ring around a single point (triangulated)
+
+    return { facePointByIndex, centerSegmentIndexToEndpointIndices, centerSegmentToEndpointPrimaryMaterialIndices, resultingPointsByIndex, resultingTriangleIndexToResultingCornerIndices, fillMats };
 }
