@@ -12,73 +12,7 @@ using namespace nlohmann;
 int main(int argc, char** argv)
 {
 
-	using json = nlohmann::json;
-	int i = 0;
-
-	auto jsonToMatrix = [](const json& source)
-	{
-		//This should only be used for testing. Not logic safe.
-		Eigen::Matrix2Xf a(2, source.size());
-
-		for (int i = 0; i < source.size(); i++)
-		{
-			a(0, i) = source[i][0];
-			a(1, i) = source[i][1];
-		}
-		return a;
-	};
-
-	auto jsonToVector = [](const json& source)
-	{
-		std::vector<std::vector<float>> ret;
-		for (auto row : source)
-		{
-			std::vector<float> temp;
-			for (auto item : row)
-			{
-				temp.push_back(item);
-			}
-			ret.push_back(temp);
-		}
-		return ret;
-	};
-
-	auto jsonToTris = [](const json& source)
-	{
-		std::vector<std::vector<int>> ret;
-		for (auto row : source)
-		{
-			std::vector<int> temp;
-			for (auto item : row)
-			{
-				temp.push_back(static_cast<int>(item)-1);//Subtract 1 b/c mathematica indices start a 1
-			}
-			ret.push_back(temp);
-		}
-		return ret;
-	};
-	// read a JSON file
-	std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourTest.json");
-	auto a = file.is_open();
-	json j = json::parse(file);
-	auto pts = jsonToMatrix(j[0]);
-	auto vals = jsonToVector(j[1]);
-	auto tris = jsonToTris(j[2]);
-
-	auto first = contourTriMultiDC(pts, tris, vals);
-
-	json ret = json::array();
 	
-	std::vector<Eigen::Vector2f> temp;
-	for(auto& vert: first.verts)
-	{
-		temp.push_back(vert);
-	}
-	ret.push_back(temp);
-	ret.push_back(first.segs);
-
-	std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourResults.json");
-	f << ret;
 
     // const auto alignmentValues = importAlignments("C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
     // const auto results = loadTsv(
