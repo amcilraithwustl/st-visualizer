@@ -176,10 +176,10 @@ getSectionContours(
                 newSegments); //Do I need to deep copy the segments?
         });
 
-    const auto& ftries = res.fillTris;
+    const auto& ftris = res.fillTris;
     const auto& fmats = res.fillMats;
     auto fverts = res.fillVerts << dim2to3;
-    return {ctrNewPtsAndSegs, {ftries, fmats, fverts}};
+    return {ctrNewPtsAndSegs, {ftris, fmats, fverts}};
 }
 
 
