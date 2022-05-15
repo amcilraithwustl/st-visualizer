@@ -73,7 +73,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             if (endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second]==-1)//If the edge doesn't already exist
             {
                 int num_of_edges = edgeIndexToEndpointIndices.size();
-                //here ct is a unique index for an edge which is stored in edges
+
                 const auto& cornerPair = triangle_edges[triangleSide];
                 edgeIndexToEndpointIndices.push_back({
                     triangleIndexToCornerIndices[faceIndex][cornerPair.first],
@@ -259,12 +259,13 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
+    auto temp = std::function([facePointByIndex](int item) { return item + static_cast<int>(facePointByIndex.size()); });
     for (int currentTriangleIndex = 0; currentTriangleIndex < triangleIndexToCornerIndices.size(); currentTriangleIndex++)
     {
         //If There is no change at all
         if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][1]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] && primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]])
         {
-            resultingTriangleIndexToResultingCornerIndices.push_back(triangleIndexToCornerIndices[currentTriangleIndex] << std::function([facePointByIndex](int item) { return item + static_cast<int>(facePointByIndex.size()); }));
+            resultingTriangleIndexToResultingCornerIndices.push_back(triangleIndexToCornerIndices[currentTriangleIndex] << temp);
             fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]]);
         }
         else
@@ -278,16 +279,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
                 if (primaryMaterialIndexByPointIndex[cornerIndices[triangle_side.first]] ==
                     primaryMaterialIndexByPointIndex[cornerIndices[triangle_side.second]])
                 {
-                    
-                    const std::vector<int>& adjustedIndices = {
+                    resultingTriangleIndexToResultingCornerIndices.push_back( {
                         cornerIndices[triangle_side.first] + static_cast<int>(facePointByIndex.size()),
-                        cornerIndices[triangle_side.second] + static_cast<int>(facePointByIndex.size())
-                    };
+                        cornerIndices[triangle_side.second] + static_cast<int>(facePointByIndex.size()),
+                        triangleIndexToFacePointIndex[currentTriangleIndex] });
 
-                    resultingTriangleIndexToResultingCornerIndices.push_back(
-                        concat(
-                            adjustedIndices
-                            , { triangleIndexToFacePointIndex[currentTriangleIndex] }));
                     fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][triangle_side.second]]);
                 }
             }
@@ -297,5 +293,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
     //Test on three points, four points, and a ring around a single point (triangulated)
 
-    return { facePointByIndex, centerSegmentIndexToEndpointIndices, centerSegmentToEndpointPrimaryMaterialIndices, resultingPointsByIndex, resultingTriangleIndexToResultingCornerIndices, fillMats };
+    return {
+        std::move(facePointByIndex),
+        std::move(centerSegmentIndexToEndpointIndices),
+        std::move(centerSegmentToEndpointPrimaryMaterialIndices),
+        std::move(resultingPointsByIndex),
+        std::move(resultingTriangleIndexToResultingCornerIndices),
+        std::move(fillMats) };
 }
