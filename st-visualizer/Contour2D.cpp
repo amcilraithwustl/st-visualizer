@@ -62,7 +62,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     //Make connections between edges/faces, edges/endpoints, and endpoints/edges
     for (int triangleSide = 0; triangleSide < 3; triangleSide++)
     {
-        for (int faceIndex = 0; faceIndex < numberOfTriangles; faceIndex++)
+        for (size_t faceIndex = 0; faceIndex < numberOfTriangles; faceIndex++)
         {
             auto endpointIndices = std::pair(
                 triangleIndexToCornerIndices[faceIndex][triangle_edges[triangleSide].first],
@@ -79,7 +79,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
                     triangleIndexToCornerIndices[faceIndex][cornerPair.first],
                     triangleIndexToCornerIndices[faceIndex][cornerPair.second]
                 });
-                edgeIndexToFaceIndices.push_back({faceIndex});
+                edgeIndexToFaceIndices.push_back({static_cast<int>(faceIndex)});
                 endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second] = num_of_edges;
                 endpointIndicesToEdgeIndex[endpointIndices.second][endpointIndices.first] = num_of_edges;
                 num_of_edges++;
@@ -129,6 +129,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     //2) Make tests on real data
     //3) Time Benchmark for speed
     std::vector<Eigen::Vector2f> facePointByIndex;
+    facePointByIndex.reserve(numberOfTriangles*2);
     std::vector triangleIndexToFacePointIndex(numberOfTriangles, -1);
     for (size_t triangleIndex = 0; triangleIndex < triangleIndexToCornerIndices.size(); triangleIndex++) {
         auto cornerIndices = triangleIndexToCornerIndices[triangleIndex];
@@ -153,7 +154,10 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     
     /*create center segments*/
     std::vector<std::pair<int, int>> centerSegmentIndexToEndpointIndices;
+    centerSegmentIndexToEndpointIndices.reserve(facePointByIndex.size() * 2);
     std::vector<std::pair<int, int>> centerSegmentToEndpointPrimaryMaterialIndices;
+    centerSegmentToEndpointPrimaryMaterialIndices.reserve(facePointByIndex.size() * 2);
+
     for (int edge_index = 0; edge_index < edgeIndexToEndpointIndices.size(); edge_index++)
     {
         //If there is a change in material between the edges of the segments
