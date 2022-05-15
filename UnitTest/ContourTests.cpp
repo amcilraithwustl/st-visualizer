@@ -179,9 +179,9 @@ namespace ContourTests
 			f << ret2;
 		}
 
-		TEST_METHOD(TriangulateAndContourMathematicaFaceTests)
+		TEST_METHOD(TriangulateAndFillMathematicaTests)
 		{
-			using json = nlohmann::json;
+			using json = json;
 			int i = 0;
 
 			auto jsonToMatrix = [](const json& source)
@@ -220,22 +220,28 @@ namespace ContourTests
 					std::vector<int> temp;
 					for (auto item : row)
 					{
-						temp.push_back(static_cast<int>(item) - 1);//Subtract 1 b/c mathematica indices start a 1
+						temp.push_back(static_cast<int>(item) - 1); //Subtract 1 b/c mathematica indices start a 1
 					}
 					ret.push_back(temp);
 				}
 				return ret;
 			};
+
 			// read a JSON file
-			std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourTest.json");
+			std::ifstream
+				file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourTest.json");
 			auto a = file.is_open();
 			json j2 = json::parse(file);
 			json ret2 = json::array();
-			for (auto j : j2) {
+			for (auto j : j2)
+			{
 				auto pts = jsonToMatrix(j[0]);
 				auto vals = jsonToVector(j[1]);
 				auto delaunay = triangulateMatrix(pts);
-				auto tris = table(static_cast<size_t>(delaunay.numberoftriangles), std::function([delaunay](size_t i) {return getTriangleCornerIndices(delaunay, i); }));
+				auto tris = table(static_cast<size_t>(delaunay.numberoftriangles), std::function([delaunay](size_t i)
+					{
+						return getTriangleCornerIndices(delaunay, i);
+					}));
 
 				auto first = contourTriMultiDC(pts, tris, vals);
 
@@ -247,21 +253,13 @@ namespace ContourTests
 					temp.push_back(vert);
 				}
 				ret.push_back(temp);
-
-				//Adjust indices for mathematica indexing
-				for(auto& tri : first.fillTris)
-				{
-					for(auto& index:tri)
-					{
-						index++;
-					}
-				}
 				ret.push_back(first.fillTris);
 
 				ret.push_back(first.fillMats);
 				ret2.push_back(ret);
 			}
-			std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourResultsFaces.json");
+			std::ofstream f(
+				"C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourResultsFaces.json");
 			f << ret2;
 		}
 

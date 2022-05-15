@@ -55,6 +55,7 @@ int main(int argc, char** argv)
         }
         return ret;
     };
+
     // read a JSON file
     std::ifstream
         file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContourTest.json");
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
             return getTriangleCornerIndices(delaunay, i);
         }));
 
-        auto first = contourTriMultiDC(pts, tris, vals);
+        auto first = contourTriMultiDC(pts, jsonToTris(j[2]), vals);
 
         json ret = json::array();
 
