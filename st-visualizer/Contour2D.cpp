@@ -123,7 +123,10 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     std::vector edgeIndexToFacePointIndex(edgeIndexToEndpointIndices.size(), -1);
 
     /*create vertices in faces, one per triangle with material change*/
-    //TODO: This is the slowest section
+    //TODO: This is the slowest section -> Remove maps
+    //1) Make slice tests
+    //2) Make tests on real data
+    //3) Time Benchmark for speed
     std::vector<Eigen::Vector2f> facePointByIndex;
     std::map<int, int> triangleIndexToFacePointIndex;
     for (int triangleIndex = 0; triangleIndex < triangleIndexToCornerIndices.size(); triangleIndex++) {
@@ -192,57 +195,62 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     /*Create Fill Triangles -> Solid fill triangles for displaying areas of material type, not the contour*/
     std::vector<Eigen::Vector2f> resultingPointsByIndex;
     resultingPointsByIndex.reserve(facePointByIndex.size() + pointIndexToPoint.cols()); //We know how big this will be
-    //Join both sets of points into all the existing points
     for (const auto& centerPoint : facePointByIndex)
     {
         resultingPointsByIndex.push_back(centerPoint);
     }
+    //Join both sets of points into all the existing points
     for (const auto& pt : pointIndexToPoint.colwise())
     {
         resultingPointsByIndex.emplace_back(pt);
     }
+   
 
     std::vector<std::vector<int>> resultingTriangleIndexToResultingCornerIndices;
     resultingTriangleIndexToResultingCornerIndices.reserve(numberOfTriangles * 6);
     std::vector<int> fillMats;
     fillMats.reserve(numberOfTriangles * 6);
 
-    auto resultingTriangleCurrentSize = 0;
     /*first type of triangles : dual to mesh edges with a material change*/
-    for (int edgeIndex = 0; edgeIndex < edgeIndexToEndpointIndices.size(); edgeIndex++)
+    for (int currentEdgeIndex = 0; currentEdgeIndex < edgeIndexToEndpointIndices.size(); currentEdgeIndex++)
     {
         //If the materials on either end of an edge don't match, there will be a triangle
-        //TODO: Make all triangles connect to the edge rather than centers to centers
-        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][1]])
+        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]])
         {
             std::pair<int, int> segmentEndpoints;
-            if (edgeIndexToFaceIndices[edgeIndex].size() == 1) //if boundary edge edge
+            if (edgeIndexToFaceIndices[currentEdgeIndex].size() == 1) //if boundary edge edge
             {
+                if (edgeIndexToFacePointIndex[currentEdgeIndex] == -1) throw "Logic error, midpoint index not found in face points";
                 /*boundary edge : connect edge point and center point*/
-                segmentEndpoints = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][0]], edgeIndexToFacePointIndex[edgeIndex] };
+                segmentEndpoints = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][0]], edgeIndexToFacePointIndex[currentEdgeIndex] };
             }
             else
             {
                 /*interior edge : connect two center points*/
                 //We know both of these will exist b/c there is always a center point if the triangle has any material changes
                 segmentEndpoints = {
-                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][0]],
-                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[edgeIndex][1]]
+                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][0]],
+                    triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][1]]
                 };
             }
-            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
-                segmentEndpoints.first,
-                segmentEndpoints.second,
-                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[edgeIndex][0]
-                }));
-            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][0]]);
 
+            //Insert two triangles&materials using the two endpoints of the currentEdge as the third corner
+
+            //Insert the "top" triangle
             resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
                 segmentEndpoints.first,
                 segmentEndpoints.second,
-                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[edgeIndex][1]
+                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][0] //B/c the edge indices start after the face point indices
                 }));
-            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edgeIndex][1]]);
+            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]]);
+
+            //Insert the "bottom" triangle
+            resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
+                segmentEndpoints.first,
+                segmentEndpoints.second,
+                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][1]
+                }));
+            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]]);
         }
     }
 
@@ -279,8 +287,6 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
             }
         }
     }
-
-    resultingTriangleIndexToResultingCornerIndices = std::vector(resultingTriangleIndexToResultingCornerIndices.begin(), resultingTriangleIndexToResultingCornerIndices.begin() + resultingTriangleCurrentSize);
 
     //Test on three points, four points, and a ring around a single point (triangulated)
 
