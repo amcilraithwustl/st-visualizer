@@ -7,7 +7,7 @@
 int orientation(Eigen::Vector2f a, Eigen::Vector2f b);
 
 // getMaxPos
-int getMaxPos(const std::vector<float>& vals);
+int getMaxPos(const std::vector<float>& material_values);
 
 // getMassPoint
 // Might need work based on input type

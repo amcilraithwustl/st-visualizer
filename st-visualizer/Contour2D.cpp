@@ -20,18 +20,18 @@ int orientation(Eigen::Vector2f a, Eigen::Vector2f b)
     return result == 0.0f ? 0 : (result < 0.0f ? -1 : 1);
 }
 
-int getMaxPos(const std::vector<float>& vals)
+int getMaxPos(const std::vector<float>& material_values)
 {
-    int maxIndex = 0;
-    for (int i = 0; i < vals.size(); i++)
+    int max_index = 0;
+    for (size_t i = 0; i < material_values.size(); i++)
     {
-        if (vals[maxIndex] < vals[i])
+        if (material_values[max_index] < material_values[i])
         {
-            maxIndex = i;
+            max_index = static_cast<int>(i);
         }
     }
 
-    return maxIndex;
+    return max_index;
 }
 
 contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, std::vector<std::vector<int>> triangleIndexToCornerIndices, std::vector<std::vector<float>> pointIndexToMaterialValues)
@@ -72,7 +72,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
             if (endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second]==-1)//If the edge doesn't already exist
             {
-                int num_of_edges = edgeIndexToEndpointIndices.size();
+                auto num_of_edges = edgeIndexToEndpointIndices.size();
 
                 const auto& cornerPair = triangle_edges[triangleSide];
                 edgeIndexToEndpointIndices.push_back({
@@ -164,13 +164,12 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
         if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][1]])
         {
             //The index is going to be the size of the list of segments before the push
-            const int newSegmentIndex = centerSegmentIndexToEndpointIndices.size();
 
             const auto& endpointIndices = edgeIndexToEndpointIndices[edge_index];
-            centerSegmentToEndpointPrimaryMaterialIndices.push_back({
+            centerSegmentToEndpointPrimaryMaterialIndices.emplace_back(
                 primaryMaterialIndexByPointIndex[endpointIndices[0]],
                 primaryMaterialIndexByPointIndex[endpointIndices[1]]
-            });
+            );
 
             std::pair<int, int> newSegmentEndpointIndices;
             if (edgeIndexToFaceIndices[edge_index].size() == 1)
@@ -200,14 +199,14 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     /*Create Fill Triangles -> Solid fill triangles for displaying areas of material type, not the contour*/
     std::vector<Eigen::Vector2f> resultingPointsByIndex;
     resultingPointsByIndex.reserve(facePointByIndex.size() + pointIndexToPoint.cols()); //We know how big this will be
-    for (const auto& centerPoint : facePointByIndex)
+    for (auto centerPoint : facePointByIndex)
     {
-        resultingPointsByIndex.push_back(centerPoint);
+        resultingPointsByIndex.push_back(std::move(centerPoint));
     }
     //Join both sets of points into all the existing points
-    for (const auto& pt : pointIndexToPoint.colwise())
+    for (auto pt : pointIndexToPoint.colwise())
     {
-        resultingPointsByIndex.emplace_back(pt);
+        resultingPointsByIndex.emplace_back(std::move(pt));
     }
     std::vector<std::vector<int>> resultingTriangleIndexToResultingCornerIndices;
     resultingTriangleIndexToResultingCornerIndices.reserve(numberOfTriangles * 6);
