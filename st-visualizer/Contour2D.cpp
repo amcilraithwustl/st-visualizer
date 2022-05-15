@@ -54,7 +54,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     std::vector endpointIndicesToEdgeIndex(number_of_points, std::vector(number_of_points, -1));
 
     //Might be good to eventually make this a pair
-
+    TOCK
     std::vector<std::vector<int>> edgeIndexToEndpointIndices;
     //Stores which face index an edge belongs to
     std::vector<std::vector<int>> edgeIndexToFaceIndices;
@@ -64,13 +64,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     {
         for (size_t faceIndex = 0; faceIndex < numberOfTriangles; faceIndex++)
         {
-            auto endpointIndices = std::pair(
-                triangleIndexToCornerIndices[faceIndex][triangle_edges[triangleSide].first],
-                triangleIndexToCornerIndices[faceIndex][triangle_edges[triangleSide].second]
-            );
+            int firstEndpointIndex = triangleIndexToCornerIndices[faceIndex][triangle_edges[triangleSide].first];
+            int secondEndpointIndex = triangleIndexToCornerIndices[faceIndex][triangle_edges[triangleSide].second];
 
 
-            if (endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second]==-1)//If the edge doesn't already exist
+            if (endpointIndicesToEdgeIndex[firstEndpointIndex][secondEndpointIndex]==-1)//If the edge doesn't already exist
             {
                 auto num_of_edges = edgeIndexToEndpointIndices.size();
 
@@ -80,19 +78,19 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
                     triangleIndexToCornerIndices[faceIndex][cornerPair.second]
                 });
                 edgeIndexToFaceIndices.push_back({static_cast<int>(faceIndex)});
-                endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second] = num_of_edges;
-                endpointIndicesToEdgeIndex[endpointIndices.second][endpointIndices.first] = num_of_edges;
+                endpointIndicesToEdgeIndex[firstEndpointIndex][secondEndpointIndex] = num_of_edges;
+                endpointIndicesToEdgeIndex[secondEndpointIndex][firstEndpointIndex] = num_of_edges;
                 num_of_edges++;
             }
             else
             {
-                int existingEdgeIndex = endpointIndicesToEdgeIndex[endpointIndices.first][endpointIndices.second];
+                int existingEdgeIndex = endpointIndicesToEdgeIndex[firstEndpointIndex][secondEndpointIndex];
                 edgeIndexToFaceIndices[existingEdgeIndex].push_back(faceIndex); //Connect it to it's other face
             }
         }
     }
 
-
+    TOCK
     /*create interpolation points if they exist, one per edge with material change*/
 
     std::vector<std::pair<Eigen::Vector2f, bool>> edgeIndexToMidPoints(edgeIndexToFaceIndices.size(), { {0,0},false }); //Second value is whether it has been set
@@ -219,18 +217,18 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
         //If the materials on either end of an edge don't match, there will be a triangle
         if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]])
         {
-            std::pair<int, int> segmentEndpoints;
+            std::pair<int, int> segment_endpoints;
             if (edgeIndexToFaceIndices[currentEdgeIndex].size() == 1) //if boundary edge edge
             {
                 if (edgeIndexToFacePointIndex[currentEdgeIndex] == -1) throw "Logic error, midpoint index not found in face points";
                 /*boundary edge : connect edge point and center point*/
-                segmentEndpoints = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][0]], edgeIndexToFacePointIndex[currentEdgeIndex] };
+                segment_endpoints = { triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][0]], edgeIndexToFacePointIndex[currentEdgeIndex] };
             }
             else
             {
                 /*interior edge : connect two center points*/
                 //We know both of these will exist b/c there is always a center point if the triangle has any material changes
-                segmentEndpoints = {
+                segment_endpoints = {
                     triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][0]],
                     triangleIndexToFacePointIndex[edgeIndexToFaceIndices[currentEdgeIndex][1]]
                 };
@@ -240,16 +238,16 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
             //Insert the "top" triangle
             resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
-                segmentEndpoints.first,
-                segmentEndpoints.second,
+                segment_endpoints.first,
+                segment_endpoints.second,
                 static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][0] //B/c the edge indices start after the face point indices
                 }));
             fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]]);
 
             //Insert the "bottom" triangle
             resultingTriangleIndexToResultingCornerIndices.push_back(std::vector({
-                segmentEndpoints.first,
-                segmentEndpoints.second,
+                segment_endpoints.first,
+                segment_endpoints.second,
                 static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][1]
                 }));
             fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]]);
@@ -289,8 +287,6 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
         }
     }
     TOCK
-
-    //Test on three points, four points, and a ring around a single point (triangulated)
 
     return {
         std::move(facePointByIndex),
