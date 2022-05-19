@@ -56,8 +56,11 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     //Might be good to eventually make this a pair
     TOCK
     std::vector<std::vector<int>> edgeIndexToEndpointIndices;
+    edgeIndexToEndpointIndices.reserve(triangle_edges.size());
     //Stores which face index an edge belongs to
     std::vector<std::vector<int>> edgeIndexToFaceIndices;
+    edgeIndexToFaceIndices.reserve(triangle_edges.size());
+
     //TODO: This is the longest process
     //Make connections between edges/faces, edges/endpoints, and endpoints/edges
     for (int triangleSide = 0; triangleSide < 3; triangleSide++)
