@@ -11,7 +11,7 @@ int getMaxPos(const std::vector<float>& material_values);
 
 // getMassPoint
 // Might need work based on input type
-Eigen::Vector2f inline getMassPoint(std::vector<Eigen::Vector2f> a)
+Eigen::Vector2f inline getMassPoint(const std::vector<Eigen::Vector2f>& a)
 {
     Eigen::Vector2f temp = Eigen::Vector2f::Zero(2);
     for(auto v : a)
@@ -23,8 +23,8 @@ Eigen::Vector2f inline getMassPoint(std::vector<Eigen::Vector2f> a)
 
 // InterpEdge2Mat
 // Does a linear interpolation of two materials to produce the midpoint location where the "cross over"
-inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, std::pair<float, float> p_vals,
-                               std::pair<float, float> q_vals)
+inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, const std::pair<float, float>& p_vals,
+                               const std::pair<float, float>& q_vals)
 {
     const auto top = std::abs(p_vals.first - p_vals.second);
     const auto bottom = std::abs(p_vals.first - p_vals.second) + std::abs(q_vals.first - q_vals.second);
@@ -43,8 +43,8 @@ struct contourTriMultiDCStruct
     std::vector<int> fillMats;
 };
 
-contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, std::vector<std::vector<int>> triangleIndexToCornerIndices,
-                                          std::vector<std::vector<float>> pointIndexToMaterialValues);
+contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPoint, const std::vector<std::vector<int>>& triangleIndexToCornerIndices,
+                                          const std::vector<std::vector<float>>& pointIndexToMaterialValues);
 
 // perp
 inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }

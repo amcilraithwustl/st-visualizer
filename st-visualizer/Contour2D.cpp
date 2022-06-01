@@ -34,7 +34,8 @@ int getMaxPos(const std::vector<float>& material_values)
     return max_index;
 }
 
-contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, std::vector<std::vector<int>> triangleIndexToCornerIndices, std::vector<std::vector<float>> pointIndexToMaterialValues)
+contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPoint, const std::vector<std::vector<int>>& triangleIndexToCornerIndices, const std
+                                          ::vector<std::vector<float>>& pointIndexToMaterialValues)
 {
 
     
@@ -73,7 +74,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
 
             if (endpointIndicesToEdgeIndex[firstEndpointIndex][secondEndpointIndex]==-1)//If the edge doesn't already exist
             {
-                auto num_of_edges = edgeIndexToEndpointIndices.size();
+                const auto num_of_edges = edgeIndexToEndpointIndices.size();
 
                 const auto& cornerPair = triangle_edges[triangleSide];
                 edgeIndexToEndpointIndices.push_back({
@@ -83,7 +84,6 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
                 edgeIndexToFaceIndices.push_back({static_cast<int>(faceIndex)});
                 endpointIndicesToEdgeIndex[firstEndpointIndex][secondEndpointIndex] = num_of_edges;
                 endpointIndicesToEdgeIndex[secondEndpointIndex][firstEndpointIndex] = num_of_edges;
-                num_of_edges++;
             }
             else
             {
@@ -139,6 +139,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
         {
             //Generate the center point of the existing midpoint
             std::vector<Eigen::Vector2f> triangleMidpoints;
+            triangleMidpoints.reserve(triangle_edges.size());
             for (auto edge : triangle_edges)
             {
                 auto endpointIndices = endpointIndicesToEdgeIndex[cornerIndices[edge.first]][ cornerIndices[edge.second] ];
@@ -200,19 +201,21 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     /*Create Fill Triangles -> Solid fill triangles for displaying areas of material type, not the contour*/
     std::vector<Eigen::Vector2f> resultingPointsByIndex;
     resultingPointsByIndex.reserve(facePointByIndex.size() + pointIndexToPoint.cols()); //We know how big this will be
-    for (auto centerPoint : facePointByIndex)
+    for (const auto& centerPoint : facePointByIndex)
     {
-        resultingPointsByIndex.push_back(std::move(centerPoint));
+        resultingPointsByIndex.push_back(centerPoint);
     }
     //Join both sets of points into all the existing points
-    for (auto pt : pointIndexToPoint.colwise())
+    for (const auto& pt : pointIndexToPoint.colwise())
     {
-        resultingPointsByIndex.emplace_back(std::move(pt));
+        resultingPointsByIndex.emplace_back(pt);
     }
     std::vector<std::vector<int>> resultingTriangleIndexToResultingCornerIndices;
     resultingTriangleIndexToResultingCornerIndices.reserve(numberOfTriangles * 6);
     std::vector<int> fillMats;
     fillMats.reserve(numberOfTriangles * 6);
+
+    TOCK
 
     /*first type of triangles : dual to mesh edges with a material change*/
     for (int currentEdgeIndex = 0; currentEdgeIndex < edgeIndexToEndpointIndices.size(); currentEdgeIndex++)
@@ -259,7 +262,7 @@ contourTriMultiDCStruct contourTriMultiDC(Eigen::Matrix2Xf pointIndexToPoint, st
     
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
-    auto temp = std::function([facePointByIndex](int item) { return item + static_cast<int>(facePointByIndex.size()); });
+    auto temp = std::function([facePointByIndex](const int& item) { return item + static_cast<int>(facePointByIndex.size()); });
     for (int currentTriangleIndex = 0; currentTriangleIndex < triangleIndexToCornerIndices.size(); currentTriangleIndex++)
     {
         //If There is no change at all
