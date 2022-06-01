@@ -125,6 +125,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +151,8 @@
     <ClCompile Include="GrowAndCover.h" />
     <ClCompile Include="ImportFunctions.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="tetgen1.6.0\predicates.cxx" />
+    <ClCompile Include="tetgen1.6.0\tetgen.cxx" />
     <ClCompile Include="triangle-1.6\triangle.c" />
     <ClCompile Include="UtilityFunctions.cpp" />
   </ItemGroup>
@@ -158,6 +161,7 @@
     <ClInclude Include="Contour3D.h" />
     <ClInclude Include="ImportFunctions.h" />
     <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="tetgen1.6.0\tetgen.h" />
     <ClInclude Include="triangle-1.6\triangle.h" />
     <ClInclude Include="UtilityFunctions.h" />
   </ItemGroup>

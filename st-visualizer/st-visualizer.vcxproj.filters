@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Libraries">
+      <UniqueIdentifier>{12e780f7-fba1-453d-bb58-bc443c978af6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Libraries">
+      <UniqueIdentifier>{4898fd63-0aaf-40ff-a9c6-c330e2e23368}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -33,11 +39,17 @@
     <ClCompile Include="Contour2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="triangle-1.6\triangle.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Contour3D.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="triangle-1.6\triangle.c">
+      <Filter>Source Files\Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="tetgen1.6.0\predicates.cxx">
+      <Filter>Source Files\Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="tetgen1.6.0\tetgen.cxx">
+      <Filter>Source Files\Libraries</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -47,17 +59,20 @@
     <ClInclude Include="UtilityFunctions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JSONParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Contour2D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="triangle-1.6\triangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Contour3D.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="triangle-1.6\triangle.h">
+      <Filter>Header Files\Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="JSONParser.h">
+      <Filter>Header Files\Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="tetgen1.6.0\tetgen.h">
+      <Filter>Header Files\Libraries</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

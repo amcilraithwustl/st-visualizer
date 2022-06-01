@@ -52,13 +52,16 @@
 // To compile TetGen as a library instead of an executable program, define
 //   the TETLIBRARY symbol.
 
-// #define TETLIBRARY
+#define TETLIBRARY
 
 
 // TetGen default uses the double-precision (64 bit) for a real number.
 //   Alternatively, one can use the single-precision (32 bit) 'float' if the
 //   memory is limited.
 
+/**
+ * \brief 
+ */
 #define REAL double  // #define REAL float
 
 // The maximum number of characters in a file name (including the null).
