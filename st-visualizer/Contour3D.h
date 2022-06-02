@@ -33,7 +33,7 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
     tetrahedralize(_strdup(
         "z" //Start arrays at zero
         "V" //Verbose for debugging
-        
+        ""
         // "O0" //Level of mesh optimization (none)
         // "S0" //Max number of added points (none)
     ), &in, &out);
