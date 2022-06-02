@@ -7,6 +7,8 @@
 #include <Eigen/Dense>
 #include "triangle-1.6/triangle.h"
 #include <iostream>
+#include "tetgen1.6.0/tetgen.h"
+
 
 #include "JSONParser.h"
 
@@ -210,16 +212,28 @@ std::vector<T> table(size_t length, std::function<T(size_t)> op)
 }
 
 
-//Functions for ease of use with triangle
+//Functions for ease of use with triangle and tetgen
 inline Eigen::Vector2f getCornerVector(const triangulateio& obj, int corner_index)
 {
 	const auto x_index = corner_index * 2;
 	return Eigen::Vector2d(obj.pointlist[x_index], obj.pointlist[x_index + 1]).cast<float>();
 }
 
+inline Eigen::Vector3f getCornerVector(const tetgenio& obj, int corner_index)
+{
+	const auto x_index = corner_index * 2;
+	return Eigen::Vector3d(obj.pointlist[x_index], obj.pointlist[x_index + 1], obj.pointlist[x_index+2]).cast<float>();
+}
+
 inline std::vector<int> getTriangleCornerIndices(const triangulateio& obj, int triangleIndex)
 {
 	const int* ptr = obj.trianglelist + static_cast<ptrdiff_t>(triangleIndex * obj.numberofcorners);
+	return { ptr, ptr + obj.numberofcorners };
+}
+
+inline std::vector<int> getTetCornerIndices(const tetgenio& obj, int tetIndex)
+{
+	const int* ptr = obj.tetrahedronlist + static_cast<ptrdiff_t>(tetIndex * obj.numberofcorners);
 	return { ptr, ptr + obj.numberofcorners };
 }
 
@@ -307,6 +321,34 @@ inline json extractTriangleMathematicaMesh(const triangulateio& obj)
 		triangleJson.push_back(toJson(set));
 	}
 	json ret = json::array({ pointJson ,triangleJson });
+	return ret;
+};
+
+inline json extractTetMathematicaMesh(const tetgenio& obj)
+{
+	std::vector<Eigen::Vector3f> points;
+	for(int i = 0; i < obj.numberofpoints; i++)
+	{
+        points.push_back(getCornerVector(obj, i));
+    }
+
+	std::vector<std::vector<int>> tets;
+    for(int i = 0; i < obj.numberoftetrahedra ;i ++){
+        tets.push_back(getTetCornerIndices(obj, i));
+    }
+
+	json pointJson = json::array();
+	for (auto& pt : points)
+	{
+		pointJson.push_back(toJson(eigenToVec(pt)));
+	}
+
+	json tetJson = json::array();
+	for (const auto& tet : tets)
+	{
+		tetJson.push_back(toJson(tet));
+	}
+	json ret = json::array({ pointJson ,tetJson });
 	return ret;
 };
 
