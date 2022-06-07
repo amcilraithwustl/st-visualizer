@@ -162,6 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Contour3DTests.cpp" />
     <ClCompile Include="ContourTests.cpp" />
     <ClCompile Include="HexTests.cpp" />
     <ClCompile Include="ImportTests.cpp" />
