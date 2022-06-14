@@ -11,7 +11,8 @@ int getMaxPos(const std::vector<float>& material_values);
 
 // getMassPoint
 // Might need work based on input type
-Eigen::Vector2f inline getMassPoint(const std::vector<Eigen::Vector2f>& a)
+template<unsigned int N>
+Eigen::Matrix<float, N, 1> getMassPoint(const std::vector<Eigen::Matrix<float, N, 1>>& a)
 {
     Eigen::Vector2f temp = Eigen::Vector2f::Zero(2);
     for(auto v : a)
@@ -23,7 +24,8 @@ Eigen::Vector2f inline getMassPoint(const std::vector<Eigen::Vector2f>& a)
 
 // InterpEdge2Mat
 // Does a linear interpolation of two materials to produce the midpoint location where the "cross over"
-inline Eigen::Vector2f interpEdge2Mat(const Eigen::Vector2f& p, const Eigen::Vector2f& q, const std::pair<float, float>& p_vals,
+template<unsigned int N>
+Eigen::Matrix<float, N, 1> interpEdge2Mat(const Eigen::Matrix<float, N, 1>& p, const Eigen::Matrix<float, N, 1>& q, const std::pair<float, float>& p_vals,
                                const std::pair<float, float>& q_vals)
 {
     const auto top = std::abs(p_vals.first - p_vals.second);

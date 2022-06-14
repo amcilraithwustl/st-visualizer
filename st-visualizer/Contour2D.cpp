@@ -113,7 +113,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
             const auto& primaryValues0 = pointIndexToMaterialValues[endpt0Index];
             const auto& primaryValues1 = pointIndexToMaterialValues[endpt1Index];
 
-            edgeIndexToMidPoints[edgeIndex] = { interpEdge2Mat(
+            edgeIndexToMidPoints[edgeIndex] = { interpEdge2Mat<2>(
                 pointIndexToPoint.col(endpointIndices[0]),
                 pointIndexToPoint.col(endpointIndices[1]),
                 { primaryValues0[endpt0PrimaryValueIndex], primaryValues0[endpt1PrimaryValueIndex] },
