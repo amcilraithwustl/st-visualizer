@@ -4,7 +4,7 @@
 
 #include "tetgen1.6.0/tetgen.h"
 
-int orientation(Eigen::Vector3f u, Eigen::Vector3f v, Eigen::Vector3f w)
+inline int orientation(Eigen::Vector3f u, Eigen::Vector3f v, Eigen::Vector3f w)
 {
     auto val = u.cross(v).dot(w);
     if (val < 0) return -1;
@@ -127,18 +127,18 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(std::pair<int, in
 
 inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::vector<int>>, std::vector<std::pair<
     int, int>>> contourTetMultiDC(const std::vector<Eigen::Vector3f>& pts, const std::vector<std::vector<int>>& tets,
-                              std::vector<std::vector<float>> vals)
+        std::vector<std::vector<float>> vals)
 {
     auto nmat = vals[0].size();
     auto npts = pts.size();
     auto ntets = tets.size();
-    std::vector<std::pair<int, int>> edgeMap = {{1, 2}, {1, 3}, {1, 4}, {2, 3}, {2, 4}, {3, 4}};
+    std::vector<std::pair<int, int>> edgeMap = { {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3} };
 
     //get material index at each point
     std::vector<int> ptMats;
     {
         ptMats.reserve(npts);
-        for(int i = 0; i < pts.size(); i ++)
+        for (int i = 0; i < pts.size(); i++)
         {
             ptMats.push_back(getMaxPos(vals[i]));
         }
@@ -152,22 +152,25 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         edges.reserve(ntets * 6);
         edgeTets.reserve(ntets * 6);
         const int temp = ntets % 10 == 0
-                   ? ntets / 10
-                   : (ntets + 10) / 10;
-        for(int i = 0; i < ntets; i++)
+            ? ntets / 10
+            : (ntets + 10) / 10;
+        for (int i = 0; i < ntets; i++)
         {
-            for(int j = 0; j < 6; j++)
+            for (int j = 0; j < 6; j++)
             {
                 if (i % temp == 0 && j == 0) std::cout << static_cast<float>(i) / ntets * 100 << "%" << std::endl;
                 const auto edge = edgeMap[j];
                 const auto& tet = tets[i];
-                auto ind = edgeHash[tet[edge.first]][tet[edge.second]];
                 std::pair endpoints = { tet[edge.first], tet[edge.second] };
-                if(ind == -1)
+                auto ind = edgeHash[endpoints.first][endpoints.second];
+                if (ind == -1)
                 {
                     edges.push_back(endpoints);
+                    edgeTets.push_back({i});
                     edgeHash[endpoints.first][endpoints.second] = edges.size() - 1;
                     edgeHash[endpoints.second][endpoints.first] = edges.size() - 1;
+                }
+                else{
                     edgeTets[ind].push_back(i);
                 }
             }
@@ -176,14 +179,14 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     }
 
     //create interpolation points, one per edge with material change
-    std::vector<std::pair<Eigen::Vector3f,bool>> edgePoints;
+    std::vector<std::pair<Eigen::Vector3f, bool>> edgePoints;
     {
         edgePoints.reserve(edges.size());
         for (auto& edge : edges)
         {
             const auto& pMatIndex = ptMats[edge.first];
             const auto& qMatIndex = ptMats[edge.second];
-            if(pMatIndex== qMatIndex)
+            if (pMatIndex == qMatIndex)
             {
                 edgePoints.push_back({ {0,0,0},false });
             }
@@ -193,7 +196,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 const auto& q = pts[edge.second];
                 const auto& pvals = vals[edge.first];
                 const auto& qvals = vals[edge.second];
-                
+
                 edgePoints.emplace_back(interpEdge2Mat<3>(
                     p, q,
                     { pvals[pMatIndex],pvals[qMatIndex] },
@@ -227,14 +230,15 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 {
                     temp.push_back(edgePoints[edgeHash[ind[edge.first]][ind[edge.second]]].first);
                 }
-                verts.push_back(getMassPoint(temp));
+                verts.push_back(getMassPoint<3>(temp));
+                tetVertInds.push_back(verts.size() - 1);
             }
         }
         std::cout << "Tet points DONE." << std::endl;
     }
 
     //Create Segments
-    std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(),-1)));
+    std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
     std::vector<std::vector<int>> segs;
     std::vector<std::pair<int, int>> segMats;
     {
@@ -244,28 +248,29 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
             ? edges.size() / 10
             : (edges.size() + 10) / 10;
 
-        for(int i = 0; i < edges.size(); i++)
+        for (int i = 0; i < edges.size(); i++)
         {
-            
+
             if (i % temp == 0) std::cout << static_cast<float>(i) / ntets * 100 << "%" << std::endl;
             const auto& edge = edges[i];
-            if(ptMats[edge.first]==ptMats[edge.second])
+            if (ptMats[edge.first] == ptMats[edge.second])
             {
                 std::vector<int> newseg;
-                segMats.emplace_back(ptMats[edge.first] , ptMats[edge.second]);
-                auto [ot, ends] = orderTets(edges [i], subset(tets,edgeTets[i] ));
-               
-                if(ends.size() >0)
+                segMats.emplace_back(ptMats[edge.first], ptMats[edge.second]);
+                //TODO: EdgeTets is wrong
+                auto [ot, ends] = orderTets(edges[i], subset(tets, edgeTets[i]));
+
+                if (ends.size() > 0)
                 {
                     //if there are boundary faces
                     std::vector ps = { 0,0 };
-                    for(auto j = 0; j < ps.size(); j++)
+                    for (auto j = 0; j < ps.size(); j++)
                     {
                         std::vector tri = { edge.first, edge.second, ends[j] };
                         std::ranges::sort(tri);
                         int& hashValue = bdFaceHash[tri[0]][tri[1]][tri[2]];
                         ps[j] = hashValue;
-                        if(ps[j] == -1)
+                        if (ps[j] == -1)
                         {
                             const std::vector<std::pair<int, int>> a = { {0,1},{1,2},{2,0} };
 
@@ -276,13 +281,13 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                                 auto index = edgeHash[tri[pair.first]][tri[pair.second]];
                                 massedPoints.push_back(edgePoints[index].first);
                             }
-                            verts.push_back(getMassPoint(massedPoints));
+                            verts.push_back(getMassPoint<3>(massedPoints));
                             ps[j] = verts.size() - 1;
                             hashValue = ps[j];
                         }
                     }
                     auto t = subset(tetVertInds, subset(edgeTets[i], ot));
-                    newseg = concat(concat({ps[1]}, t), {ps[2]});
+                    newseg = concat(concat({ ps[0] }, t), { ps[1] });
                 }
                 else
                 {
@@ -292,7 +297,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
                 //orient the polygon
                 int p1, p2;
-                if(ot.size()==1)
+                if (ot.size() == 1)
                 {
                     p1 = ends[0];
                     p2 = ends[1];
@@ -303,7 +308,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                     p2 = complement(tets[edgeTets[i][ot[0]]], { edge.first, edge.second, p1 })[0];
                 }
 
-                if (orientation(pts[edge.first] - pts[edge.second], pts[p1] - pts[edge.first], pts[p2] - pts[p1])<0)
+                if (orientation(pts[edge.first] - pts[edge.second], pts[p1] - pts[edge.first], pts[p2] - pts[p1]) < 0)
                 {
                     std::ranges::reverse(newseg);
                 }
@@ -312,7 +317,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
             }
         }
     }
-    return {verts, segs, segMats};
+    return { verts, segs, segMats };
 }
 
 
@@ -339,4 +344,103 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
                        // "O0" //Level of mesh optimization (none)
                        // "S0" //Max number of added points (none)
                    ), &in, &out);
+}
+
+inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f&> pts)
+{
+    Eigen::Vector3f sum = {0,0,0};
+    for(int i = 0; i < pts.size(); i++)
+    {
+        sum += pts[i].cross(pts[(i + 1) % pts.size()]);
+    }
+    return sum;
+}
+
+inline std::pair< std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> getContourByMat3D(
+    std::vector<Eigen::Vector3f> verts,
+    std::vector<std::vector<int>> segs, 
+    std::vector<std::pair<int, int>> segmats,
+    int mat,
+    float shrink)
+{
+    //Select segments by material
+    std::vector<int> inds1;
+    std::vector<int> inds2;
+    {
+        for(int i = 0; i < segs.size(); i++)
+        {
+            if (segmats[i].first == mat) inds1.push_back(i);
+            if (segmats[i].second == mat) inds2.push_back(i);
+        }
+    }
+
+    const auto reversedInds = subset(segs, inds2);
+    std::reverse(reversedInds.begin(), reversedInds.end());
+    auto nsegs = concat(subset(segs, inds1), reversedInds);
+
+    //Prune unused vertices
+    std::vector vertUsed(verts.size(), false);
+    {
+        for(const auto& seg:nsegs)
+        {
+            for(const auto& ind : seg)
+            {
+                vertUsed[ind] = true;
+            }
+        }
+    }
+
+    std::vector<int> nVertInds;
+    for(int i = 0; i < vertUsed.size(); i++)
+    {
+        if (vertUsed[i] == true) nVertInds.push_back(i);
+    }
+
+    std::vector vertNewInds(verts.size(), 0);
+    for(int i = 0; i < nVertInds.size(); i++)
+    {
+        vertNewInds[nVertInds[i]] = i;
+    }
+    auto nverts = subset(verts,nVertInds);
+    std::vector<std::vector<int>> nsegs2;
+    {
+        for(auto& seg: nsegs)
+        {
+            nsegs.push_back({});
+            for(auto& pt:seg)
+            {
+                nsegs[nsegs.size()-1].push_back(vertNewInds[pt]);
+            }
+        }
+    }
+
+    //shrink
+    std::vector<Eigen::Vector3f> vertNorms(nverts.size(), { 0,0,0 });
+    for (auto seg& : segmats)
+    {
+        auto nm = getFaceNorm({ nverts[seg.first], nverts[seg.second] });
+        vertNorms[seg.first] += nm;
+        vertNorms[seg.second] += nm;
+    }
+
+    for(int i = 0; i < vertNorms; i++)
+    {
+        nverts[i] += shrink * vertNorms[i].normalized();
+    }
+
+    return { nverts, nsegs2 };
+}
+
+inline std::vector<std::pair< std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> getContourAllMats3D(std::vector<Eigen::Vector3f> verts,
+    std::vector<std::vector<int>> segs,
+    std::vector<std::pair<int, int>> segmats,
+    int nmats,
+    float shrink)
+{
+    std::vector<std::pair< std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> a;
+    for(int i = 0; i < nmats; i++)
+    {
+        a.push_back(getContourByMat3D(verts, segs, segmats, i, shrink));
+    }
+    return a;
 }

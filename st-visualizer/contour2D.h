@@ -14,7 +14,7 @@ int getMaxPos(const std::vector<float>& material_values);
 template<unsigned int N>
 Eigen::Matrix<float, N, 1> getMassPoint(const std::vector<Eigen::Matrix<float, N, 1>>& a)
 {
-    Eigen::Vector2f temp = Eigen::Vector2f::Zero(2);
+    Eigen::Matrix<float, N, 1> temp = Eigen::Matrix<float, N, 1>::Zero(N);
     for(auto v : a)
     {
         temp += v;

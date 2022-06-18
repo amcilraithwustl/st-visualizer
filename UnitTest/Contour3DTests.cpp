@@ -50,5 +50,10 @@ namespace ContourTests
             std::ofstream f(R"(C:\Users\Aiden McIlraith\Documents\GitHub\st-visualizer\tetgenResults.json)");
             f << finalJson;
 		}
+
+		TEST_METHOD(ContourMathematicaTests)
+		{
+			
+		}
 	};
 }

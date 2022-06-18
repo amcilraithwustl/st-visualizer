@@ -146,7 +146,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
                 if (edgeIndexToMidPoints[endpointIndices].second) triangleMidpoints.push_back(edgeIndexToMidPoints[endpointIndices].first);
             }
 
-            auto centerPoint = getMassPoint(triangleMidpoints);
+            auto centerPoint = getMassPoint<2>(triangleMidpoints);
             facePointByIndex.push_back(centerPoint);
 
             //Create a face vertex at that generated center point
