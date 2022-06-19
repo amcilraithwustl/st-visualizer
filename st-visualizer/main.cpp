@@ -71,12 +71,15 @@ int main(int argc, char* argv[])
 		auto vals = jsonToVector(j[1]);
 
 		auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
-
+		auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
 		json ret = json::array();
-
+		ret.push_back(pts);
+		ret.push_back(vals);
+		ret.push_back(tets);
 		ret.push_back(verts);
 		ret.push_back(segs);
 		ret.push_back(segmats);
+		ret.push_back(ctrs);
 		ret2.push_back(ret);
 	}
 	std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContour3DResults.json");

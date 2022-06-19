@@ -346,7 +346,7 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
                    ), &in, &out);
 }
 
-inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f&> pts)
+inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f>& pts)
 {
     Eigen::Vector3f sum = {0,0,0};
     for(int i = 0; i < pts.size(); i++)
@@ -374,8 +374,8 @@ inline std::pair< std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> g
         }
     }
 
-    const auto reversedInds = subset(segs, inds2);
-    std::reverse(reversedInds.begin(), reversedInds.end());
+    auto reversedInds = subset(segs, inds2);
+    std::ranges::reverse(reversedInds);
     auto nsegs = concat(subset(segs, inds1), reversedInds);
 
     //Prune unused vertices
@@ -404,26 +404,29 @@ inline std::pair< std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> g
     auto nverts = subset(verts,nVertInds);
     std::vector<std::vector<int>> nsegs2;
     {
-        for(auto& seg: nsegs)
+        for(const auto& seg: nsegs)
         {
-            nsegs.push_back({});
-            for(auto& pt:seg)
+            nsegs2.push_back({});
+            for(const auto& pt:seg)
             {
-                nsegs[nsegs.size()-1].push_back(vertNewInds[pt]);
+                nsegs2[nsegs2.size()-1].push_back(vertNewInds[pt]);
             }
         }
     }
 
     //shrink
     std::vector<Eigen::Vector3f> vertNorms(nverts.size(), { 0,0,0 });
-    for (auto seg& : segmats)
+    for (const auto& seg : segmats)
     {
-        auto nm = getFaceNorm({ nverts[seg.first], nverts[seg.second] });
+        std::vector<Eigen::Vector3f> points;
+        points.push_back(nverts[seg.first]);
+        points.push_back(nverts[seg.second]);
+        auto nm = getFaceNorm(points);
         vertNorms[seg.first] += nm;
         vertNorms[seg.second] += nm;
     }
 
-    for(int i = 0; i < vertNorms; i++)
+    for(int i = 0; i < vertNorms.size(); i++)
     {
         nverts[i] += shrink * vertNorms[i].normalized();
     }
