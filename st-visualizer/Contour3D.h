@@ -237,7 +237,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         std::cout << "Tet points DONE." << std::endl;
     }
 
-    //Create Segments
+    //Create Segments //TODO: This doesn't work properly
     std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
     std::vector<std::vector<int>> segs;
     std::vector<std::pair<int, int>> segMats;
@@ -252,6 +252,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         {
             if(i % temp == 0) std::cout << static_cast<float>(i) / edges.size() * 100 << "%" << std::endl;
             const auto& edge = edges[i];
+
             if(ptMats[edge.first] != ptMats[edge.second])
             {
                 segMats.emplace_back(ptMats[edge.first], ptMats[edge.second]);
@@ -350,15 +351,16 @@ inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f>& pts)
     Eigen::Vector3f sum = {0, 0, 0};
     for(int i = 0; i < pts.size(); i++)
     {
-        sum += pts[i].cross(pts[(i + 1) % pts.size()]);
+        const auto offset = (i + 1) % pts.size();
+        sum += pts[i].cross(pts[offset]);
     }
     return sum;
 }
 
 inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> getContourByMat3D(
-    std::vector<Eigen::Vector3f> verts,
-    std::vector<std::vector<int>> segs,
-    std::vector<std::pair<int, int>> segmats,
+    const std::vector<Eigen::Vector3f>& verts,
+    const std::vector<std::vector<int>>& segs,
+    const std::vector<std::pair<int, int>>& segmats,
     int mat,
     float shrink)
 {
@@ -374,7 +376,10 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     }
 
     auto reversedInds = subset(segs, inds2);
-    std::ranges::reverse(reversedInds);
+    for(auto& seg : reversedInds)
+    {
+        std::ranges::reverse(seg);
+    }
     auto nsegs = concat(subset(segs, inds1), reversedInds);
 
     //Prune unused vertices
@@ -395,7 +400,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
         if(vertUsed[i] == true) nVertInds.push_back(i);
     }
 
-    std::vector vertNewInds(verts.size(), 0);
+    std::vector vertNewInds(verts.size(), -1);
     for(int i = 0; i < nVertInds.size(); i++)
     {
         vertNewInds[nVertInds[i]] = i;
@@ -415,19 +420,21 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
 
     //shrink
     std::vector<Eigen::Vector3f> vertNorms(nverts.size(), {0, 0, 0});
-    for(const auto& seg : segmats)
+    for(const auto& seg : nsegs)
     {
-        std::vector<Eigen::Vector3f> points;
-        points.push_back(nverts[seg.first]);
-        points.push_back(nverts[seg.second]);
+        std::vector<Eigen::Vector3f> points = subset(nverts, seg);
         auto nm = getFaceNorm(points);
-        vertNorms[seg.first] += nm;
-        vertNorms[seg.second] += nm;
+        for(auto index : seg)
+        {
+            vertNorms[index] += nm;
+        }
     }
 
     for(int i = 0; i < vertNorms.size(); i++)
     {
-        nverts[i] += shrink * vertNorms[i].normalized();
+        const auto faceVector = vertNorms[i];
+        const auto normalized = faceVector.normalized();
+        nverts[i] += shrink * normalized;
     }
 
     return {nverts, nsegs2};
