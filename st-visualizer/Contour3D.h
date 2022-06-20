@@ -28,8 +28,8 @@ std::vector<T> complement(const std::vector<T>& source, const std::vector<T>& ta
     return std::move(accumulator);
 }
 
-inline std::pair<std::vector<int>, std::vector<int>> orderTets(std::pair<int, int> edges,
-                                                               std::vector<std::vector<int>> tets)
+inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<int, int>& edges,
+                                                               const std::vector<std::vector<int>>& tets)
 {
     std::vector<std::vector<int>> nonEdgeCornersByTet; //This should have two non-edge corners per tet
     {
@@ -277,7 +277,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                             for(const auto& pair : a)
                             {
                                 auto index = edgeHash[tri[pair.first]][tri[pair.second]];
-                                massedPoints.push_back(edgePoints[index].first);
+                                if(edgePoints[index].second) massedPoints.push_back(edgePoints[index].first);
                             }
                             verts.push_back(getMassPoint<3>(massedPoints));
                             ps[j] = verts.size() - 1;
