@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
         auto tets = jsonToTets(j[2]);
 
         auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
-		// auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
+		auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
 		json ret = json::array();
 		ret.push_back(pts);
 		ret.push_back(vals);
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 		ret.push_back(verts);
 		ret.push_back(segs);
 		ret.push_back(segmats);
-		// ret.push_back(ctrs);
+		ret.push_back(ctrs);
 		ret.push_back({});
 		ret2.push_back(ret);
 	}

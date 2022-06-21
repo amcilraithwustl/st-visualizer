@@ -25,7 +25,8 @@ std::vector<T> complement(const std::vector<T>& source, const std::vector<T>& ta
             accumulator.push_back(element);
         }
     }
-    return std::move(accumulator);
+    std::ranges::sort(accumulator);
+    return accumulator;
 }
 
 inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<int, int>& edges,
@@ -36,13 +37,8 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         nonEdgeCornersByTet.reserve(tets.size());
 
         for(const auto& tet : tets)
-        {
-            std::vector<int> complement;
-            for(const auto& corner : tet)
-            {
-                if(corner != edges.first && corner != edges.second) complement.push_back(corner);
-            }
-            nonEdgeCornersByTet.push_back(std::move(complement));
+        {                    
+            nonEdgeCornersByTet.push_back(complement<int>(tet, { edges.first, edges.second }));
         }
     }
 
@@ -59,8 +55,10 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     }
 
     std::vector<int> endpoints; //There will be either 0 or 2 unique corners
+
+     //Which tet, which index in tet
     std::vector tetsByCorner(nonEdgeCornersSet[nonEdgeCornersSet.size() - 1] + 1, std::vector<std::pair<int, int>>());
-    //Which tet, which index in tet
+   
     {
         for(const auto& corner : nonEdgeCornersSet)
         {
@@ -105,6 +103,8 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     //Run through all the connected tets to order them correctly
     while(nextCorner != endPoint)
     {
+
+        //TODO: I THINK THERE IS A PROBLEM HERE SOMEWHERE
         auto tetEntry = tetsByCorner[nextCorner];
 
         //If we have already looked at the first tet in the entry
@@ -121,7 +121,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
             //The new next is the other corner in that tet
         }
     }
-
+    
     return {orderedTets, endpoints};
 }
 
@@ -237,7 +237,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         std::cout << "Tet points DONE." << std::endl;
     }
 
-    //Create Segments //TODO: This doesn't work properly
+    //Create Segments
     std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
     std::vector<std::vector<int>> segs;
     std::vector<std::pair<int, int>> segMats;
@@ -267,18 +267,21 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                     {
                         std::vector tri = {edge.first, edge.second, ends[j]};
                         std::ranges::sort(tri);
+
+
                         int& hashValue = bdFaceHash[tri[0]][tri[1]][tri[2]];
                         ps[j] = hashValue;
-                        if(ps[j] == -1)
+                        if(hashValue == -1)
                         {
-                            const std::vector<std::pair<int, int>> a = {{0, 1}, {1, 2}, {2, 0}};
+                            const std::vector<std::pair<int, int>> triangleEdges = {{0, 1}, {1, 2}, {2, 0}};
 
                             //Add Face Vertex
                             std::vector<Eigen::Vector3f> massedPoints;
-                            for(const auto& pair : a)
+                            for(const auto& triangleEdgeEndpoints : triangleEdges)
                             {
-                                auto index = edgeHash[tri[pair.first]][tri[pair.second]];
-                                if(edgePoints[index].second) massedPoints.push_back(edgePoints[index].first);
+                                auto index = edgeHash[tri[triangleEdgeEndpoints.first]][tri[triangleEdgeEndpoints.second]];
+                                if(edgePoints[index].second) 
+                                    massedPoints.push_back(edgePoints[index].first);
                             }
                             verts.push_back(getMassPoint<3>(massedPoints));
                             ps[j] = verts.size() - 1;
@@ -290,7 +293,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 }
                 else
                 {
-                    //If no boundary edges
+                    //If no boundary faces
                     //TODO: This could probably be done in one go without the else
                     newseg = subset(tetVertInds, subset(edgeTets[i], ot));
                 }
@@ -364,7 +367,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     int mat,
     float shrink)
 {
-    //Select segments by material
+    //Select segments by target material
     std::vector<int> inds1;
     std::vector<int> inds2;
     {
@@ -380,7 +383,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     {
         std::ranges::reverse(seg);
     }
-    auto nsegs = concat(subset(segs, inds1), reversedInds);
+    auto nsegs = concat(subset(segs, inds1), reversedInds);//All these segements start with the target material
 
     //Prune unused vertices
     std::vector vertUsed(verts.size(), false);
@@ -394,18 +397,18 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
         }
     }
 
-    std::vector<int> nVertInds;
+    std::vector<int> nVertInds;//Indices of the vertices we care about
     for(int i = 0; i < vertUsed.size(); i++)
     {
         if(vertUsed[i] == true) nVertInds.push_back(i);
     }
 
-    std::vector vertNewInds(verts.size(), -1);
+    std::vector vertNewInds(verts.size(), -1);//Map the old indices to the new indices
     for(int i = 0; i < nVertInds.size(); i++)
     {
         vertNewInds[nVertInds[i]] = i;
     }
-    auto nverts = subset(verts, nVertInds);
+    auto nverts = subset(verts, nVertInds);//New vertices (can be mapped)
     std::vector<std::vector<int>> nsegs2;
     {
         for(const auto& seg : nsegs)
@@ -420,7 +423,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
 
     //shrink
     std::vector<Eigen::Vector3f> vertNorms(nverts.size(), {0, 0, 0});
-    for(const auto& seg : nsegs)
+    for(const auto& seg : nsegs2)
     {
         std::vector<Eigen::Vector3f> points = subset(nverts, seg);
         auto nm = getFaceNorm(points);
@@ -441,11 +444,11 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
 }
 
 inline std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> getContourAllMats3D(
-    std::vector<Eigen::Vector3f> verts,
-    std::vector<std::vector<int>> segs,
-    std::vector<std::pair<int, int>> segmats,
-    int nmats,
-    float shrink)
+    const std::vector<Eigen::Vector3f>& verts,
+    const std::vector<std::vector<int>>& segs,
+    const std::vector<std::pair<int, int>>& segmats,
+    const int& nmats,
+    const float& shrink)
 {
     std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> a;
     for(int i = 0; i < nmats; i++)

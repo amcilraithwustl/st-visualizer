@@ -15,7 +15,7 @@ template<unsigned int N>
 Eigen::Matrix<float, N, 1> getMassPoint(const std::vector<Eigen::Matrix<float, N, 1>>& a)
 {
     Eigen::Matrix<float, N, 1> temp = Eigen::Matrix<float, N, 1>::Zero(N);
-    for(auto v : a)
+    for(const Eigen::Matrix<float, N, 1>& v : a)
     {
         temp += v;
     }
