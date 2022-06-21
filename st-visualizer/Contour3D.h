@@ -125,6 +125,48 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     return {orderedTets, endpoints};
 }
 
+
+class lookupTable3D
+{
+public:
+    std::vector<std::vector<std::vector<int>>> table;
+
+    lookupTable3D(size_t size)
+    {
+        table = std::vector(size, std::vector(size, std::vector(size,-1)));
+
+        //table = std::vector<std::vector<std::vector<int>>>();
+        // for(int i = 0 ; i < size; i++)
+        // {
+        //     auto& entry = table[i];
+        //
+        //     entry = std::vector(i+1,std::vector<int>());
+        //     for(int j = 0; j < i+1; j++)
+        //     {
+        //         entry[j] = std::vector(j + 1, -1);
+        //     }
+        // }
+    }
+
+    int& at(size_t a, size_t b, size_t c)
+    {
+        //Order arguments
+        if(b>a)
+        {
+            std::swap(a, b);
+        }
+        if(c>a)
+        {
+            std::swap(c, a);
+        }
+        if(c>b)
+        {
+            std::swap(b, c);
+        }
+        return table[a][b][c];
+    }
+};
+
 inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::vector<int>>, std::vector<std::pair<
                       int, int>>> contourTetMultiDC(const std::vector<Eigen::Vector3f>& pts,
                                                     const std::vector<std::vector<int>>& tets,
@@ -238,7 +280,11 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     }
 
     //Create Segments
-    std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
+
+    //TODO: Extremely slow. Reduce size of cube vector and Consider a faster allocated option.
+    // std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
+    // std::unordered_map<std::tuple<int, int, int>, int> bdFaceHash;
+    lookupTable3D bdFaceHash(edges.size());
     std::vector<std::vector<int>> segs;
     std::vector<std::pair<int, int>> segMats;
     {
@@ -269,7 +315,10 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                         std::ranges::sort(tri);
 
 
-                        int& hashValue = bdFaceHash[tri[0]][tri[1]][tri[2]];
+                        // if (!bdFaceHash.contains({ tri[0], tri[1], tri[2] })) {
+                        //     bdFaceHash.insert({ { tri[0], tri[1], tri[2] } , -1 });
+                        // }
+                        auto& hashValue = bdFaceHash.at(tri[0],tri[1],tri[2]);
                         ps[j] = hashValue;
                         if(hashValue == -1)
                         {
