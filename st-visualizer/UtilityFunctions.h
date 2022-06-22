@@ -349,5 +349,11 @@ inline json extractTetMathematicaMesh(const tetgenio& obj)
 template <typename T>
 std::vector<T> subset(const std::vector<T>& set, const std::vector<int>& indices)
 {
-	return indices << std::function([set](int i) {return set[i]; });
+	std::vector<T> new_vector;
+	new_vector.reserve(indices.size());
+	for(const auto& index:indices)
+	{
+		new_vector.push_back(set[index]);
+	}
+	return new_vector;
 }

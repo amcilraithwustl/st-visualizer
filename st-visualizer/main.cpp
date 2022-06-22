@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	auto a = file.is_open();
 	json j2 = json::parse(file);
 	json ret2 = json::array();
-	for (auto j : j2) {
+	for (const auto& j : j2) {
 		auto pts = jsonToMatrix(j[0]);
         auto vals = jsonToVector(j[1]);
         auto tets = jsonToTets(j[2]);

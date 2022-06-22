@@ -1,8 +1,13 @@
 #pragma once
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
+#include <iomanip>
 
 #include "tetgen1.6.0/tetgen.h"
+
+#define LOADING_SIZE 50
+#define UNLOADED_SYMBOL char(176)
+#define LOADED_SYMBOL char(219)
 
 inline int orientation(Eigen::Vector3f u, Eigen::Vector3f v, Eigen::Vector3f w)
 {
@@ -29,6 +34,7 @@ std::vector<T> complement(const std::vector<T>& source, const std::vector<T>& ta
     return accumulator;
 }
 
+//TODO: This function is what takes the longest?
 inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<int, int>& edges,
                                                                const std::vector<std::vector<int>>& tets)
 {
@@ -57,8 +63,8 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     std::vector<int> endpoints; //There will be either 0 or 2 unique corners
 
      //Which tet, which index in tet
+    //This section is slow
     std::vector tetsByCorner(nonEdgeCornersSet[nonEdgeCornersSet.size() - 1] + 1, std::vector<std::pair<int, int>>());
-   
     {
         for(const auto& corner : nonEdgeCornersSet)
         {
@@ -121,7 +127,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         }
     }
     
-    return {orderedTets, endpoints};
+    return {std::move(orderedTets), std::move(endpoints)};
 }
 
 
@@ -131,44 +137,45 @@ public:
     std::vector<std::vector<std::vector<int>>> table;
     // std::map<std::pair<size_t, size_t>, std::vector<int>> table;
     size_t size;
-    lookupTable3D(size_t size):size(size)
+    lookupTable3D(size_t size) :size(size)
     {
-        table = std::vector(size, std::vector(size, std::vector(size,-1)));
-        // table.reserve(size);
+        // table = std::vector(size, std::vector(size, std::vector(size,-1)));
+        table.reserve(size);
     }
 
     int& at(size_t a, size_t b, size_t c)
     {
-        // //Order arguments
-        // if (b > a)
-        // {
-        //     std::swap(a, b);
-        // }
-        // if (c > a)
-        // {
-        //     std::swap(c, a);
-        // }
-        // if (c > b)
-        // {
-        //     std::swap(b, c);
-        // }
-        //
-        // if(table.size() < a+1)
-        // {
-        //     table.resize(a+1);
-        // }
-        // // table[a].reserve(size);
-        //
-        // if(table[a].size()<b+1)
-        // {
-        //     table[a].resize(b + 1);
-        // }
-        // // table[a][b].reserve(size);
-        //
-        // if(table[a][b].size()<c+1)
-        // {
-        //     table[a][b].resize(c + 1);
-        // }
+        //Order arguments
+        if (b > a)
+        {
+            std::swap(a, b);
+        }
+        if (c > a)
+        {
+            std::swap(c, a);
+        }
+        if (c > b)
+        {
+            std::swap(b, c);
+        }
+
+        if (table.size() < a + 1)
+        {
+            table.resize(a + 1);
+        }
+        // table[a].reserve(size);
+
+        if (table[a].size() < b + 1)
+        {
+            table[a].resize(b + 1);
+        }
+
+        // table[a][b].reserve(size);
+
+        if (table[a][b].size() < c + 1)
+        {
+            table[a][b].resize(c + 1, -1);
+        }
 
         return table[a][b][c];
     }
@@ -179,6 +186,8 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                                                     const std::vector<std::vector<int>>& tets,
                                                     std::vector<std::vector<float>> vals)
 {
+    std::cout << std::fixed;
+    std::cout << std::setprecision(0);
     auto nmat = vals[0].size();
     auto npts = pts.size();
     auto ntets = tets.size();
@@ -201,14 +210,17 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     {
         edges.reserve(ntets * 6);
         edgeTets.reserve(ntets * 6);
-        const int temp = ntets % 10 == 0
-                         ? ntets / 10
-                         : (ntets + 10) / 10;
+        const int temp = ntets % LOADING_SIZE == 0
+                         ? ntets / LOADING_SIZE
+                         : (ntets / LOADING_SIZE)+1;
+
         for(int i = 0; i < ntets; i++)
         {
             for(int j = 0; j < 6; j++)
             {
-                if(i % temp == 0 && j == 0) std::cout << static_cast<float>(i) / ntets * 100 << "%" << std::endl;
+
+                if (i % temp == 0 && j == 0) 
+                    std::cout << std::string(i / temp,LOADED_SYMBOL) + std::string(LOADING_SIZE - (i / temp), UNLOADED_SYMBOL) << "\r";
                 const auto edge = edgeMap[j];
                 const auto& tet = tets[i];
                 std::pair endpoints = {tet[edge.first], tet[edge.second]};
@@ -295,13 +307,14 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     {
         segs.reserve(edges.size());
         segMats.reserve(edges.size());
-        const int temp = edges.size() % 10 == 0
-                         ? edges.size() / 10
-                         : (edges.size() / 10) + 1;
+        const int temp = edges.size() % LOADING_SIZE == 0
+                         ? edges.size() / LOADING_SIZE
+                         : (edges.size() / LOADING_SIZE) + 1;
 
         for(int i = 0; i < edges.size(); i++)
         {
-            if(i % temp == 0) std::cout << static_cast<float>(i) / edges.size() * 100 << "%" << std::endl;
+            if(i % temp == 0) 
+                std::cout << std::string(i / temp, LOADED_SYMBOL) + std::string(LOADING_SIZE - (i / temp), UNLOADED_SYMBOL) << "\r";
             const auto& edge = edges[i];
 
             if(ptMats[edge.first] != ptMats[edge.second])
