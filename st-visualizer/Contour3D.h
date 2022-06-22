@@ -133,42 +133,42 @@ public:
     size_t size;
     lookupTable3D(size_t size):size(size)
     {
-        // table = std::vector(size, std::vector(size, std::vector(size,-1)));
-        table.reserve(size);
+        table = std::vector(size, std::vector(size, std::vector(size,-1)));
+        // table.reserve(size);
     }
 
     int& at(size_t a, size_t b, size_t c)
     {
-        //Order arguments
-        if (b > a)
-        {
-            std::swap(a, b);
-        }
-        if (c > a)
-        {
-            std::swap(c, a);
-        }
-        if (c > b)
-        {
-            std::swap(b, c);
-        }
-
-        if(table.size() < a+1)
-        {
-            table.resize(a+1);
-        }
-        // table[a].reserve(size);
-
-        if(table[a].size()<b+1)
-        {
-            table[a].resize(b + 1);
-        }
-        // table[a][b].reserve(size);
-
-        if(table[a][b].size()<c+1)
-        {
-            table[a][b].resize(c + 1);
-        }
+        // //Order arguments
+        // if (b > a)
+        // {
+        //     std::swap(a, b);
+        // }
+        // if (c > a)
+        // {
+        //     std::swap(c, a);
+        // }
+        // if (c > b)
+        // {
+        //     std::swap(b, c);
+        // }
+        //
+        // if(table.size() < a+1)
+        // {
+        //     table.resize(a+1);
+        // }
+        // // table[a].reserve(size);
+        //
+        // if(table[a].size()<b+1)
+        // {
+        //     table[a].resize(b + 1);
+        // }
+        // // table[a][b].reserve(size);
+        //
+        // if(table[a][b].size()<c+1)
+        // {
+        //     table[a][b].resize(c + 1);
+        // }
 
         return table[a][b][c];
     }
