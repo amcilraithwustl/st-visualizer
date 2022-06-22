@@ -282,8 +282,6 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     //Create Segments
 
     //TODO: Extremely slow. Reduce size of cube vector and Consider a faster allocated option.
-    // std::vector bdFaceHash(edges.size(), std::vector(edges.size(), std::vector(edges.size(), -1)));
-    // std::unordered_map<std::tuple<int, int, int>, int> bdFaceHash;
     lookupTable3D bdFaceHash(edges.size());
     std::vector<std::vector<int>> segs;
     std::vector<std::pair<int, int>> segMats;
