@@ -104,7 +104,6 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     while(nextCorner != endPoint)
     {
 
-        //TODO: I THINK THERE IS A PROBLEM HERE SOMEWHERE
         auto tetEntry = tetsByCorner[nextCorner];
 
         //If we have already looked at the first tet in the entry
@@ -130,39 +129,47 @@ class lookupTable3D
 {
 public:
     std::vector<std::vector<std::vector<int>>> table;
-
-    lookupTable3D(size_t size)
+    // std::map<std::pair<size_t, size_t>, std::vector<int>> table;
+    size_t size;
+    lookupTable3D(size_t size):size(size)
     {
-        table = std::vector(size, std::vector(size, std::vector(size,-1)));
-
-        //table = std::vector<std::vector<std::vector<int>>>();
-        // for(int i = 0 ; i < size; i++)
-        // {
-        //     auto& entry = table[i];
-        //
-        //     entry = std::vector(i+1,std::vector<int>());
-        //     for(int j = 0; j < i+1; j++)
-        //     {
-        //         entry[j] = std::vector(j + 1, -1);
-        //     }
-        // }
+        // table = std::vector(size, std::vector(size, std::vector(size,-1)));
+        table.reserve(size);
     }
 
     int& at(size_t a, size_t b, size_t c)
     {
         //Order arguments
-        if(b>a)
+        if (b > a)
         {
             std::swap(a, b);
         }
-        if(c>a)
+        if (c > a)
         {
             std::swap(c, a);
         }
-        if(c>b)
+        if (c > b)
         {
             std::swap(b, c);
         }
+
+        if(table.size() < a+1)
+        {
+            table.resize(a+1);
+        }
+        // table[a].reserve(size);
+
+        if(table[a].size()<b+1)
+        {
+            table[a].resize(b + 1);
+        }
+        // table[a][b].reserve(size);
+
+        if(table[a][b].size()<c+1)
+        {
+            table[a][b].resize(c + 1);
+        }
+
         return table[a][b][c];
     }
 };
