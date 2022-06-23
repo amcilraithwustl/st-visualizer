@@ -9,6 +9,12 @@
 #define UNLOADED_SYMBOL char(176)
 #define LOADED_SYMBOL char(219)
 
+
+//1) Geneate vertices, don't append, create flat array w/ fixed size
+//2) Remove 2d/3d vector to hashmaps
+//3) Store indices of the other two vertices not on the edge
+//4) Figure out how to reduce number of data structures
+
 inline int orientation(Eigen::Vector3f u, Eigen::Vector3f v, Eigen::Vector3f w)
 {
     auto val = u.cross(v).dot(w);
@@ -127,7 +133,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         }
     }
     
-    return {std::move(orderedTets), std::move(endpoints)};
+    return std::pair<std::vector<int>, std::vector<int>>({ std::move(orderedTets), std::move(endpoints) });
 }
 
 
