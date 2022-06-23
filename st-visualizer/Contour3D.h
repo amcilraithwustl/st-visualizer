@@ -8,9 +8,9 @@
 #define LOADING_SIZE 50
 #define UNLOADED_SYMBOL char(176)
 #define LOADED_SYMBOL char(219)
+#define DEBUG true
 
-
-//1) Geneate vertices, don't append, create flat array w/ fixed size
+//1) Generate vertices, don't append, create flat array w/ fixed size
 //2) Remove 2d/3d vector to hashmaps
 //3) Store indices of the other two vertices not on the edge
 //4) Figure out how to reduce number of data structures
@@ -44,6 +44,10 @@ std::vector<T> complement(const std::vector<T>& source, const std::vector<T>& ta
 inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<int, int>& edges,
                                                                const std::vector<std::vector<int>>& tets)
 {
+    std::pair<std::vector<int>, std::vector<int>> ret;
+    auto& orderedTets = ret.first;
+    orderedTets.reserve(tets.size());
+    auto& endpoints = ret.second;
     std::vector<std::vector<int>> nonEdgeCornersByTet; //This should have two non-edge corners per tet
     {
         nonEdgeCornersByTet.reserve(tets.size());
@@ -66,11 +70,10 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         nonEdgeCornersSet.resize(end - nonEdgeCornersSet.begin());
     }
 
-    std::vector<int> endpoints; //There will be either 0 or 2 unique corners
-
      //Which tet, which index in tet
     //This section is slow
-    std::vector tetsByCorner(nonEdgeCornersSet[nonEdgeCornersSet.size() - 1] + 1, std::vector<std::pair<int, int>>());
+    //Change index method
+    std::map<int, std::vector<std::pair<int, int>>> tetsByCorner;
     {
         for(const auto& corner : nonEdgeCornersSet)
         {
@@ -91,7 +94,6 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         }
     }
 
-    std::vector<int> orderedTets;
     int endPoint;
     int nextCorner;
     //If there are no boundary spaces
@@ -133,7 +135,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         }
     }
     
-    return std::pair<std::vector<int>, std::vector<int>>({ std::move(orderedTets), std::move(endpoints) });
+    return ret;
 }
 
 
@@ -224,9 +226,10 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         {
             for(int j = 0; j < 6; j++)
             {
-
-                if (i % temp == 0 && j == 0) 
+                #if DEBUG
+                 if (i % temp == 0 && j == 0) 
                     std::cout << std::string(i / temp,LOADED_SYMBOL) + std::string(LOADING_SIZE - (i / temp), UNLOADED_SYMBOL) << "\r";
+                #endif
                 const auto edge = edgeMap[j];
                 const auto& tet = tets[i];
                 std::pair endpoints = {tet[edge.first], tet[edge.second]};
@@ -319,8 +322,10 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
         for(int i = 0; i < edges.size(); i++)
         {
+            #if DEBUG
             if(i % temp == 0) 
                 std::cout << std::string(i / temp, LOADED_SYMBOL) + std::string(LOADING_SIZE - (i / temp), UNLOADED_SYMBOL) << "\r";
+            #endif
             const auto& edge = edges[i];
 
             if(ptMats[edge.first] != ptMats[edge.second])
