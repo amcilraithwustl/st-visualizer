@@ -11,19 +11,20 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace ContourTests
 {
+    inline std::vector<std::vector<std::vector<int>>> tets_vec;
+    inline std::vector<std::vector<Eigen::Vector3f>> pts_vec;
+    inline std::vector<std::vector<std::vector<float>>> vals_vec;
+    inline std::vector<std::vector<std::vector<int>>> tetsImported_vec;
+
     TEST_CLASS(ContourTests3D)
     {
-    private:
-        std::vector<std::vector<std::vector<int>>> tets_vec;
-        std::vector<std::vector<Eigen::Vector3f>> pts_vec;
-        std::vector<std::vector<std::vector<float>>> vals_vec;
-        std::vector<std::vector<std::vector<int>>> tetsImported_vec;
+        
     public:
-        TEST_METHOD_INITIALIZE(InitValues)
+        TEST_CLASS_INITIALIZE(InitValues)
         {
             using json = nlohmann::json;
 
-            if (tets_vec.size()) return;
+            if (!tets_vec.empty()) return;
             tets_vec = {};
             pts_vec = {};
             vals_vec = {};
@@ -79,7 +80,7 @@ namespace ContourTests
                 "C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContour3DTest.json");
             json j2 = json::parse(file);
 
-            for(const auto& j : j2)
+            for(auto& j : j2)
             {
                 auto pts = jsonToMatrix(j[0]);
                 pts_vec.push_back(pts);
@@ -95,17 +96,10 @@ namespace ContourTests
                 tetgenio out;
                 tetralizeMatrix(ptsMat, out);
 
-                auto tets = jsonToTets(extractTetMathematicaMesh(out)[1]);
-                //Undo mathematica index overadjustment from jsonToTets
-                for(auto& tet:tets)
-                {
-                    for(auto& corner:tet)
-                    {
-                        corner++;
-                    }
-                }
-                tets_vec.push_back(tets);
+                tets_vec.push_back(tetgenToTetVector(out));
+                j.clear();
             }
+            
         }
 
         TEST_METHOD(Contour3DMathematicaTests)

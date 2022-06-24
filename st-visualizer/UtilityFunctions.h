@@ -219,6 +219,8 @@ inline Eigen::Vector2f getCornerVector(const triangulateio& obj, int corner_inde
 	return Eigen::Vector2d(obj.pointlist[x_index], obj.pointlist[x_index + 1]).cast<float>();
 }
 
+
+
 inline Eigen::Vector3f getCornerVector(const tetgenio& obj, int corner_index)
 {
 	const auto x_index = corner_index * 3;
@@ -323,6 +325,17 @@ inline json extractTriangleMathematicaMesh(const triangulateio& obj)
 	json ret = json::array({ pointJson ,triangleJson });
 	return ret;
 };
+
+inline std::vector<std::vector<int>> tetgenToTetVector(const tetgenio& obj)
+{
+	std::vector<std::vector<int>> tets;
+	tets.reserve(obj.numberoftetrahedra);
+	for (int i = 0; i < obj.numberoftetrahedra; i++)
+	{
+		tets.push_back(getTetCornerIndices(obj, i));
+	}
+	return tets;
+}
 
 inline json extractTetMathematicaMesh(const tetgenio& obj)
 {

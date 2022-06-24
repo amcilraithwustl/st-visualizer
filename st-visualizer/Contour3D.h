@@ -186,7 +186,10 @@ public:
         // {
         //     table[a][b].resize(c + 1, -1);
         // }
-
+        if(!table[a][b].contains(c))
+        {
+            table[a][b][c] = -1;
+        }
         return table[a][b][c];
     }
 };

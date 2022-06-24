@@ -65,11 +65,12 @@ int main(int argc, char* argv[])
 	auto a = file.is_open();
 	json j2 = json::parse(file);
 	json ret2 = json::array();
-	for (const auto& j : j2) {
+	for (auto& j : j2) {
 		std::cout << std::endl << "~~ Begin New Evalutation ~~" << std::endl;
 		auto pts = jsonToMatrix(j[0]);
         auto vals = jsonToVector(j[1]);
         auto tets = jsonToTets(j[2]);
+		j.clear();
 
         auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
 		auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
