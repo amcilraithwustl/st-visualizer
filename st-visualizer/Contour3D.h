@@ -142,13 +142,15 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
 class lookupTable3D
 {
 public:
-    std::vector<std::vector<std::vector<int>>> table;
+    // std::vector<std::vector<std::vector<int>>> table;
+    //TODO: make this a composite key
+    std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, int>>> table;
     // std::map<std::pair<size_t, size_t>, std::vector<int>> table;
     size_t size;
     lookupTable3D(size_t size) :size(size)
     {
         // table = std::vector(size, std::vector(size, std::vector(size,-1)));
-        table.reserve(size);
+        // table.reserve(size);
     }
 
     int& at(size_t a, size_t b, size_t c)
@@ -166,24 +168,24 @@ public:
         {
             std::swap(b, c);
         }
-
-        if (table.size() < a + 1)
-        {
-            table.resize(a + 1);
-        }
-        // table[a].reserve(size);
-
-        if (table[a].size() < b + 1)
-        {
-            table[a].resize(b + 1);
-        }
-
-        // table[a][b].reserve(size);
-
-        if (table[a][b].size() < c + 1)
-        {
-            table[a][b].resize(c + 1, -1);
-        }
+        //
+        // if (table.size() < a + 1)
+        // {
+        //     table.resize(a + 1);
+        // }
+        // // table[a].reserve(size);
+        //
+        // if (table[a].size() < b + 1)
+        // {
+        //     table[a].resize(b + 1);
+        // }
+        //
+        // // table[a][b].reserve(size);
+        //
+        // if (table[a][b].size() < c + 1)
+        // {
+        //     table[a][b].resize(c + 1, -1);
+        // }
 
         return table[a][b][c];
     }
@@ -417,7 +419,6 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
             in.pointlist[3 * i + j] = static_cast<double>(pts.col(i)(j));
         }
     }
-
     tetrahedralize(_strdup(
                        "z" //Start arrays at zero
                        "V" //Verbose for debugging
