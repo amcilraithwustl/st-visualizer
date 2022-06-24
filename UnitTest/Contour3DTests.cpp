@@ -13,6 +13,7 @@ namespace ContourTests
 {
     inline std::vector<std::vector<std::vector<int>>> tets_vec;
     inline std::vector<std::vector<Eigen::Vector3f>> pts_vec;
+    inline std::vector<Eigen::Matrix3Xf> ptsMat_vec;
     inline std::vector<std::vector<std::vector<float>>> vals_vec;
     inline std::vector<std::vector<std::vector<int>>> tetsImported_vec;
 
@@ -79,9 +80,11 @@ namespace ContourTests
             std::ifstream file(
                 "C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContour3DTest.json");
             json j2 = json::parse(file);
-
+            int i = 0;
             for(auto& j : j2)
             {
+                const auto log = std::string("==> Starting Import #") + std::to_string(i++);
+                Logger::WriteMessage(&log[0]);
                 auto pts = jsonToMatrix(j[0]);
                 pts_vec.push_back(pts);
                 auto vals = jsonToVector(j[1]);
@@ -95,13 +98,35 @@ namespace ContourTests
                 }
                 tetgenio out;
                 tetralizeMatrix(ptsMat, out);
-
+                ptsMat_vec.push_back(ptsMat);
                 tets_vec.push_back(tetgenToTetVector(out));
                 j.clear();
             }
             
         }
 
+        TEST_METHOD(TetgenRuntimeTest)
+        {
+            for(const auto& ptsMat:ptsMat_vec)
+            {
+                tetgenio out;
+                tetralizeMatrix(ptsMat, out);
+            }
+        }
+        TEST_METHOD(Contour3DRuntimeTest)
+        {
+            for (int i = 0; i < pts_vec.size(); i++)
+            {
+                const auto log = std::string("==> Starting Test #") + std::to_string(i);
+                Logger::WriteMessage(&log[0]);
+                auto& pts = pts_vec[i];
+                auto& vals = vals_vec[i];
+                auto& tets = tets_vec[i];
+
+                auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
+                getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
+            }
+        }
         TEST_METHOD(Contour3DMathematicaTests)
         {
             using json = nlohmann::json;
@@ -110,6 +135,8 @@ namespace ContourTests
             json ret2 = json::array();
             for(int i = 0; i < pts_vec.size(); i++)
             {
+                const auto log = std::string("==> Starting Test #") + std::to_string(i);
+                Logger::WriteMessage(&log[0]);
                 auto& pts = pts_vec[i];
                 auto& vals = vals_vec[i];
                 auto& tets = tets_vec[i];
@@ -140,6 +167,8 @@ namespace ContourTests
             json ret2 = json::array();
             for(int i = 0; i < pts_vec.size(); i++)
             {
+                const auto log = std::string("==> Starting Test #") + std::to_string(i);
+                Logger::WriteMessage(&log[0]);
                 auto& pts = pts_vec[i];
                 auto& vals = vals_vec[i];
                 auto& tets = tetsImported_vec[i];
