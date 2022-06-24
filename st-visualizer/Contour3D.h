@@ -24,17 +24,39 @@ inline int orientation(Eigen::Vector3f u, Eigen::Vector3f v, Eigen::Vector3f w)
 }
 
 
-template <typename T>
-std::vector<T> complement(const std::vector<T>& source, const std::vector<T>& target)
+//TODO: This is slow
+inline std::vector<int> complement(std::vector<int> source, std::vector<int> target)
 {
-    std::vector<T> accumulator;
+    std::ranges::sort(source);
+    std::ranges::sort(target);
+    std::vector<int> accumulator;
     accumulator.reserve(source.size());
-    for(auto& element : source)
+    int i = 0, j = 0;
+    while(i < source.size() && j < target.size())
     {
-        if(std::find(target.begin(), target.end(), element) == target.end())
+        auto& element = source[i];
+        //If the element is ahead of the target comparison, there are no more matches with it
+        if(element > target[j])
+        {
+            j++;
+        }
+        //If the element is behind the target comparison, we can safely use it
+        else if(element < target[j])
         {
             accumulator.push_back(element);
+            i++;
         }
+        //If the element is equal, we know it cannot be in the set and we skip it
+        else if(element == target[j])
+        {
+            i++;
+        }
+    }
+
+    //Push back any remaining points
+    for(; i < source.size(); i++)
+    {
+        accumulator.push_back(source[i]);
     }
     std::ranges::sort(accumulator);
     return accumulator;
@@ -54,7 +76,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
 
         for(const auto& tet : tets)
         {                    
-            nonEdgeCornersByTet.push_back(complement<int>(tet, { edges.first, edges.second }));
+            nonEdgeCornersByTet.push_back(complement(tet, { edges.first, edges.second }));
         }
     }
 
@@ -217,7 +239,25 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     }
 
     //create adj table from edges to faces
-    std::vector edgeHash(npts, std::vector(npts, -1));
+    //TODO: make this a hashmap
+    struct hash2d
+    {
+        std::unordered_map<int, std::unordered_map<int, int>> table;
+        int& at(int a, int b)
+        {
+            if(a > b)
+            {
+                std::swap(a, b);
+            }
+            if(!table[a].contains(b))
+            {
+                table[a][b] = -1;
+            }
+            return table[a][b];
+        }
+    };
+    hash2d edgeHash;
+
     std::vector<std::pair<int, int>> edges;
     std::vector<std::vector<int>> edgeTets;
     {
@@ -238,13 +278,13 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 const auto edge = edgeMap[j];
                 const auto& tet = tets[i];
                 std::pair endpoints = {tet[edge.first], tet[edge.second]};
-                auto ind = edgeHash[endpoints.first][endpoints.second];
+                auto& ind = edgeHash.at(endpoints.first,endpoints.second);
                 if(ind == -1)
                 {
                     edges.push_back(endpoints);
                     edgeTets.push_back({i});
-                    edgeHash[endpoints.first][endpoints.second] = edges.size() - 1;
-                    edgeHash[endpoints.second][endpoints.first] = edges.size() - 1;
+                    edgeHash.at(endpoints.first,endpoints.second) = edges.size() - 1;
+                    edgeHash.at(endpoints.second,endpoints.first) = edges.size() - 1;
                 }
                 else
                 {
@@ -256,16 +296,17 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     }
 
     //create interpolation points, one per edge with material change
-    std::vector<std::pair<Eigen::Vector3f, bool>> edgePoints;
+    std::unordered_map<int, Eigen::Vector3f> edgePoints;
     {
         edgePoints.reserve(edges.size());
-        for(auto& edge : edges)
+        for(int i = 0; i < edges.size(); i++)
         {
+            auto& edge = edges[i];
             const auto& pMatIndex = ptMats[edge.first];
             const auto& qMatIndex = ptMats[edge.second];
             if(pMatIndex == qMatIndex)
             {
-                edgePoints.push_back({{0, 0, 0}, false});
+                
             }
             else
             {
@@ -274,11 +315,10 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 const auto& pvals = vals[edge.first];
                 const auto& qvals = vals[edge.second];
 
-                edgePoints.emplace_back(interpEdge2Mat<3>(
-                                            p, q,
-                                            {pvals[pMatIndex], pvals[qMatIndex]},
-                                            {qvals[pMatIndex], qvals[qMatIndex]}
-                                        ), true
+                edgePoints[i] = interpEdge2Mat<3>(
+                    p, q,
+                    { pvals[pMatIndex], pvals[qMatIndex] },
+                    { qvals[pMatIndex], qvals[qMatIndex] }
                 );
             }
         }
@@ -302,8 +342,9 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 std::vector<Eigen::Vector3f> temp;
                 for(const auto& edge : edgeMap)
                 {
-                    const auto& point = edgePoints[edgeHash[tet[edge.first]][tet[edge.second]]];
-                    if(point.second) temp.push_back(point.first);
+                    const auto pointIndex = edgeHash.at(tet[edge.first], tet[edge.second]);
+                   
+                    if(edgePoints.contains(pointIndex)) temp.push_back(edgePoints[pointIndex]);
                 }
                 verts.push_back(getMassPoint<3>(temp));
                 tetVertInds.push_back(verts.size() - 1);
@@ -362,9 +403,9 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                             std::vector<Eigen::Vector3f> massedPoints;
                             for(const auto& triangleEdgeEndpoints : triangleEdges)
                             {
-                                auto index = edgeHash[tri[triangleEdgeEndpoints.first]][tri[triangleEdgeEndpoints.second]];
-                                if(edgePoints[index].second) 
-                                    massedPoints.push_back(edgePoints[index].first);
+                                auto index = edgeHash.at(tri[triangleEdgeEndpoints.first],tri[triangleEdgeEndpoints.second]);
+                                if(edgePoints.contains(index)) 
+                                    massedPoints.push_back(edgePoints[index]);
                             }
                             verts.push_back(getMassPoint<3>(massedPoints));
                             ps[j] = verts.size() - 1;
@@ -467,22 +508,25 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     }
     auto nsegs = concat(subset(segs, inds1), reversedInds);//All these segements start with the target material
 
-    //Prune unused vertices
-    std::vector vertUsed(verts.size(), false);
+    std::vector<int> nVertInds;//Indices of the vertices we care about
+    //TODO: This process is slow. Could be sped up w/ std functions of uniq
     {
-        for(const auto& seg : nsegs)
+        //Prune unused vertices
+        std::vector vertUsed(verts.size(), false);
         {
-            for(const auto& ind : seg)
+            for (const auto& seg : nsegs)
             {
-                vertUsed[ind] = true;
+                for (const auto& ind : seg)
+                {
+                    vertUsed[ind] = true;
+                }
             }
         }
-    }
 
-    std::vector<int> nVertInds;//Indices of the vertices we care about
-    for(int i = 0; i < vertUsed.size(); i++)
-    {
-        if(vertUsed[i] == true) nVertInds.push_back(i);
+        for (int i = 0; i < vertUsed.size(); i++)
+        {
+            if (vertUsed[i] == true) nVertInds.push_back(i);
+        }
     }
 
     std::vector vertNewInds(verts.size(), -1);//Map the old indices to the new indices
