@@ -2,7 +2,6 @@
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
 #include <iomanip>
-
 #include "tetgen1.6.0/tetgen.h"
 
 #define LOADING_SIZE 50
