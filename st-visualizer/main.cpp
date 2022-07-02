@@ -35,10 +35,13 @@ int main(int argc, char* argv[])
 	auto jsonToVector = [](const json& source)
 	{
 		std::vector<std::vector<float>> ret;
-		for (auto row : source)
+		ret.reserve(source.size());
+		for (const auto& row : source)
 		{
-			std::vector<float> temp;
-			for (auto item : row)
+			ret.push_back({});
+			std::vector<float>& temp = ret[ret.size()-1];
+			temp.reserve(row.size());
+			for (const auto& item : row)
 			{
 				temp.push_back(item);
 			}
@@ -50,9 +53,11 @@ int main(int argc, char* argv[])
 	auto jsonToTets = [](const json& source)
 	{
 		std::vector<std::vector<int>> ret;
+		ret.reserve(source.size());
 		for (auto row : source)
 		{
 			std::vector<int> temp;
+			temp.reserve(row.size());
 			for (auto item : row)
 			{
 				temp.push_back(static_cast<int>(item) - 1);//Subtract 1 b/c mathematica indices start a 1
@@ -63,7 +68,6 @@ int main(int argc, char* argv[])
 	};
 	// read a JSON file
 	std::ifstream file("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\singleContour3DTest.json");
-	auto a = file.is_open();
 	json j2 = json::parse(file);
 	json ret2 = json::array();
 	for (auto& j : j2) {
@@ -72,6 +76,16 @@ int main(int argc, char* argv[])
         auto vals = jsonToVector(j[1]);
         auto tets = jsonToTets(j[2]);
 		j.clear();
+
+		auto randPoints = Eigen::Matrix3Xf(3, pts.size());
+
+		for(int i = 0; i < pts.size(); i++)
+		{
+			randPoints.col(i) = pts[i];
+		}
+
+		tetgenio out;
+		tetralizeMatrix(randPoints, out);
 
         auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
 		auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
