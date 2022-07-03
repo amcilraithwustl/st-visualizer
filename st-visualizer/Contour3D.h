@@ -9,6 +9,7 @@
 #define LOADED_SYMBOL char(219)
 #define DEBUG true
 
+
 //1) Generate vertices, don't append, create flat array w/ fixed size
 //2) Remove 2d/3d vector to hashmaps
 //3) Store indices of the other two vertices not on the edge
@@ -58,7 +59,6 @@ inline std::vector<int> complement(std::vector<int> source, std::vector<int> tar
     {
         accumulator.push_back(source[i]);
     }
-    // std::ranges::sort(accumulator);//TODO: Could probably comment this out
     return accumulator;
 }
 
@@ -69,8 +69,6 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     std::pair<std::vector<int>, std::vector<int>> ret;
     auto& orderedTets = ret.first;
     orderedTets.reserve(tets.size());
-
-    auto& endpoints = ret.second;
 
     //Which 2 other corners does each tet have?
     std::vector<std::vector<int>> cornersByTet; //This should have two non-edge vertices per tet
@@ -83,30 +81,20 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         }
     }
 
-    std::vector<int> cornerSet;
-    {
-        cornerSet.reserve(tets.size() * 2);
-        for(auto& set : cornersByTet)
-        {
-            cornerSet.insert(cornerSet.end(), set.begin(), set.end());
-        }
-
-        std::ranges::sort(cornerSet);
-        const auto end = std::ranges::unique(cornerSet).begin();
-        cornerSet.resize(end - cornerSet.begin());
-    }
+    
 
     //Which tet, which index in tet
-    //O(n)
-    std::map<int, std::vector<std::pair<int, int>>> tetsByCorner;
+    std::unordered_map<int, std::vector<std::pair<int, int>>> tetsByCorner;
     {
 
         //For Each tet
+        //O(2n) b/c each tet has exactly two stored corners
         for (int tetIndex = 0; tetIndex < cornersByTet.size(); tetIndex++)//O(n)
         {
-            //For each corner in that tet
-            for (int cornerIndex = 0; cornerIndex < cornersByTet[tetIndex].size(); cornerIndex++) //O(1) b/c n==2
+            //For each of the two corners in that tet
+            for (int cornerIndex = 0; cornerIndex < cornersByTet[tetIndex].size(); cornerIndex++) //O(2)
             {
+                //Push back the corners that it touches
                 const auto& corner = cornersByTet[tetIndex][cornerIndex];
                 tetsByCorner[corner].emplace_back(tetIndex, cornerIndex);
             }
@@ -129,6 +117,27 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         //     }
         // }
 
+        
+    }
+
+    //Set of all the corners, sorted
+    //O(nlogn)
+    std::vector<int> cornerSet;
+    {
+        cornerSet.reserve(cornersByTet.size() * 2);
+        for (auto& set : cornersByTet)
+        {
+            cornerSet.insert(cornerSet.end(), set.begin(), set.end());
+        }
+
+        std::ranges::sort(cornerSet);
+        const auto end = std::ranges::unique(cornerSet).begin();
+        cornerSet.resize(end - cornerSet.begin());
+    }
+
+    //Find the two endpoints (if they exist)
+    auto& endpoints = ret.second;
+    {
         for (const auto& corner : cornerSet)
         {
             //Find each tet it touches
@@ -138,6 +147,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
             {
                 endpoints.push_back(corner);//Then save it as an endpoint
             }
+            if (endpoints.size() == 2) break;//We know there will be no more than 2
         }
     }
 
@@ -162,23 +172,19 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     }
 
     //Run through all the connected tets to order them correctly
-    while(nextCorner != endPoint)
+    //Stop when we get to the endpoint (Which will be on the first tet we started at or on the other unconnected tet)
+    while (nextCorner != endPoint)//O(n)
     {
-        auto tetEntry = tetsByCorner[nextCorner];
+        const auto& tetEntry = tetsByCorner[nextCorner];
 
-        //If we have already looked at the first tet in the entry
-        if(tetEntry[0].first == orderedTets[orderedTets.size() - 1])
-        {
-            orderedTets.push_back(tetEntry[1].first); //Push back the second tet index
-            nextCorner = cornersByTet[tetEntry[1].first][1 - tetEntry[1].second];
-            //The new next is the other corner in that tet
-        }
-        else
-        {
-            orderedTets.push_back(tetEntry[0].first); //push back the tet index from the first entry
-            nextCorner = cornersByTet[tetEntry[0].first][1 - tetEntry[0].second];
-            //The new next is the other corner in that tet
-        }
+        //If we have already looked at the first tet in the entry, then we know it is the second and vice versa
+        //First is tet index, second is the corner's index in that tet (0 or 1 b/c we removed the two we are rotating around)
+        const auto& selectedTet = tetEntry[0].first == orderedTets[orderedTets.size() - 1]
+            ? tetEntry[1]
+            : tetEntry[0];
+
+        orderedTets.push_back(selectedTet.first); //Push back the tet index
+        nextCorner = cornersByTet[selectedTet.first][1 - selectedTet.second];//Save the other corner from that tet
     }
 
     return ret;
@@ -189,7 +195,6 @@ class Hash3d
 {
 public:
     // std::vector<std::vector<std::vector<int>>> table;
-    //TODO: make this a composite key
     std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, int>>> table;
     // std::map<std::pair<size_t, size_t>, std::vector<int>> table;
     size_t size;
@@ -540,10 +545,10 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
         }
     }
 
-    std::vector vertNewInds(verts.size(), -1); //Map the old indices to the new indices
+    std::vector newIndices_by_oldIndices(verts.size(), -1); //Map the old indices to the new indices
     for(int i = 0; i < nVertInds.size(); i++)
     {
-        vertNewInds[nVertInds[i]] = i;
+        newIndices_by_oldIndices[nVertInds[i]] = i;
     }
     auto nverts = subset(verts, nVertInds); //New vertices (can be mapped)
     std::vector<std::vector<int>> nsegs2;
@@ -553,7 +558,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
             nsegs2.push_back({});
             for(const auto& pt : seg)
             {
-                nsegs2[nsegs2.size() - 1].push_back(vertNewInds[pt]);
+                nsegs2[nsegs2.size() - 1].push_back(newIndices_by_oldIndices[pt]);
             }
         }
     }
