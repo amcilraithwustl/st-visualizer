@@ -10,7 +10,7 @@ using namespace nlohmann;
 //Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
 int main(int argc, char* argv[])
 {
-	constexpr auto n = 500000;
+	constexpr auto n = 50000;
     auto rand_pts = Eigen::Matrix3Xf::Random(3, n);
 	std::vector<Eigen::Vector3f> pts;
 	pts.reserve(n);
@@ -31,12 +31,13 @@ int main(int argc, char* argv[])
 			vals[vals.size() - 1].push_back(v(i));
 		}
 	}
+	std::vector<std::vector<int>> tets;
+	{
+		tetgenio out;
+		tetralizeMatrix(rand_pts, out);
+		tets = tetgenToTetVector(out);
+	}
 
-	tetgenio out;
-	tetralizeMatrix(rand_pts, out);
-	
-	auto tets = tetgenToTetVector(out);
-	
 	auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
 	auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
 	
