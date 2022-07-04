@@ -82,9 +82,9 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     }
 
     
-
+    //Stores which tet(s) each corner belongs to
     //Which tet, which index in tet
-    std::unordered_map<int, std::vector<std::pair<int, int>>> tetsByCorner;
+    std::unordered_map<int, std::vector<std::pair<int, int>>> tets_by_corner;
     {
 
         //For Each tet
@@ -96,7 +96,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
             {
                 //Push back the corners that it touches
                 const auto& corner = cornersByTet[tetIndex][cornerIndex];
-                tetsByCorner[corner].emplace_back(tetIndex, cornerIndex);
+                tets_by_corner[corner].emplace_back(tetIndex, cornerIndex);
             }
         }
         
@@ -120,34 +120,18 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
         
     }
 
-    //Set of all the corners, sorted
-    //O(nlogn)
-    std::vector<int> cornerSet;
-    {
-        cornerSet.reserve(cornersByTet.size() * 2);
-        for (auto& set : cornersByTet)
-        {
-            cornerSet.insert(cornerSet.end(), set.begin(), set.end());
-        }
-
-        std::ranges::sort(cornerSet);
-        const auto end = std::ranges::unique(cornerSet).begin();
-        cornerSet.resize(end - cornerSet.begin());
-    }
-
     //Find the two endpoints (if they exist)
     auto& endpoints = ret.second;
     {
-        for (const auto& corner : cornerSet)
+        //For each entry in tets_by_corner
+        for (const auto& [ corner, owningTets ] : tets_by_corner)
         {
-            //Find each tet it touches
-            auto& tetEntry = tetsByCorner[corner];
-
-            if (tetEntry.size() == 1) //If the corner isn't shared by any other tets
+            if (owningTets.size() == 1) //If the corner only belongs to one tet
             {
                 endpoints.push_back(corner);//Then save it as an endpoint
+
+                if (endpoints.size() == 2) break;//We know there will be 0 or 2
             }
-            if (endpoints.size() == 2) break;//We know there will be no more than 2
         }
     }
 
@@ -165,7 +149,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     else
     {
         //We know the associated set of tets will have exactly one entry
-        const auto& temp = tetsByCorner[endpoints[0]][0]; //The tet associated with the first unique corner
+        const auto& temp = tets_by_corner[endpoints[0]][0]; //The tet associated with the first unique corner
         orderedTets.push_back(temp.first);
         nextCorner = cornersByTet[temp.first][1 - temp.second]; //Start with the other corner in that tet
         endPoint = endpoints[1]; //End with the other unique corner
@@ -175,7 +159,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     //Stop when we get to the endpoint (Which will be on the first tet we started at or on the other unconnected tet)
     while (nextCorner != endPoint)//O(n)
     {
-        const auto& tetEntry = tetsByCorner[nextCorner];
+        const auto& tetEntry = tets_by_corner[nextCorner];
 
         //If we have already looked at the first tet in the entry, then we know it is the second and vice versa
         //First is tet index, second is the corner's index in that tet (0 or 1 b/c we removed the two we are rotating around)
@@ -275,6 +259,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
 
     Hash2d edge_index_by_endpoint_indices;
+    edge_index_by_endpoint_indices.table.reserve(points_by_index.size());
     std::vector<std::pair<int, int>> edges_by_index;
     std::vector<std::vector<int>> tets_by_edge_index;
     {
@@ -283,32 +268,42 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         const int display_fraction = number_of_tets % LOADING_SIZE == 0
                          ? number_of_tets / LOADING_SIZE
                          : (number_of_tets / LOADING_SIZE) + 1;
+
+        //For each tet
+        //O(n)
         for (size_t tet_index = 0; tet_index < number_of_tets; tet_index++)
         {
-#if DEBUG
-            if (tet_index % display_fraction == 0)
-                std::cout << std::string(tet_index / display_fraction, LOADED_SYMBOL) + std::string(
-                    LOADING_SIZE - (tet_index / display_fraction), UNLOADED_SYMBOL) << "\r";
-#endif
-            for (int combination_index = 0; combination_index < 6; combination_index++)
-            {
+            const auto& tet = tets_by_index[tet_index];
 
-                const auto& corner_combination = corner_combinations[combination_index];
-                const auto& tet = tets_by_index[tet_index];
+            //For each edge in that tet
+            //O(6)
+            for (const auto& corner_combination : corner_combinations)
+            {
+                //Get the edge's endpoints
                 const auto& firstEndpoint = tet[corner_combination.first];
                 const auto& secondEndpoint = tet[corner_combination.second];
+
+                //See if we have looked at this edge before
                 auto& edge_index = edge_index_by_endpoint_indices.at(firstEndpoint, secondEndpoint);
+
                 if (edge_index == -1) //If the edge does not exist
                 {
+                    //Add it to the various indexes we are building
                     edges_by_index.emplace_back(firstEndpoint, secondEndpoint);
                     tets_by_edge_index.push_back({ static_cast<int>(tet_index) });
                     edge_index = edges_by_index.size() - 1;
                 }
                 else
                 {
+                    //Otherwise, we just track the tet part b/c we know the index already
                     tets_by_edge_index[edge_index].push_back(tet_index);
                 }
             }
+#if DEBUG
+            if (tet_index % display_fraction == 0)
+                std::cout << std::string(tet_index / display_fraction, LOADED_SYMBOL) + std::string(
+                    LOADING_SIZE - (tet_index / display_fraction), UNLOADED_SYMBOL) << "\r";
+#endif
         }
         std::cout << "Adj table DONE." << std::endl;
     }
