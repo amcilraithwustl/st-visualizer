@@ -15,15 +15,15 @@
 //3) Store indices of the other two vertices not on the edge (DONE)
 //4) Figure out how to reduce number of data structures
 
-template<typename T>
-class rigidVector {
+template <typename T>
+class rigidVector
+{
     T* data = __nullptr;
     size_t max = 0;
     size_t s = 0;
 public:
     rigidVector()
     {
-        
     }
 
     void reserve(size_t newMax)
@@ -33,7 +33,7 @@ public:
         data = new T[newMax];
     }
 
-    T* start() { return data+0; }
+    T* start() { return data + 0; }
     T* end() { return data + s; }
 
     T& operator[](size_t index)
@@ -49,11 +49,11 @@ public:
     void push_back(T&& i)
     {
         data[s++] = std::move(i);
-        if (s > max) throw "Out of Range";
+        if(s > max) throw "Out of Range";
     }
 };
 
-inline int orientation(const Eigen::Vector3f& u,const Eigen::Vector3f& v, const Eigen::Vector3f& w)
+inline int orientation(const Eigen::Vector3f& u, const Eigen::Vector3f& v, const Eigen::Vector3f& w)
 {
     auto val = u.cross(v).dot(w);
     if(val < 0) return -1;
@@ -66,14 +66,14 @@ inline std::vector<int> complementByReference(const std::vector<int>& source, co
 {
     std::vector<int> accumulator;
     accumulator.reserve(source.size());
-    for(const auto& item:source)
+    for(const auto& item : source)
     {
         bool wasFound = false;
-        for(const auto& t:target)
+        for(const auto& t : target)
         {
-            if (t == item) wasFound = true;
+            if(t == item) wasFound = true;
         }
-        if (!wasFound) accumulator.push_back(item);
+        if(!wasFound) accumulator.push_back(item);
     }
     std::ranges::sort(accumulator);
     return accumulator;
@@ -129,45 +129,45 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
     std::vector<std::vector<int>> cornersByTet; //This should have two non-edge vertices per tet
     {
         cornersByTet.reserve(tets.size());
-        std::vector edgeEndpoints = { edge.first, edge.second };
+        std::vector edgeEndpoints = {edge.first, edge.second};
         for(const auto& tet : tets)
         {
             cornersByTet.push_back(complementByReference(tet, edgeEndpoints));
         }
     }
 
-    
+
     //Stores which tet(s) each corner belongs to
     //Which tet, which index in tet
     std::unordered_map<int, std::vector<std::pair<int, int>>> tets_by_corner;
     {
-
         //For Each tet
         //O(2n) b/c each tet has exactly two stored corners
-        for (int tetIndex = 0; tetIndex < cornersByTet.size(); tetIndex++)//O(n)
+        size_t corner_index = 0;
+        for(int tetIndex = 0; tetIndex < cornersByTet.size(); tetIndex++) //O(n)
         {
             //For each of the two corners in that tet
-            for (size_t corner_index = 0; corner_index < cornersByTet[tetIndex].size(); corner_index++) //O(2)
+            for(corner_index = 0; corner_index < cornersByTet[tetIndex].size(); corner_index++) //O(2)
             {
                 //Push back the corners that it touches
                 const auto& corner = cornersByTet[tetIndex][corner_index];
                 tets_by_corner[corner].reserve(10);
                 tets_by_corner[corner].emplace_back(tetIndex, corner_index);
             }
-        }        
+        }
     }
 
     //Find the two endpoints (if they exist)
     auto& endpoints = ret.second;
     {
         //For each entry in tets_by_corner
-        for (const auto& [ corner, owningTets ] : tets_by_corner)
+        for(const auto& [corner, owningTets] : tets_by_corner)
         {
-            if (owningTets.size() == 1) //If the corner only belongs to one tet
+            if(owningTets.size() == 1) //If the corner only belongs to one tet
             {
-                endpoints.push_back(corner);//Then save it as an endpoint
+                endpoints.push_back(corner); //Then save it as an endpoint
 
-                if (endpoints.size() == 2) break;//We know there will be 0 or 2
+                if(endpoints.size() == 2) break; //We know there will be 0 or 2
             }
         }
     }
@@ -194,18 +194,19 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
 
     //Run through all the connected tets to order them correctly
     //Stop when we get to the endpoint (Which will be on the first tet we started at or on the other unconnected tet)
-    while (nextCorner != endPoint)//O(n)
+    while(nextCorner != endPoint) //O(n)
     {
         const auto& tet_entry = tets_by_corner[nextCorner];
 
         //If we have already looked at the first tet in the entry, then we know it is the second and vice versa
         //First is tet index, second is the corner's index in that tet (0 or 1 b/c we removed the two we are rotating around)
         auto [tet_index, corner_index] = tet_entry[0].first == orderedTets[orderedTets.size() - 1]
-                                 ? tet_entry[1]
-                                 : tet_entry[0];
+                                         ? tet_entry[1]
+                                         : tet_entry[0];
 
         orderedTets.push_back(tet_index); //Push back the tet index
-        nextCorner = cornersByTet[tet_index][static_cast<size_t>(1) - corner_index];//Save the other corner from that tet
+        nextCorner = cornersByTet[tet_index][static_cast<size_t>(1) - corner_index];
+        //Save the other corner from that tet
     }
 
     return ret;
@@ -258,22 +259,19 @@ struct Hash2d
     {
         if(a > b)
         {
-            if (!table[b].contains(a))
+            if(!table[b].contains(a))
             {
                 table[b][a] = -1;
             }
             return table[b][a];
         }
-        else {
-            if (!table[a].contains(b))
-            {
-                table[a][b] = -1;
-            }
-            return table[a][b];
+        if(!table[a].contains(b))
+        {
+            table[a][b] = -1;
         }
+        return table[a][b];
     }
 };
-
 
 
 inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::vector<int>>, std::vector<std::pair<
@@ -309,18 +307,18 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         edges_by_index.reserve(number_of_tets * 6);
         tets_by_edge_index.reserve(number_of_tets * 6);
         const int display_fraction = number_of_tets % LOADING_SIZE == 0
-                         ? number_of_tets / LOADING_SIZE
-                         : (number_of_tets / LOADING_SIZE) + 1;
+                                     ? number_of_tets / LOADING_SIZE
+                                     : (number_of_tets / LOADING_SIZE) + 1;
 
         //For each tet
         //O(n)
-        for (size_t tet_index = 0; tet_index < number_of_tets; tet_index++)
+        for(size_t tet_index = 0; tet_index < number_of_tets; tet_index++)
         {
             const auto& tet = tets_by_index[tet_index];
 
             //For each edge in that tet
             //O(6)
-            for (const auto& corner_combination : corner_combinations)
+            for(const auto& corner_combination : corner_combinations)
             {
                 //Get the edge's endpoints
                 const auto& firstEndpoint = tet[corner_combination.first];
@@ -329,7 +327,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 //See if we have looked at this edge before
                 auto& edge_index = edge_index_by_endpoint_indices.at(firstEndpoint, secondEndpoint);
 
-                if (edge_index == -1) //If the edge does not exist
+                if(edge_index == -1) //If the edge does not exist
                 {
                     //Add it to the various indexes we are building
                     edge_index = static_cast<int>(edges_by_index.size());
@@ -342,10 +340,9 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
                 //Track the tet part no matter what
                 tets_by_edge_index[edge_index].push_back(tet_index);
-
             }
 #if DEBUG
-            if (tet_index % display_fraction == 0)
+            if(tet_index % display_fraction == 0)
                 std::cout << std::string(tet_index / display_fraction, LOADED_SYMBOL) + std::string(
                     LOADING_SIZE - (tet_index / display_fraction), UNLOADED_SYMBOL) << "\r";
 #endif
@@ -387,6 +384,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     std::vector<Eigen::Vector3f> vertex_by_index;
     std::vector<int> vertex_index_by_tet_index;
     {
+        std::vector<Eigen::Vector3f> temp;
         vertex_by_index.reserve(number_of_tets * 6);
         vertex_index_by_tet_index.reserve(number_of_tets);
         for(const auto& tet : tets_by_index)
@@ -396,21 +394,22 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 && primary_material_by_point_index[tet[0]] == primary_material_by_point_index[tet[2]]
                 && primary_material_by_point_index[tet[0]] == primary_material_by_point_index[tet[3]])
             {
-                vertex_index_by_tet_index.push_back(-1);//There is no central vertex
+                vertex_index_by_tet_index.push_back(-1); //There is no central vertex
             }
             else
             {
-                std::vector<Eigen::Vector3f> temp;
                 temp.reserve(corner_combinations.size());
                 for(const auto& corner_combination : corner_combinations)
                 {
                     const auto& pointIndex = edge_index_by_endpoint_indices.at(
                         tet[corner_combination.first], tet[corner_combination.second]);
 
-                    if(edgePoint_by_edge_index.contains(pointIndex)) temp.push_back(edgePoint_by_edge_index[pointIndex]);
+                    if(edgePoint_by_edge_index.contains(pointIndex)) temp.
+                        push_back(edgePoint_by_edge_index[pointIndex]);
                 }
                 vertex_by_index.push_back(getMassPoint<3>(temp));
                 vertex_index_by_tet_index.push_back(vertex_by_index.size() - 1);
+                temp.resize(0);
             }
         }
         std::cout << "Tet points_by_index DONE." << std::endl;
@@ -425,11 +424,11 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
         segments_by_index.reserve(edges_by_index.size());
         segmentMaterials_by_index.reserve(edges_by_index.size());
 
-        const std::vector<std::pair<int, int>> triangleEdges = { {0, 1}, {1, 2}, {2, 0} };
+        const std::vector<std::pair<int, int>> triangleEdges = {{0, 1}, {1, 2}, {2, 0}};
 
         const int print_constant = edges_by_index.size() % LOADING_SIZE == 0
-                         ? edges_by_index.size() / LOADING_SIZE
-                         : (edges_by_index.size() / LOADING_SIZE) + 1;
+                                   ? edges_by_index.size() / LOADING_SIZE
+                                   : (edges_by_index.size() / LOADING_SIZE) + 1;
 
         //O(n), total O(n^2)
         //This function has the largest slowdown
@@ -440,7 +439,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
             if(primary_material_by_point_index[edge.first] != primary_material_by_point_index[edge.second])
             {
                 segmentMaterials_by_index.emplace_back(primary_material_by_point_index[edge.first],
-                                     primary_material_by_point_index[edge.second]);
+                                                       primary_material_by_point_index[edge.second]);
 
                 const auto& tets_around_edge_by_index = tets_by_edge_index[edgeIndex];
                 const auto& tets_surrounding_edge_set = subset(tets_by_index, tets_around_edge_by_index);
@@ -452,7 +451,8 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 const auto& tets_touching_edge_set = subset(tets_around_edge_by_index, ordered_tets_in_set);
 
                 //Stores the vertices in order that make up the new segment
-                std::vector<int> new_segment_vertices_set_ordered = subset(vertex_index_by_tet_index, tets_touching_edge_set);
+                std::vector<int> new_segment_vertices_set_ordered = subset(
+                    vertex_index_by_tet_index, tets_touching_edge_set);
 
                 if(!endpoints.empty())
                 {
@@ -470,8 +470,6 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                         //If it doesn't exist
                         if(hashValue == -1)
                         {
-                            
-
                             //Add Face Vertex
                             std::vector<Eigen::Vector3f> massedPoints;
                             massedPoints.reserve(triangleEdges.size());
@@ -488,10 +486,11 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                             hashValue = endpoint_vertices[j];
                         }
                     }
-                    
-                    new_segment_vertices_set_ordered = concat(concat({endpoint_vertices[0]}, new_segment_vertices_set_ordered), {endpoint_vertices[1]});
+
+                    new_segment_vertices_set_ordered = concat(
+                        concat({endpoint_vertices[0]}, new_segment_vertices_set_ordered), {endpoint_vertices[1]});
                 }
-                
+
 
                 //orient the polygon
                 int p1, p2;
@@ -504,9 +503,9 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 {
                     const auto& random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
                     p1 = complementByReference(random_tet,
-                                    tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
+                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
                     p2 = complementByReference(random_tet,
-                        {edge.first, edge.second, p1})[0];
+                                               {edge.first, edge.second, p1})[0];
                 }
 
                 if(orientation(points_by_index[edge.first] - points_by_index[edge.second],
@@ -519,7 +518,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 segments_by_index.push_back(new_segment_vertices_set_ordered);
             }
 #if DEBUG
-            if (edgeIndex % print_constant == 0)
+            if(edgeIndex % print_constant == 0)
                 std::cout << std::string(edgeIndex / print_constant, LOADED_SYMBOL) + std::string(
                     LOADING_SIZE - (edgeIndex / print_constant), UNLOADED_SYMBOL) << "\r";
 #endif
@@ -587,11 +586,11 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     {
         std::ranges::reverse(seg);
     }
-    auto matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches); //All these segements start with the target material
+    auto matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches);
+    //All these segements start with the target material
 
     std::vector<int> oldIndices_by_newIndex; //Indices of the vertices we care about
     {
-        
         std::vector vertices_used_by_index(verts.size(), false);
         {
             //O(n)
