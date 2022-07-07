@@ -46,18 +46,7 @@ namespace Cube {
     }
 }
 
-// Display and Animation. To draw we just clear the window and draw the cube.
-// Because our main window is double buffered we have to swap the buffers to
-// make the drawing visible. Animation is achieved by successively moving our
-// camera and drawing. The function nextAnimationFrame() moves the camera to
-// the next point and draws. The way that we get animation in OpenGL is to
-// register nextFrame as the idle function; this is done in main().
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    Cube::draw();
-    glFlush();
-    glutSwapBuffers();
-}
+
 
 // We'll be flying around the cube by moving the camera along the orbit of the
 // curve u->(8*cos(u), 7*cos(u)-1, 4*cos(u/3)+2).  We keep the camera looking
@@ -92,8 +81,80 @@ void init() {
     glCullFace(GL_BACK);
 }
 
-// The usual main for a GLUT application.
-int main(int argc, char** argv) {
+
+#include "JSONParser.h"
+#include "UtilityFunctions.h"
+#include "tetgen1.6.0/tetgen.h"
+#include "Contour3D.h"
+using namespace nlohmann;
+//https://wias-berlin.de/software/tetgen/
+
+//https://www.youtube.com/watch?v=A1LqGsyl3C4
+
+
+void drawContour(std::vector<Eigen::Vector3f> contour)
+{
+    glBegin(GL_POLYGON);
+    for (int i = 0; i < contour.size(); i++) {
+        glColor3fv(Cube::vertexColors[i%Cube::NUM_VERTICES]);
+        glVertex3fv(contour[i].data());
+    }
+    glEnd();
+}
+
+// Display and Animation. To draw we just clear the window and draw the cube.
+// Because our main window is double buffered we have to swap the buffers to
+// make the drawing visible. Animation is achieved by successively moving our
+// camera and drawing. The function nextAnimationFrame() moves the camera to
+// the next point and draws. The way that we get animation in OpenGL is to
+// register nextFrame as the idle function; this is done in main().
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Cube::draw();
+
+    //Render both sides of the polygon
+    glDisable(GL_CULL_FACE);
+
+
+    drawContour({ {0,0,0},{1,0,0},{1,1,0},{0,1,0},{0,1,1},{0,0,1},{1, 0, 1} });
+    glFlush();
+    glutSwapBuffers();
+}
+
+//Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
+int main(int argc, char* argv[])
+{
+	constexpr auto n = 50;
+    auto rand_pts = Eigen::Matrix3Xf::Random(3, n);
+	std::vector<Eigen::Vector3f> pts;
+	pts.reserve(n);
+	for (int i = 0; i < rand_pts.cols(); i++)
+	{
+		const auto temp = rand_pts.col(i);
+		pts.emplace_back(temp);
+	}
+	std::vector<std::vector<float>> vals;
+	vals.reserve(n);
+	for (int i = 0; i < rand_pts.cols(); i++)
+	{
+        constexpr auto m = 5;
+        vals.emplace_back();
+		const auto v = Eigen::VectorXf::Random(m);
+		for (int i = 0; i < m; i++)
+		{
+			vals[vals.size() - 1].push_back(v(i));
+		}
+	}
+	std::vector<std::vector<int>> tets;
+	{
+		tetgenio out;
+		tetralizeMatrix(rand_pts, out);
+		tets = tetgenToTetVector(out);
+	}
+
+	auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
+	auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(500, 500);
@@ -103,51 +164,6 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     init();
     glutMainLoop();
-}
 
-// #include "JSONParser.h"
-// #include "UtilityFunctions.h"
-// #include "tetgen1.6.0/tetgen.h"
-// #include "Contour3D.h"
-// using namespace nlohmann;
-// //https://wias-berlin.de/software/tetgen/
-//
-// //https://www.youtube.com/watch?v=A1LqGsyl3C4
-//
-// //Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
-// int main(int argc, char* argv[])
-// {
-// 	constexpr auto n = 50000;
-//     auto rand_pts = Eigen::Matrix3Xf::Random(3, n);
-// 	std::vector<Eigen::Vector3f> pts;
-// 	pts.reserve(n);
-// 	for (int i = 0; i < rand_pts.cols(); i++)
-// 	{
-// 		const auto temp = rand_pts.col(i);
-// 		pts.emplace_back(temp);
-// 	}
-// 	std::vector<std::vector<float>> vals;
-// 	vals.reserve(n);
-// 	for (int i = 0; i < rand_pts.cols(); i++)
-// 	{
-//         constexpr auto m = 5;
-//         vals.emplace_back();
-// 		const auto v = Eigen::VectorXf::Random(m);
-// 		for (int i = 0; i < m; i++)
-// 		{
-// 			vals[vals.size() - 1].push_back(v(i));
-// 		}
-// 	}
-// 	std::vector<std::vector<int>> tets;
-// 	{
-// 		tetgenio out;
-// 		tetralizeMatrix(rand_pts, out);
-// 		tets = tetgenToTetVector(out);
-// 	}
-//
-// 	auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
-// 	auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
-// 	
-//
-// 	return 0;
-// }
+	return 0;
+}
