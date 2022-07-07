@@ -91,12 +91,12 @@ using namespace nlohmann;
 
 //https://www.youtube.com/watch?v=A1LqGsyl3C4
 
-
-void drawContour(std::vector<Eigen::Vector3f> contour)
+int index = 0;
+void drawContour(const std::vector<Eigen::Vector3f>& contour)
 {
     glBegin(GL_POLYGON);
     for (int i = 0; i < contour.size(); i++) {
-        glColor3fv(Cube::vertexColors[i%Cube::NUM_VERTICES]);
+        glColor3fv(Cube::vertexColors[index %Cube::NUM_VERTICES]);
         glVertex3fv(contour[i].data());
     }
     glEnd();
@@ -108,15 +108,43 @@ void drawContour(std::vector<Eigen::Vector3f> contour)
 // camera and drawing. The function nextAnimationFrame() moves the camera to
 // the next point and draws. The way that we get animation in OpenGL is to
 // register nextFrame as the idle function; this is done in main().
+
+std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>* contours = nullptr;
+std::vector<Eigen::Vector3f>* points = nullptr;
+
+void drawPoints()
+{
+    glBegin(GL_POINTS);
+    glEnable(GL_POINT_SIZE);
+    for(const auto& point : *points)
+    {
+        glColor3fv(Cube::vertexColors[7]);
+        glVertex3fv(point.data());
+    }
+    glEnd();
+}
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     // Cube::draw();
 
     //Render both sides of the polygon
-    glDisable(GL_CULL_FACE);
+    // glDisable(GL_CULL_FACE);
+    index = 0;
+    for (const auto& contour : *contours) {
+        index++;
 
+        for(auto&seg:contour.second)
+        {
+            std::vector<Eigen::Vector3f> temp;
+            temp.reserve(seg.size());
+            for(auto&index:seg) {
+                temp.push_back(contour.first[index]);
+            }
+            drawContour(temp);
+        }
 
-    drawContour({ {0,0,0},{1,0,0},{1,1,0},{0,1,0},{0,1,1},{0,0,1},{1, 0, 1} });
+    }
+    drawPoints();
     glFlush();
     glutSwapBuffers();
 }
@@ -124,7 +152,7 @@ void display() {
 //Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
 int main(int argc, char* argv[])
 {
-	constexpr auto n = 50;
+	constexpr auto n = 10;
     auto rand_pts = Eigen::Matrix3Xf::Random(3, n);
 	std::vector<Eigen::Vector3f> pts;
 	pts.reserve(n);
@@ -137,7 +165,7 @@ int main(int argc, char* argv[])
 	vals.reserve(n);
 	for (int i = 0; i < rand_pts.cols(); i++)
 	{
-        constexpr auto m = 5;
+        constexpr auto m = 2;
         vals.emplace_back();
 		const auto v = Eigen::VectorXf::Random(m);
 		for (int i = 0; i < m; i++)
@@ -153,7 +181,10 @@ int main(int argc, char* argv[])
 	}
 
 	auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
-	auto ctrs = getContourAllMats3D(verts, segs, segmats, vals[0].size(), 0.04);
+    std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> ctrs = getContourAllMats3D(
+        verts, segs, segmats, vals[0].size(), 0.04);
+    contours = &ctrs;
+    points = &pts;
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
