@@ -1,111 +1,106 @@
 // This program is from the OpenGL Programming Guide.  It shows a robot arm
 // that you can rotate by pressing the arrow keys.
 
+// This program is a flyby around the RGB color cube.  One intersting note
+// is that because the cube is a convex polyhedron and it is the only thing
+// in the scene, we can render it using backface culling only. i.e., there
+// is no need for a depth buffer.
+
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
 #endif
+#include <cmath>
 
-// The robot arm is specified by (1) the angle that the upper arm makes
-// relative to the x-axis, called shoulderAngle, and (2) the angle that the
-// lower arm makes relative to the upper arm, called elbowAngle.  These angles
-// are adjusted in 5 degree increments by a keyboard callback.
-static int shoulderAngle = 0, elbowAngle = 0;
+// The cube has opposite corners at (0,0,0) and (1,1,1), which are black and
+// white respectively.  The x-axis is the red gradient, the y-axis is the
+// green gradient, and the z-axis is the blue gradient.  The cube's position
+// and colors are fixed.
+namespace Cube {
 
-// Handles the keyboard event: the left and right arrows bend the elbow, the
-// up and down keys bend the shoulder.
-void special(int key, int, int) {
-    switch (key) {
-    case GLUT_KEY_LEFT: (elbowAngle += 5) %= 360; break;
-    case GLUT_KEY_RIGHT: (elbowAngle -= 5) %= 360; break;
-    case GLUT_KEY_UP: (shoulderAngle += 5) %= 360; break;
-    case GLUT_KEY_DOWN: (shoulderAngle -= 5) %= 360; break;
-    default: return;
+    const int NUM_VERTICES = 8;
+    const int NUM_FACES = 6;
+
+    GLint vertices[NUM_VERTICES][3] = {
+      {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
+      {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1} };
+
+    GLint faces[NUM_FACES][4] = {
+      {1, 5, 7, 3}, {5, 4, 6, 7}, {4, 0, 2, 6},
+      {3, 7, 6, 2}, {0, 1, 3, 2}, {0, 4, 5, 1} };
+
+    GLfloat vertexColors[NUM_VERTICES][3] = {
+      {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0},
+      {1.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0} };
+
+    void draw() {
+        glBegin(GL_QUADS);
+        for (int i = 0; i < NUM_FACES; i++) {
+            for (int j = 0; j < 4; j++) {
+                glColor3fv((GLfloat*)&vertexColors[faces[i][j]]);
+                glVertex3iv((GLint*)&vertices[faces[i][j]]);
+            }
+        }
+        glEnd();
     }
-    glutPostRedisplay();
 }
 
-// wireBox(w, h, d) makes a wireframe box with width w, height h and
-// depth d centered at the origin.  It uses the GLUT wire cube function.
-// The calls to glPushMatrix and glPopMatrix are essential here; they enable
-// this function to be called from just about anywhere and guarantee that
-// the glScalef call does not pollute code that follows a call to myWireBox.
-void wireBox(GLdouble width, GLdouble height, GLdouble depth) {
-    glPushMatrix();
-    glScalef(width, height, depth);
-    glutWireCube(1.0);
-    glPopMatrix();
-}
-
-// Displays the arm in its current position and orientation.  The whole
-// function is bracketed by glPushMatrix and glPopMatrix calls because every
-// time we call it we are in an "environment" in which a gluLookAt is in
-// effect.  (Note that in particular, replacing glPushMatrix with
-// glLoadIdentity makes you lose the camera setting from gluLookAt).
+// Display and Animation. To draw we just clear the window and draw the cube.
+// Because our main window is double buffered we have to swap the buffers to
+// make the drawing visible. Animation is achieved by successively moving our
+// camera and drawing. The function nextAnimationFrame() moves the camera to
+// the next point and draws. The way that we get animation in OpenGL is to
+// register nextFrame as the idle function; this is done in main().
 void display() {
-
     glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
-    // Draw the upper arm, rotated shoulder degrees about the z-axis.  Note that
-    // the thing about glutWireBox is that normally its origin is in the middle
-    // of the box, but we want the "origin" of our box to be at the left end of
-    // the box, so it needs to first be shifted 1 unit in the x direction, then
-    // rotated.
-    glRotatef((GLfloat)shoulderAngle, 0.0, 0.0, 1.0);
-    glTranslatef(1.0, 0.0, 0.0);
-    wireBox(2.0, 0.4, 1.0);
-
-    // Now we are ready to draw the lower arm.  Since the lower arm is attached
-    // to the upper arm we put the code here so that all rotations we do are
-    // relative to the rotation that we already made above to orient the upper
-    // arm.  So, we want to rotate elbow degrees about the z-axis.  But, like
-    // before, the anchor point for the rotation is at the end of the box, so
-    // we translate <1,0,0> before rotating.  But after rotating we have to
-    // position the lower arm at the end of the upper arm, so we have to
-    // translate it <1,0,0> again.
-    glTranslatef(1.0, 0.0, 0.0);
-    glRotatef((GLfloat)elbowAngle, 0.0, 0.0, 1.0);
-    glTranslatef(1.0, 0.0, 0.0);
-    wireBox(2.0, 0.4, 1.0);
-
-    glPopMatrix();
+    Cube::draw();
     glFlush();
+    glutSwapBuffers();
 }
 
-// Handles the reshape event by setting the viewport so that it takes up the
-// whole visible region, then sets the projection matrix to something reason-
-// able that maintains proper aspect ratio.
-void reshape(GLint w, GLint h) {
+// We'll be flying around the cube by moving the camera along the orbit of the
+// curve u->(8*cos(u), 7*cos(u)-1, 4*cos(u/3)+2).  We keep the camera looking
+// at the center of the cube (0.5, 0.5, 0.5) and vary the up vector to achieve
+// a weird tumbling effect.
+void timer(int v) {
+    static GLfloat u = 0.0;
+    u += 0.01;
+    glLoadIdentity();
+    gluLookAt(8 * cos(u), 7 * cos(u) - 1, 4 * cos(u / 3) + 2, .5, .5, .5, cos(u), 1, 0);
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 60.0, timer, v);
+}
+
+// When the window is reshaped we have to recompute the camera settings to
+// match the new window shape.  Set the viewport to (0,0)-(w,h).  Set the
+// camera to have a 60 degree vertical field of view, aspect ratio w/h, near
+// clipping plane distance 0.5 and far clipping plane distance 40.
+void reshape(int w, int h) {
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(65.0, GLfloat(w) / GLfloat(h), 1.0, 20.0);
-}
-
-// Perfroms application specific initialization: turn off smooth shading,
-// sets the viewing transformation once and for all.  In this application we
-// won't be moving the camera at all, so it makes sense to do this.
-void init() {
-    glShadeModel(GL_FLAT);
+    gluPerspective(60.0, GLfloat(w) / GLfloat(h), 0.5, 40.0);
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(1, 2, 8, 0, 0, 0, 0, 1, 0);
 }
 
-// Initializes GLUT, the display mode, and main window; registers callbacks;
-// does application initialization; enters the main event loop.
+// Application specific initialization:  The only thing we really need to do
+// is enable back face culling because the only thing in the scene is a cube
+// which is a convex polyhedron.
+void init() {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+}
+
+// The usual main for a GLUT application.
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowPosition(80, 80);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("Robot Arm");
-    glutDisplayFunc(display);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitWindowSize(500, 500);
+    glutCreateWindow("The RGB Color Cube");
     glutReshapeFunc(reshape);
-    glutSpecialFunc(special);
+    glutTimerFunc(100, timer, 0);
+    glutDisplayFunc(display);
     init();
     glutMainLoop();
 }
