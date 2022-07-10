@@ -12,6 +12,8 @@
 #include <GL/glut.h>
 #endif
 #include <cmath>
+#include <fstream>
+
 #include "JSONParser.h"
 #include "UtilityFunctions.h"
 #include "tetgen1.6.0/tetgen.h"
@@ -250,11 +252,13 @@ template<typename T> std::vector<T> flatten(const std::vector<std::vector<T>>& i
 int main(int argc, char* argv[])
 {
     constexpr float shrink = 0.04;
+    std::vector<std::string>sliceNames({ "NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4" });
+    std::vector<unsigned> featureCols({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
     const auto alignmentValues = importAlignments(
         "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
     const auto results = loadTsv(
         "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",
-        std::vector<std::string>({ "NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4" }),
+       sliceNames,
         1,
         2,
         std::pair<unsigned, unsigned>(3, 4),
@@ -272,8 +276,42 @@ int main(int argc, char* argv[])
     auto allpts = concatMatrixes(results.slices);
     auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
     auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
+    auto ptClusIndex = results.clusters << std::function([](std::vector<std::vector<float>> layer) {return layer << std::function(getMaxPos); });
+    auto ptValIndex = results.values << std::function([](std::vector<std::vector<float>> layer) {return layer << std::function(getMaxPos); });
+    auto slices = results.slices << std::function([](const Eigen::Matrix3Xf& layer)
+        {
+            std::vector<Eigen::Vector3f> temp;
+            temp.reserve(layer.cols());
+            for (const auto& pt : layer.colwise())
+            {
+                temp.push_back(pt);
+            }
+            return temp;
+        });
+
+    json ret = json::array();
+
+    ret.push_back(results.values[0].size());//nMat,
+    ret.push_back(shrink);//shrink,
+    ret.push_back(results.clusters);//clusters,
+    ret.push_back(slices);//slices,
+    ret.push_back(ptClusIndex);//ptClusIndex,
+    ret.push_back(ctrs2dVals);//ctrs2Dvals,
+    ret.push_back(ctrs3dVals);//ctrs3Dvals,
+    ret.push_back(results.names);//featureNames,
+    ret.push_back(ptValIndex);//ptValIndex,
+    ret.push_back(tris2dVals);//tris2Dvals,
+    ret.push_back(ctrs2dclusters);//ctrs2Dclusters,
+    ret.push_back(ctrs3dClusters);//ctrs3Dclusters,
+    ret.push_back(results.clusters[0].size());//nClusters,
+    ret.push_back(tris2dclusters);//tris2Dclusters,
+    ret.push_back(featureCols);//featureCols,
+    ret.push_back(sliceNames);//sliceNames
 
 
+    std::ofstream f(
+        "C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\integrationTest.json");
+    f << ret;
     // contours = &ctrs;
     // points = &pts;
     //
