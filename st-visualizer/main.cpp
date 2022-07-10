@@ -12,32 +12,70 @@
 #include <GL/glut.h>
 #endif
 #include <cmath>
+#include "JSONParser.h"
+#include "UtilityFunctions.h"
+#include "tetgen1.6.0/tetgen.h"
+#include "Contour3D.h"
+#include "ImportFunctions.h"
+using namespace nlohmann;
+
+
+//https://wias-berlin.de/software/tetgen/
+//https://www.youtube.com/watch?v=A1LqGsyl3C4
+//Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
+
+
+//Explore electron as front-end option vs C++ w/ QT
+
+//GUI with QT (if C++)
 
 // The cube has opposite corners at (0,0,0) and (1,1,1), which are black and
 // white respectively.  The x-axis is the red gradient, the y-axis is the
 // green gradient, and the z-axis is the blue gradient.  The cube's position
 // and colors are fixed.
-namespace Cube {
-
+namespace Cube
+{
     const int NUM_VERTICES = 8;
     const int NUM_FACES = 6;
 
     GLint vertices[NUM_VERTICES][3] = {
-      {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
-      {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1} };
+        {0, 0, 0},
+        {0, 0, 1},
+        {0, 1, 0},
+        {0, 1, 1},
+        {1, 0, 0},
+        {1, 0, 1},
+        {1, 1, 0},
+        {1, 1, 1}
+    };
 
     GLint faces[NUM_FACES][4] = {
-      {1, 5, 7, 3}, {5, 4, 6, 7}, {4, 0, 2, 6},
-      {3, 7, 6, 2}, {0, 1, 3, 2}, {0, 4, 5, 1} };
+        {1, 5, 7, 3},
+        {5, 4, 6, 7},
+        {4, 0, 2, 6},
+        {3, 7, 6, 2},
+        {0, 1, 3, 2},
+        {0, 4, 5, 1}
+    };
 
     GLfloat vertexColors[NUM_VERTICES][3] = {
-      {0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}, {0.0, 1.0, 1.0},
-      {1.0, 0.0, 0.0}, {1.0, 0.0, 1.0}, {1.0, 1.0, 0.0}, {1.0, 1.0, 1.0} };
+        {0.0, 0.0, 0.0},
+        {0.0, 0.0, 1.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 1.0, 1.0},
+        {1.0, 0.0, 0.0},
+        {1.0, 0.0, 1.0},
+        {1.0, 1.0, 0.0},
+        {1.0, 1.0, 1.0}
+    };
 
-    void draw() {
+    void draw()
+    {
         glBegin(GL_QUADS);
-        for (int i = 0; i < NUM_FACES; i++) {
-            for (int j = 0; j < 4; j++) {
+        for(int i = 0; i < NUM_FACES; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
                 glColor3fv((GLfloat*)&vertexColors[faces[i][j]]);
                 glVertex3iv((GLint*)&vertices[faces[i][j]]);
             }
@@ -47,12 +85,12 @@ namespace Cube {
 }
 
 
-
 // We'll be flying around the cube by moving the camera along the orbit of the
 // curve u->(8*cos(u), 7*cos(u)-1, 4*cos(u/3)+2).  We keep the camera looking
 // at the center of the cube (0.5, 0.5, 0.5) and vary the up vector to achieve
 // a weird tumbling effect.
-void timer(int v) {
+void timer(int v)
+{
     static GLfloat u = 0.0;
     u += 0.01;
     glLoadIdentity();
@@ -65,38 +103,33 @@ void timer(int v) {
 // match the new window shape.  Set the viewport to (0,0)-(w,h).  Set the
 // camera to have a 60 degree vertical field of view, aspect ratio w/h, near
 // clipping plane distance 0.5 and far clipping plane distance 40.
-void reshape(int w, int h) {
+void reshape(int w, int h)
+{
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, GLfloat(w) / GLfloat(h), 0.5, 40.0);
+    gluPerspective(60.0, static_cast<GLfloat>(w) / static_cast<GLfloat>(h), 0.5, 40.0);
     glMatrixMode(GL_MODELVIEW);
 }
 
 // Application specific initialization:  The only thing we really need to do
 // is enable back face culling because the only thing in the scene is a cube
 // which is a convex polyhedron.
-void init() {
+void init()
+{
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 }
 
 
-#include "JSONParser.h"
-#include "UtilityFunctions.h"
-#include "tetgen1.6.0/tetgen.h"
-#include "Contour3D.h"
-using namespace nlohmann;
-//https://wias-berlin.de/software/tetgen/
-
-//https://www.youtube.com/watch?v=A1LqGsyl3C4
-
 int index = 0;
+
 void drawContour(const std::vector<Eigen::Vector3f>& contour)
 {
     glBegin(GL_POLYGON);
-    for (int i = 0; i < contour.size(); i++) {
-        glColor3fv(Cube::vertexColors[index %Cube::NUM_VERTICES]);
+    for(int i = 0; i < contour.size(); i++)
+    {
+        glColor3fv(Cube::vertexColors[index % Cube::NUM_VERTICES]);
         glVertex3fv(contour[i].data());
     }
     glEnd();
@@ -123,78 +156,136 @@ void drawPoints()
     }
     glEnd();
 }
-void display() {
+
+void display()
+{
     glClear(GL_COLOR_BUFFER_BIT);
     // Cube::draw();
 
     //Render both sides of the polygon
     // glDisable(GL_CULL_FACE);
+
     index = 0;
-    for (const auto& contour : *contours) {
+    for(const auto& [vertices, segments] : *contours)
+    {
         index++;
 
-        for(auto&seg:contour.second)
+        for(auto& seg : segments)
         {
             std::vector<Eigen::Vector3f> temp;
             temp.reserve(seg.size());
-            for(auto&index:seg) {
-                temp.push_back(contour.first[index]);
+            for(auto& index : seg)
+            {
+                temp.push_back(vertices[index]);
             }
             drawContour(temp);
         }
-
     }
     drawPoints();
     glFlush();
     glutSwapBuffers();
 }
 
-//Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
+
+std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
+getVolumeContours(const Eigen::Matrix3Xf& pts, std::vector<std::vector<float>> vals, float shrink)
+{
+    const auto nmat = vals[0].size();
+    tetgenio reg;
+    tetralizeMatrix(pts, reg);
+    const auto tets = tetgenToTetVector(reg);
+    std::vector<Eigen::Vector3f> pts_vector;
+    pts_vector.reserve(pts.cols());
+    //TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
+    for(auto& pt : pts.colwise())
+    {
+        pts_vector.push_back(pt);
+    }
+    auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
+    return getContourAllMats3D(
+        verts, segs, segmats, nmat, shrink);
+}
+
+
+Eigen::Matrix3Xf concatMatrixes(const std::vector<Eigen::Matrix3Xf>& input)
+{
+    unsigned int sum = 0;
+    for(auto& layer : input)
+    {
+        sum += layer.cols();
+    }
+    Eigen::Matrix3Xf result(3, sum);
+    unsigned int i = 0;
+    for(const auto& layer : input)
+    {
+        for(const auto&pt:layer.colwise())
+        {
+            result.col(i) = pt;
+            i++;
+        }
+    }
+    return result;
+}
+
+template<typename T> std::vector<T> flatten(const std::vector<std::vector<T>>& input)
+{
+    unsigned int sum = 0;
+    for (auto& layer : input)
+    {
+        sum += layer.size();
+    }
+    std::vector<T> result;
+    result.reserve(sum);
+    unsigned int i = 0;
+    for (const auto& layer : input)
+    {
+        for (const auto& pt : layer)
+        {
+            result.push_back(pt);
+        }
+    }
+    return result;
+}
+
 int main(int argc, char* argv[])
 {
-	constexpr auto n = 10;
-    auto rand_pts = Eigen::Matrix3Xf::Random(3, n);
-	std::vector<Eigen::Vector3f> pts;
-	pts.reserve(n);
-	for (int i = 0; i < rand_pts.cols(); i++)
-	{
-		const auto temp = rand_pts.col(i);
-		pts.emplace_back(temp);
-	}
-	std::vector<std::vector<float>> vals;
-	vals.reserve(n);
-	for (int i = 0; i < rand_pts.cols(); i++)
-	{
-        constexpr auto m = 2;
-        vals.emplace_back();
-		const auto v = Eigen::VectorXf::Random(m);
-		for (int i = 0; i < m; i++)
-		{
-			vals[vals.size() - 1].push_back(v(i));
-		}
-	}
-	std::vector<std::vector<int>> tets;
-	{
-		tetgenio out;
-		tetralizeMatrix(rand_pts, out);
-		tets = tetgenToTetVector(out);
-	}
+    constexpr float shrink = 0.04;
+    const auto alignmentValues = importAlignments(
+        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
+    const auto results = loadTsv(
+        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",
+        std::vector<std::string>({ "NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4" }),
+        1,
+        2,
+        std::pair<unsigned, unsigned>(3, 4),
+        5,
+        std::vector<unsigned>({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }),
+        60,
+        alignmentValues
+    );
 
-	auto [verts, segs, segmats] = contourTetMultiDC(pts, tets, vals);
-    std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> ctrs = getContourAllMats3D(
-        verts, segs, segmats, vals[0].size(), 0.04);
-    contours = &ctrs;
-    points = &pts;
+    auto [ctrs2dVals, tris2dVals] = getSectionContoursAll(results.slices, results.values, shrink);
+    auto [ctrs2dclusters, tris2dclusters] = getSectionContoursAll(results.slices, results.clusters, shrink);
 
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(500, 500);
-    glutCreateWindow("The RGB Color Cube");
-    glutReshapeFunc(reshape);
-    glutTimerFunc(100, timer, 0);
-    glutDisplayFunc(display);
-    init();
-    glutMainLoop();
 
-	return 0;
+
+    auto allpts = concatMatrixes(results.slices);
+    auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
+    auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
+
+
+    // contours = &ctrs;
+    // points = &pts;
+    //
+    // glutInit(&argc, argv);
+    // glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    // glutInitWindowSize(500, 500);
+    // glutCreateWindow("The RGB Color Cube");
+    // glutReshapeFunc(reshape);
+    // glutTimerFunc(100, timer, 0);
+    // glutDisplayFunc(display);
+    // init();
+    // glutMainLoop();
+
+    return 0;
 }
