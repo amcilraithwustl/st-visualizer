@@ -11,7 +11,7 @@ int getMaxPos(const std::vector<float>& material_values);
 
 // getMassPoint
 // Might need work based on input type
-template<unsigned int N>
+template <unsigned int N>
 Eigen::Matrix<float, N, 1> getMassPoint(const std::vector<Eigen::Matrix<float, N, 1>>& a)
 {
     Eigen::Matrix<float, N, 1> temp = Eigen::Matrix<float, N, 1>::Zero(N);
@@ -19,19 +19,20 @@ Eigen::Matrix<float, N, 1> getMassPoint(const std::vector<Eigen::Matrix<float, N
     {
         temp += v;
     }
-    return temp/a.size();
+    return temp / a.size();
 }
 
 // InterpEdge2Mat
 // Does a linear interpolation of two materials to produce the midpoint location where the "cross over"
-template<unsigned int N>
-Eigen::Matrix<float, N, 1> interpEdge2Mat(const Eigen::Matrix<float, N, 1>& p, const Eigen::Matrix<float, N, 1>& q, const std::pair<float, float>& p_vals,
-                               const std::pair<float, float>& q_vals)
+template <unsigned int N>
+Eigen::Matrix<float, N, 1> interpEdge2Mat(const Eigen::Matrix<float, N, 1>& p, const Eigen::Matrix<float, N, 1>& q,
+                                          const std::pair<float, float>& p_vals,
+                                          const std::pair<float, float>& q_vals)
 {
     const auto top = std::abs(p_vals.first - p_vals.second);
     const auto bottom = std::abs(p_vals.first - p_vals.second) + std::abs(q_vals.first - q_vals.second);
-    const float t =  top/bottom ;
-    return p*(1 - t) + q*t;
+    const float t = top / bottom;
+    return p * (1 - t) + q * t;
 }
 
 // contourTriMultiDC
@@ -45,7 +46,8 @@ struct contourTriMultiDCStruct
     std::vector<int> fillMats;
 };
 
-contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPoint, const std::vector<std::vector<int>>& triangleIndexToCornerIndices,
+contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPoint,
+                                          const std::vector<std::vector<int>>& triangleIndexToCornerIndices,
                                           const std::vector<std::vector<float>>& pointIndexToMaterialValues);
 
 // perp
@@ -53,7 +55,7 @@ inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
 
 // getContourByMat2D returns new verticies, new segments
 inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
-    std::vector< Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
+    std::vector<Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
     std::vector<std::pair<int, int>> segmats, int mat, float shrink)
 {
     //select segments by mat
@@ -101,17 +103,15 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
     std::vector<std::pair<size_t, size_t>> adjusted_nsegs;
     {
         adjusted_nsegs.reserve(nsegs.size());
-        for(auto& seg:nsegs)
+        for(auto& seg : nsegs)
         {
-            adjusted_nsegs.emplace_back(vertNewInds[seg.first],vertNewInds[seg.second]);
+            adjusted_nsegs.emplace_back(vertNewInds[seg.first], vertNewInds[seg.second]);
         }
-
     }
     /*shrink*/
     std::vector<std::pair<int, int>> vertnorms(nverts.size(), {0, 0});
-    for (auto& seg : adjusted_nsegs)
+    for(auto& seg : adjusted_nsegs)
     {
-
         auto nm = perp(nverts[seg.second] - nverts[seg.first]);
         vertnorms[seg.first].first += nm(0);
         vertnorms[seg.first].second += nm(1);
@@ -130,7 +130,7 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
 
 // getContourAllMats2D each index is new vertices, new segments
 inline std::vector<std::pair<std::vector<Eigen::Matrix<float, 2, 1, 0>>, std::vector<std::pair<int, int>>>>
-getContourAllMats2D(const std::vector< Eigen::Vector2f>& verts, const std::vector<std::pair<int, int>>& segs,
+getContourAllMats2D(const std::vector<Eigen::Vector2f>& verts, const std::vector<std::pair<int, int>>& segs,
                     const std::vector<std::pair<int, int>>& segmats, const int& nmat, const float& shrink)
 {
     return table(
@@ -151,9 +151,10 @@ std::pair<
         >
     >,
     std::tuple<
+        std::vector<Eigen::Vector3f>,
         std::vector<std::vector<int>>,
-        std::vector<int>,
-        std::vector<Eigen::Vector3f>
+        std::vector<int>
+
     >
 >
 getSectionContours(
@@ -167,11 +168,11 @@ getSectionContours(
         npts.col(i) = Eigen::Vector2f({pts.col(i)(0), pts.col(i)(1)});
     }
 
-    auto delaunay = triangulateMatrix(npts);
-    auto tris = table(static_cast<size_t>(delaunay.numberoftriangles), std::function([delaunay](size_t i)
-        {
-            return getTriangleCornerIndices(delaunay, i);
-        }));
+    auto reg = triangulateMatrix(npts);
+    auto tris = table(static_cast<size_t>(reg.numberoftriangles), std::function([reg](size_t i)
+    {
+        return getTriangleCornerIndices(reg, i);
+    }));
 
     auto res = contourTriMultiDC(npts, tris, vals);
 
@@ -192,32 +193,33 @@ getSectionContours(
     const auto& ftris = res.fillTris;
     const auto& fmats = res.fillMats;
     auto fverts = res.fillVerts << dim2to3;
-    return {ctrNewPtsAndSegs, {ftris, fmats, fverts}};
+    return {ctrNewPtsAndSegs, {fverts, ftris, fmats}};
 }
 
 
 // getSectionContoursAll
-inline std::pair<std::vector<std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int
-, int>>
->>>, std::vector<std::tuple<std::vector<std::vector<int>>, std::vector<int>, std::vector<Eigen::Matrix<float, 3, 1, 0>>>
->> getSectionContoursAll(std::vector<Eigen::Matrix3Xf> sections,
-                         std::vector<std::vector<std::vector<float>>> vals, float shrink)
+inline std::pair<std::vector<std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<
+                                                       int, int>>>>>, std::vector<std::tuple<
+                     std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::vector<int>>, std::vector<int>>>>
+getSectionContoursAll(std::vector<Eigen::Matrix3Xf> sections,
+                      std::vector<std::vector<std::vector<float>>> vals, float shrink)
 {
-    std::vector<std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::pair<int, int>>>>>newPointsAndSegs;
+    std::vector<std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::pair<int, int>>>>>
+        newPointsAndSegs;
     newPointsAndSegs.reserve(sections.size());
 
-    std::vector<std::tuple<std::vector<std::vector<int>>, std::vector<int>, std::vector<Eigen::Vector3f>>>        triangleInfo;
+    std::vector<std::tuple<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>, std::vector<int>>> triangleInfo;
     triangleInfo.reserve(sections.size());
 
-    for (int i = 0; i < sections.size(); i++) {
+    for(int i = 0; i < sections.size(); i++)
+    {
         auto pts = sections[i];
         auto v = vals[i];
-        
+
 
         auto contour = getSectionContours(pts, v, shrink);
         newPointsAndSegs.push_back(std::move(contour.first));
         triangleInfo.push_back(std::move(contour.second));
     }
-        
-    return { newPointsAndSegs, triangleInfo };
+    return {newPointsAndSegs, triangleInfo};
 }
