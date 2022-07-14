@@ -1,0 +1,9 @@
+*.css
+*.svg
+
+node_modules
+.meteor
+
+# Ignore artifacts:
+build
+coverage
