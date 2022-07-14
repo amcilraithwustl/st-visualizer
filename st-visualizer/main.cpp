@@ -273,7 +273,7 @@ int main(int argc, char* argv[])
     auto [ctrs2dVals, tris2dVals] = getSectionContoursAll(results.slices, results.values, shrink);
     auto [ctrs2dclusters, tris2dclusters] = getSectionContoursAll(results.slices, results.clusters, shrink);
 
-
+    
     auto allpts = concatMatrixes(results.slices);
     auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
     auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
@@ -296,7 +296,32 @@ int main(int argc, char* argv[])
         return temp;
     });
 
-    auto convert = [](std::vector<std::tuple<
+    auto convertCtrs = [](std::vector<std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>>>& ctrs2dVals)
+    {
+        json ctrs2dValsJson = json::array();
+        for (auto& ctrSlice : ctrs2dVals)
+        {
+            json ctrJson = json::array();
+            for(auto&ctr:ctrSlice)
+            {
+                json temp = json::array();
+                temp.push_back(ctr.first);
+                for(auto& i:ctr.second)
+                {
+                    i.first++;
+                    i.second++;
+                }
+                temp.push_back(ctr.second);
+                ctrJson.push_back(temp);
+            }
+
+            ctrs2dValsJson.push_back(ctrJson);
+        }
+
+        return ctrs2dValsJson;
+    };
+
+    auto convertTris = [](std::vector<std::tuple<
         std::vector<Eigen::Matrix<float, 3, 1, 0>>,
         std::vector<std::vector<int>>,
         std::vector<int>
@@ -314,8 +339,20 @@ int main(int argc, char* argv[])
                 }
                 a.push_back(b);
             }
-            a.push_back(std::get<1>(tris));
-            a.push_back(std::get<2>(tris));
+
+            auto& triangles = std::get<1>(tris);
+            for(auto& tri: triangles)
+            {
+                for(auto& ind:tri)
+                {
+                    ind++;
+                }
+            }
+            a.push_back(triangles);
+
+            auto& materials = std::get<2>(tris);
+            for (auto& mat : materials) { mat++; }
+            a.push_back(materials);
             
             tris2dValsJson.push_back(a);
         }
@@ -330,17 +367,15 @@ int main(int argc, char* argv[])
     ret.push_back(results.clusters); //clusters,
     ret.push_back(slices); //slices,
     ret.push_back(ptClusIndex); //ptClusIndex,
-    ret.push_back(ctrs2dVals); //ctrs2Dvals,
+    ret.push_back(convertCtrs(ctrs2dVals)); //ctrs2Dvals,
     ret.push_back(ctrs3dVals); //ctrs3Dvals,
     ret.push_back(results.names); //featureNames,
     ret.push_back(ptValIndex); //ptValIndex,
-    
-
-    ret.push_back(convert(tris2dVals)); //tris2Dvals
-    ret.push_back(ctrs2dclusters); //ctrs2Dclusters,
+    ret.push_back(convertTris(tris2dVals)); //tris2Dvals
+    ret.push_back(convertCtrs(ctrs2dclusters)); //ctrs2Dclusters,
     ret.push_back(ctrs3dClusters); //ctrs3Dclusters,
     ret.push_back(results.clusters[0].size()); //nClusters,
-    ret.push_back(convert(tris2dclusters)); //tris2Dclusters,
+    ret.push_back(convertTris(tris2dclusters)); //tris2Dclusters,
     ret.push_back(featureCols); //featureCols,
     ret.push_back(sliceNames); //sliceNames
     ret.push_back(results.values);

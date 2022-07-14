@@ -158,7 +158,7 @@ std::pair<
     >
 >
 getSectionContours(
-    Eigen::Matrix3Xf pts, std::vector<std::vector<float>> vals, float shrink)
+    const Eigen::Matrix3Xf& pts, const std::vector<std::vector<float>>& vals, float shrink)
 {
     int nmat = vals[0].size();
     float z = pts.col(0)(2);
@@ -178,21 +178,35 @@ getSectionContours(
 
     auto ctrs = getContourAllMats2D(res.verts, res.segs, res.segMats, nmat, shrink);
 
-    auto dim2to3 = std::function([z](Eigen::Vector2f pt) { return Eigen::Vector3f({pt(0), pt(1), z}); });
-
-    auto ctrNewPtsAndSegs = ctrs << std::function(
-        [dim2to3](std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> ctr)
+    std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>> ctrNewPtsAndSegs;
+    ctrNewPtsAndSegs.reserve(ctrs.size());
+    for(auto& ctr: ctrs)
+    {
+        const auto& newVertices = ctr.first;
+        const auto& newSegments = ctr.second;
+        std::vector<Eigen::Vector3f> dimIncreased;
+        dimIncreased.reserve(newVertices.size());
+        for(auto& vert: newVertices)
         {
-            const auto& newVertices = ctr.first;
-            const auto& newSegments = ctr.second;
-            return std::pair(
-                newVertices << dim2to3,
-                newSegments); //Do I need to deep copy the segments?
-        });
+            dimIncreased.push_back(Eigen::Vector3f({ vert(0), vert(1), z }));
+        }
+
+        ctrNewPtsAndSegs.emplace_back(
+            dimIncreased,
+        newSegments);
+    }
 
     const auto& ftris = res.fillTris;
     const auto& fmats = res.fillMats;
-    auto fverts = res.fillVerts << dim2to3;
+
+    std::vector<Eigen::Vector3f> fverts;
+    {
+        fverts.reserve(res.fillVerts.size());
+        for (auto& vert : res.fillVerts)
+        {
+            fverts.push_back(Eigen::Vector3f({ vert(0), vert(1), z }));
+        }
+    }
     return {ctrNewPtsAndSegs, {fverts, ftris, fmats}};
 }
 
@@ -213,8 +227,8 @@ getSectionContoursAll(std::vector<Eigen::Matrix3Xf> sections,
 
     for(int i = 0; i < sections.size(); i++)
     {
-        auto pts = sections[i];
-        auto v = vals[i];
+        const auto& pts = sections[i];
+        const auto& v = vals[i];
 
 
         auto contour = getSectionContours(pts, v, shrink);
