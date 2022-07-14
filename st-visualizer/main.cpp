@@ -360,21 +360,41 @@ int main(int argc, char* argv[])
         return tris2dValsJson;
     };
 
-    json ret = json::array();
+    auto convert3D = [](std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>& ctrs3d)
+    {
+        json ctrs3dJson = json::array();
+        for (auto& ctr : ctrs3d)
+        {
+            json a = json::array();
 
-    ret.push_back(results.values[0].size()); //nMat,
+            a.push_back(ctr.first);
+            auto& segs = ctr.second;
+            for(auto&a:segs)
+            {
+                for (auto& b : a) { b++; }
+            }
+            a.push_back(segs);
+
+            ctrs3dJson.push_back(a);
+        }
+
+        return ctrs3dJson;
+    };
+
+    json ret = json::array();
+    ret.push_back(results.values[0][0].size()); //nMat,
     ret.push_back(shrink); //shrink,
     ret.push_back(results.clusters); //clusters,
     ret.push_back(slices); //slices,
     ret.push_back(ptClusIndex); //ptClusIndex,
     ret.push_back(convertCtrs(ctrs2dVals)); //ctrs2Dvals,
-    ret.push_back(ctrs3dVals); //ctrs3Dvals,
+    ret.push_back(convert3D(ctrs3dVals)); //ctrs3Dvals,
     ret.push_back(results.names); //featureNames,
     ret.push_back(ptValIndex); //ptValIndex,
     ret.push_back(convertTris(tris2dVals)); //tris2Dvals
     ret.push_back(convertCtrs(ctrs2dclusters)); //ctrs2Dclusters,
-    ret.push_back(ctrs3dClusters); //ctrs3Dclusters,
-    ret.push_back(results.clusters[0].size()); //nClusters,
+    ret.push_back(convert3D(ctrs3dClusters)); //ctrs3Dclusters,
+    ret.push_back(results.clusters[0][0].size()); //nClusters,
     ret.push_back(convertTris(tris2dclusters)); //tris2Dclusters,
     ret.push_back(featureCols); //featureCols,
     ret.push_back(sliceNames); //sliceNames
