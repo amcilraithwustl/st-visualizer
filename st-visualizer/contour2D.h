@@ -90,8 +90,8 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
         vertsUsed[seg.second] = true;
     }
 
-    std::vector<size_t> nvertInds;
-    for(size_t i = 0; i < vertsUsed.size(); i++) { if(vertsUsed[i]) nvertInds.push_back(i); }
+    std::vector<int> nvertInds;
+    for(int i = 0; i < vertsUsed.size(); i++) { if(vertsUsed[i]) nvertInds.push_back(i); }
 
     std::vector<size_t> vertNewInds(verts.size(), 0);
     for(size_t i = 0; i < nvertInds.size(); i++)
@@ -99,8 +99,8 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
         vertNewInds[nvertInds[i]] = i;
     }
 
-    auto nverts = nvertInds << std::function([verts](const size_t& i) { return verts.at(static_cast<int>(i)); });
-    std::vector<std::pair<size_t, size_t>> adjusted_nsegs;
+    auto nverts = subset(verts, nvertInds);
+    std::vector<std::pair<int, int>> adjusted_nsegs;
     {
         adjusted_nsegs.reserve(nsegs.size());
         for(auto& seg : nsegs)
@@ -108,8 +108,9 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
             adjusted_nsegs.emplace_back(vertNewInds[seg.first], vertNewInds[seg.second]);
         }
     }
+
     /*shrink*/
-    std::vector<std::pair<int, int>> vertnorms(nverts.size(), {0, 0});
+    std::vector<std::pair<float, float>> vertnorms(nverts.size(), {0, 0});
     for(auto& seg : adjusted_nsegs)
     {
         auto nm = perp(nverts[seg.second] - nverts[seg.first]);
@@ -122,10 +123,10 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
 
     nverts = nverts << std::function([vertnorms, shrink](const Eigen::Vector2f& pt, size_t i)
     {
-        return (pt + shrink * Eigen::Vector2i(vertnorms[i].first, vertnorms[i].second).cast<float>()).eval();
+        return (pt + shrink * Eigen::Vector2f(vertnorms[i].first, vertnorms[i].second).normalized()).eval();
     });
 
-    return {nverts, nsegs};
+    return {nverts, adjusted_nsegs};
 }
 
 // getContourAllMats2D each index is new vertices, new segments
