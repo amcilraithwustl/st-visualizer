@@ -187,8 +187,6 @@ void display()
     glFlush();
     glutSwapBuffers();
 }
-
-
 std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
 getVolumeContours(const Eigen::Matrix3Xf& pts, std::vector<std::vector<float>> vals, float shrink)
 {
@@ -199,7 +197,7 @@ getVolumeContours(const Eigen::Matrix3Xf& pts, std::vector<std::vector<float>> v
     std::vector<Eigen::Vector3f> pts_vector;
     pts_vector.reserve(pts.cols());
     //TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
-    for(auto& pt : pts.colwise())
+    for (auto& pt : pts.colwise())
     {
         pts_vector.push_back(pt);
     }
@@ -212,15 +210,15 @@ getVolumeContours(const Eigen::Matrix3Xf& pts, std::vector<std::vector<float>> v
 Eigen::Matrix3Xf concatMatrixes(const std::vector<Eigen::Matrix3Xf>& input)
 {
     unsigned int sum = 0;
-    for(auto& layer : input)
+    for (auto& layer : input)
     {
         sum += layer.cols();
     }
     Eigen::Matrix3Xf result(3, sum);
     unsigned int i = 0;
-    for(const auto& layer : input)
+    for (const auto& layer : input)
     {
-        for(const auto& pt : layer.colwise())
+        for (const auto& pt : layer.colwise())
         {
             result.col(i) = pt;
             i++;
@@ -233,22 +231,23 @@ template <typename T>
 std::vector<T> flatten(const std::vector<std::vector<T>>& input)
 {
     unsigned int sum = 0;
-    for(auto& layer : input)
+    for (auto& layer : input)
     {
         sum += layer.size();
     }
     std::vector<T> result;
     result.reserve(sum);
     unsigned int i = 0;
-    for(const auto& layer : input)
+    for (const auto& layer : input)
     {
-        for(const auto& pt : layer)
+        for (const auto& pt : layer)
         {
             result.push_back(pt);
         }
     }
     return result;
 }
+
 
 int main(int argc, char* argv[])
 {
