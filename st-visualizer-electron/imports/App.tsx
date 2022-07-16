@@ -1,9 +1,22 @@
 import "react";
 import * as React from "react";
 import * as THREE from "three";
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { ReactThreeFiber, extend } from "@react-three/fiber";
+
 //https://www.npmjs.com/package/@react-three/drei
+//Fix typescript problem: https://github.com/pmndrs/react-three-fiber/discussions/1387
+
+extend({ Line_: THREE.Line });
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      line_: ReactThreeFiber.Object3DNode<THREE.Line, typeof THREE.Line>;
+    }
+  }
+}
 
 function Box(props: JSX.IntrinsicElements["mesh"]) {
   const ref = useRef<THREE.Mesh>(undefined);
@@ -12,7 +25,7 @@ function Box(props: JSX.IntrinsicElements["mesh"]) {
   const [clicked, click] = useState(false);
   useFrame((state, delta) => (ref.current.rotation.x += 0.01));
 
-  const segs = 100 * 2;
+  const segs = 1 * 2;
   console.log("totalItems", segs * segs * 6);
   return (
     <mesh
@@ -37,11 +50,33 @@ function Box(props: JSX.IntrinsicElements["mesh"]) {
   );
 }
 
+function Line(props: JSX.IntrinsicElements["line_"]) {
+  //create a blue LineBasicMaterial
+
+  // create a simple square shape. We duplicate the top left and bottom right
+  // vertices because each vertex needs to appear once per triangle.
+
+  const ref = useRef<THREE.Line>();
+  useLayoutEffect(() => {
+    const points = [];
+    points.push(new THREE.Vector3(0, 10, 0));
+    points.push(new THREE.Vector3(0, 0, 0));
+    points.push(new THREE.Vector3(10, 0, 0));
+    ref.current.geometry.setFromPoints(points);
+  }, []);
+  return (
+    <line_ {...props} ref={ref}>
+      <bufferGeometry />
+      <lineBasicMaterial color={0x0000ff} />
+    </line_>
+  );
+}
+
 const ItemToRender = () => (
   <Canvas style={{ height: 500, width: 500 }}>
     <ambientLight />
     <pointLight position={[10, 10, 10]} />
-    <Box position={[0, 1, -10]} />
+    <Line position={[0, 0, 0]} />
   </Canvas>
 );
 
