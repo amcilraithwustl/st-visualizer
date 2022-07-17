@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as React from "react";
 import { useLayoutEffect, useRef } from "react";
+import "../../api/threejsHeadeers";
 
 export function Line({
   points,

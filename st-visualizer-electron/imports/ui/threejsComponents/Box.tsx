@@ -2,6 +2,7 @@ import * as React from "react";
 import { useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import "../../api/threejsHeadeers";
 
 function Box(props: JSX.IntrinsicElements["mesh"]) {
   const ref = useRef<THREE.Mesh>(undefined);
