@@ -6,7 +6,11 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Line } from "./Line";
 import { Points } from "./Points";
 
-export const ItemToRender = () => {
+const randomPoints = [...new Array(25)].map(
+  () => new THREE.Vector3(Math.random(), Math.random(), Math.random())
+);
+
+export const CustomRenderer = () => {
   return (
     <Canvas style={{ height: 500 }}>
       <ambientLight />
@@ -22,24 +26,7 @@ export const ItemToRender = () => {
         />
       </GizmoHelper>
       <pointLight position={[10, 10, 10]} />
-      <Line
-        points={[
-          new THREE.Vector3(0, 1, 0),
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(1, 0, 0),
-          new THREE.Vector3(2, 1, 0),
-        ]}
-        color={"red"}
-      />
-      <Points
-        points={[
-          new THREE.Vector3(0, 1, 1),
-          new THREE.Vector3(0, 0, 1),
-          new THREE.Vector3(1, 0, 1),
-          new THREE.Vector3(2, 1, 1),
-        ]}
-        color={"green"}
-      />
+      <Line points={randomPoints} color={"red"} />
     </Canvas>
   );
 };

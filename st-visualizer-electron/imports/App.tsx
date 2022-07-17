@@ -1,6 +1,6 @@
 import "react";
 import * as React from "react";
-import { ItemToRender } from "./ui/threejsComponents/ItemToRender";
+import { CustomRenderer } from "./ui/threejsComponents/CustomRenderer";
 
 
 export const App = () => {
@@ -10,7 +10,7 @@ export const App = () => {
       <div
         style={{ borderWidth: 3, borderColor: "black", borderStyle: "solid" }}
       >
-        <ItemToRender />
+        <CustomRenderer />
       </div>
     </div>
   );
