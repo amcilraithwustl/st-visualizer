@@ -3,6 +3,12 @@ import { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import "../../api/threejsHeadeers";
+import {
+  CubeCamera,
+  OrbitControls,
+  PerspectiveCamera,
+} from "@react-three/drei";
+
 function Box(props: JSX.IntrinsicElements["mesh"]) {
   const ref = useRef<THREE.Mesh>(undefined);
   const ref2 = useRef<THREE.BoxGeometry>(undefined);
@@ -44,7 +50,7 @@ function Line({ points }: { points: THREE.Vector3[] }) {
   const ref = useRef<THREE.Line>();
   useLayoutEffect(() => {
     ref.current.geometry.setFromPoints(points);
-  }, []);
+  }, [points]);
   return (
     <line_ ref={ref}>
       <bufferGeometry />
@@ -56,6 +62,9 @@ function Line({ points }: { points: THREE.Vector3[] }) {
 export const ItemToRender = () => (
   <Canvas style={{ height: 500, width: 500 }}>
     <ambientLight />
+    <gridHelper args={[100, 10]} />
+    <OrbitControls makeDefault enableDamping={false} />
+
     <pointLight position={[10, 10, 10]} />
     <Line
       points={[
