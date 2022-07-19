@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import "../../api/threejsHeadeers";
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
+import { GeometryCustom } from "./GeometryCustom";
 import { Line } from "./Line";
 import { Points } from "./Points";
 
@@ -26,7 +27,23 @@ export const CustomRenderer = () => {
         />
       </GizmoHelper>
       <pointLight position={[10, 10, 10]} />
-      <Line points={randomPoints} color={"red"} />
+      <pointLight position={[-10, -10, -10]} />
+      <Points points={randomPoints} color={"rgb(224,113,4)"} />
+      <Line points={randomPoints} color={"rgb(49,222,49)"} />
+
+      <GeometryCustom
+        points={[
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(10, 10, 0),
+          new THREE.Vector3(0, 10, 0),
+
+          new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(0, 10, 0),
+          new THREE.Vector3(10, 10, 0),
+        ]}
+        color={"rgb(153,162,255)"}
+        opacity={0.5}
+      />
     </Canvas>
   );
 };
