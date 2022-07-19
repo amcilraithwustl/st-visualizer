@@ -7,11 +7,19 @@ import { GeometryCustom } from "./GeometryCustom";
 import { Line } from "./Line";
 import { Points } from "./Points";
 
-const randomPoints = [...new Array(25)].map(
-  () => new THREE.Vector3(Math.random(), Math.random(), Math.random())
+const spaceRange = 3;
+const numFaces = 200 * 200;
+const randomPoints = [...new Array(3 * numFaces)].map(
+  () =>
+    new THREE.Vector3(
+      Math.random() * spaceRange - spaceRange / 2,
+      Math.random() * spaceRange - spaceRange / 2,
+      Math.random() * spaceRange - spaceRange / 2
+    )
 );
-
+const times = 4;
 export const CustomRenderer = () => {
+  console.log("RENDERING " + numFaces + " " + times + " times.");
   return (
     <Canvas style={{ height: 500 }}>
       <ambientLight />
@@ -28,22 +36,31 @@ export const CustomRenderer = () => {
       </GizmoHelper>
       <pointLight position={[10, 10, 10]} />
       <pointLight position={[-10, -10, -10]} />
-      <Points points={randomPoints} color={"rgb(224,113,4)"} />
-      <Line points={randomPoints} color={"rgb(49,222,49)"} />
+      {/*<Points points={randomPoints} color={"rgb(224,113,4)"} />*/}
+      {/*<Line points={randomPoints} color={"rgb(49,222,49)"} />*/}
 
-      <GeometryCustom
-        points={[
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(10, 10, 0),
-          new THREE.Vector3(0, 10, 0),
+      {[...new Array(times)].map((_, i) => (
+        <GeometryCustom
+          key={i}
+          points={randomPoints}
+          color={"rgb(153,162,255)"}
+          opacity={0.5}
+        />
+      ))}
 
-          new THREE.Vector3(0, 0, 0),
-          new THREE.Vector3(0, 10, 0),
-          new THREE.Vector3(10, 10, 0),
-        ]}
-        color={"rgb(153,162,255)"}
-        opacity={0.5}
-      />
+      {/*  <GeometryCustom*/}
+      {/*  points={[*/}
+      {/*    new THREE.Vector3(0, 0, 0),*/}
+      {/*    new THREE.Vector3(10, 10, 0),*/}
+      {/*    new THREE.Vector3(0, 10, 0),*/}
+
+      {/*    new THREE.Vector3(0, 0, 0),*/}
+      {/*    new THREE.Vector3(0, 10, 0),*/}
+      {/*    new THREE.Vector3(10, 10, 0),*/}
+      {/*  ]}*/}
+      {/*  color={"rgb(153,162,255)"}*/}
+      {/*  opacity={0.5}*/}
+      {/*/>*/}
     </Canvas>
   );
 };
