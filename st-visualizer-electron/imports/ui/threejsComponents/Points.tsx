@@ -6,9 +6,13 @@ import "../../api/threejsHeadeers";
 export function Points({
   points,
   color,
+  scale,
+  translate,
 }: {
   points: THREE.Vector3[];
   color: JSX.IntrinsicElements["lineBasicMaterial"]["color"];
+  scale: number;
+  translate: [number, number, number];
 }) {
   //create a blue LineBasicMaterial
 
@@ -17,8 +21,11 @@ export function Points({
 
   const ref2 = useRef<THREE.Points>();
   useLayoutEffect(() => {
-    ref2.current.geometry.setFromPoints(points);
-  }, [points]);
+    ref2.current?.geometry
+      .setFromPoints(points)
+      .translate(...translate)
+      .scale(scale, scale, scale);
+  }, [points, scale, translate]);
   return (
     <points ref={ref2}>
       <bufferGeometry />

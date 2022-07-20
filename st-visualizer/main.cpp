@@ -251,170 +251,161 @@ std::vector<T> flatten(const std::vector<std::vector<T>>& input)
 
 int main(int argc, char* argv[])
 {
-    
-    constexpr float shrink = 0.04;
-    std::vector<std::string> sliceNames({"NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4"});
-    std::vector<unsigned> featureCols({6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-    const auto alignmentValues = importAlignments(
-        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
-    const auto results = loadTsv(
-        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",
-        sliceNames,
-        1,
-        2,
-        std::pair<unsigned, unsigned>(3, 4),
-        5,
-        std::vector<unsigned>({6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-        60,
-        alignmentValues
-    );
+    {
+        constexpr float shrink = 0.04;
+        std::vector<std::string> sliceNames({ "NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4" });
+        std::vector<unsigned> featureCols({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
+        const auto alignmentValues = importAlignments(
+            "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_F_transformation_pt_coord.csv");
+        const auto results = loadTsv(
+            "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/NMK_20201201_cell_type_coord_allspots.tsv",
+            sliceNames,
+            1,
+            2,
+            std::pair<unsigned, unsigned>(3, 4),
+            5,
+            std::vector<unsigned>({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }),
+            60,
+            alignmentValues
+        );
 
-    auto [ctrs2dVals, tris2dVals] = getSectionContoursAll(results.slices, results.values, shrink);
-    auto [ctrs2dclusters, tris2dclusters] = getSectionContoursAll(results.slices, results.clusters, shrink);
+        auto [ctrs2dVals, tris2dVals] = getSectionContoursAll(results.slices, results.values, shrink);
+        auto [ctrs2dclusters, tris2dclusters] = getSectionContoursAll(results.slices, results.clusters, shrink);
 
-    
-    auto allpts = concatMatrixes(results.slices);
-    auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
-    auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
-    auto ptClusIndex = results.clusters << std::function([](std::vector<std::vector<float>> layer)
-    {
-        return layer << std::function(getMaxPos);
-    });
-    auto ptValIndex = results.values << std::function([](std::vector<std::vector<float>> layer)
-    {
-        return layer << std::function(getMaxPos);
-    });
-    auto slices = results.slices << std::function([](const Eigen::Matrix3Xf& layer)
-    {
-        std::vector<Eigen::Vector3f> temp;
-        temp.reserve(layer.cols());
-        for(const auto& pt : layer.colwise())
-        {
-            temp.emplace_back(pt);
-        }
-        return temp;
-    });
 
-    auto convertCtrs = [](std::vector<std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>>>& ctrs2dVals)
-    {
-        json ctrs2dValsJson = json::array();
-        for (auto& ctrSlice : ctrs2dVals)
-        {
-            json ctrJson = json::array();
-            for(auto&ctr:ctrSlice)
+        auto allpts = concatMatrixes(results.slices);
+        auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
+        auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
+        auto ptClusIndex = results.clusters << std::function([](std::vector<std::vector<float>> layer)
             {
-                json temp = json::array();
-                temp.push_back(ctr.first);
-                for(auto& i:ctr.second)
+                return layer << std::function(getMaxPos);
+            });
+        auto ptValIndex = results.values << std::function([](std::vector<std::vector<float>> layer)
+            {
+                return layer << std::function(getMaxPos);
+            });
+        auto slices = results.slices << std::function([](const Eigen::Matrix3Xf& layer)
+            {
+                std::vector<Eigen::Vector3f> temp;
+                temp.reserve(layer.cols());
+                for (const auto& pt : layer.colwise())
                 {
-                    i.first++;
-                    i.second++;
+                    temp.emplace_back(pt);
                 }
-                temp.push_back(ctr.second);
-                ctrJson.push_back(temp);
-            }
+                return temp;
+            });
 
-            ctrs2dValsJson.push_back(ctrJson);
-        }
-
-        return ctrs2dValsJson;
-    };
-
-    auto convertTris = [](std::vector<std::tuple<
-        std::vector<Eigen::Matrix<float, 3, 1, 0>>,
-        std::vector<std::vector<int>>,
-        std::vector<int>
-        >>&tris2dVals)
-    {
-        json tris2dValsJson = json::array();
-        for (auto& tris : tris2dVals)
+        auto convertCtrs = [](
+            std::vector<std::vector<std::pair<
+            std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>>>& ctrs2dVals)
         {
-            json a = json::array();
+            json ctrs2dValsJson = json::array();
+            for (auto& ctrSlice : ctrs2dVals)
             {
-                json b = json::array();
-                for (auto& elem : std::get<0>(tris))
+                json ctrJson = json::array();
+                for (auto& ctr : ctrSlice)
                 {
-                    b.push_back(std::vector(elem.data(), elem.data() + elem.rows()));
+                    json temp = json::array();
+                    temp.push_back(ctr.first);
+                    for (auto& i : ctr.second)
+                    {
+                        // i.first++;
+                        // i.second++;
+                    }
+                    temp.push_back(ctr.second);
+                    ctrJson.push_back(temp);
                 }
-                a.push_back(b);
+
+                ctrs2dValsJson.push_back(ctrJson);
             }
 
-            auto& triangles = std::get<1>(tris);
-            for(auto& tri: triangles)
-            {
-                for(auto& ind:tri)
-                {
-                    ind++;
-                }
-            }
-            a.push_back(triangles);
+            return ctrs2dValsJson;
+        };
 
-            auto& materials = std::get<2>(tris);
-            for (auto& mat : materials) { mat++; }
-            a.push_back(materials);
-            
-            tris2dValsJson.push_back(a);
-        }
-
-        return tris2dValsJson;
-    };
-
-    auto convert3D = [](std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>& ctrs3d)
-    {
-        json ctrs3dJson = json::array();
-        for (auto& ctr : ctrs3d)
+        auto convertTris = [](std::vector<std::tuple<
+            std::vector<Eigen::Matrix<float, 3, 1, 0>>,
+            std::vector<std::vector<int>>,
+            std::vector<int>
+            >>&tris2dVals)
         {
-            json a = json::array();
-
-            a.push_back(ctr.first);
-            auto& segs = ctr.second;
-            for(auto&a:segs)
+            json tris2dValsJson = json::array();
+            for (auto& tris : tris2dVals)
             {
-                for (auto& b : a) { b++; }
+                json a = json::array();
+                {
+                    json b = json::array();
+                    for (auto& elem : std::get<0>(tris))
+                    {
+                        b.push_back(std::vector(elem.data(), elem.data() + elem.rows()));
+                    }
+                    a.push_back(b);
+                }
+
+                auto& triangles = std::get<1>(tris);
+                for (auto& tri : triangles)
+                {
+                    for (auto& ind : tri)
+                    {
+                        // ind++;
+                    }
+                }
+                a.push_back(triangles);
+
+                auto& materials = std::get<2>(tris);
+                for (auto& mat : materials) { mat++; }
+                a.push_back(materials);
+
+                tris2dValsJson.push_back(a);
             }
-            a.push_back(segs);
 
-            ctrs3dJson.push_back(a);
-        }
+            return tris2dValsJson;
+        };
 
-        return ctrs3dJson;
-    };
+        auto convert3D = [](
+            std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>& ctrs3d)
+        {
+            json ctrs3dJson = json::array();
+            for (auto& ctr : ctrs3d)
+            {
+                json a = json::array();
 
-    json ret = json::array();
-    ret.push_back(results.values[0][0].size()); //nMat,
-    ret.push_back(shrink); //shrink,
-    ret.push_back(results.clusters); //clusters,
-    ret.push_back(slices); //slices,
-    ret.push_back(ptClusIndex); //ptClusIndex,
-    ret.push_back(convertCtrs(ctrs2dVals)); //ctrs2Dvals,
-    ret.push_back(convert3D(ctrs3dVals)); //ctrs3Dvals,
-    ret.push_back(results.names); //featureNames,
-    ret.push_back(ptValIndex); //ptValIndex,
-    ret.push_back(convertTris(tris2dVals)); //tris2Dvals
-    ret.push_back(convertCtrs(ctrs2dclusters)); //ctrs2Dclusters,
-    ret.push_back(convert3D(ctrs3dClusters)); //ctrs3Dclusters,
-    ret.push_back(results.clusters[0][0].size()); //nClusters,
-    ret.push_back(convertTris(tris2dclusters)); //tris2Dclusters,
-    ret.push_back(featureCols); //featureCols,
-    ret.push_back(sliceNames); //sliceNames
-    ret.push_back(results.values);
+                a.push_back(ctr.first);
+                auto& segs = ctr.second;
+                for (auto& a : segs)
+                {
+                    for (auto& b : a)
+                    {
+                        // b++;
+                    }
+                }
+                a.push_back(segs);
 
-    std::ofstream f(
-        "C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\UnitTest\\integrationTest.json");
-    f << ret;
-    
-    // contours = &ctrs;
-    // points = &pts;
-    //
-    // glutInit(&argc, argv);
-    // glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    // glutInitWindowSize(500, 500);
-    // glutCreateWindow("The RGB Color Cube");
-    // glutReshapeFunc(reshape);
-    // glutTimerFunc(100, timer, 0);
-    // glutDisplayFunc(display);
-    // init();
-    // glutMainLoop();
+                ctrs3dJson.push_back(a);
+            }
 
-    return 0;
+            return ctrs3dJson;
+        };
+
+        json ret = json::object();
+        ret["nat"]=(results.values[0][0].size()); //nMat,
+        ret["shrink"]=(shrink); //shrink,
+        ret["clusters"]=(results.clusters); //clusters,
+        ret["slices"]=(slices); //slices,
+        ret["ptClusIndex"]=(ptClusIndex); //ptClusIndex,
+        ret["ctrs2Dvals"]=(convertCtrs(ctrs2dVals)); //ctrs2Dvals,
+        ret["ctrs3Dvals"]=(convert3D(ctrs3dVals)); //ctrs3Dvals,
+        ret["featureNames"]=(results.names); //featureNames,
+        ret["ptValIndex"]=(ptValIndex); //ptValIndex,
+        ret["tris2Dvals"]=(convertTris(tris2dVals)); //tris2Dvals
+        ret["ctrs2Dclusters"]=(convertCtrs(ctrs2dclusters)); //ctrs2Dclusters,
+        ret["ctrs3Dclusters"]=(convert3D(ctrs3dClusters)); //ctrs3Dclusters,
+        ret["nClusters"]=(results.clusters[0][0].size()); //nClusters,
+        ret["tris2Dclusters"]=(convertTris(tris2dclusters)); //tris2Dclusters,
+        ret["featureCols"]=(featureCols); //featureCols,
+        ret["sliceNames"]=(sliceNames); //sliceNames
+        ret["values"]=(results.values);
+
+        std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\st-visualizer-electron\\imports\\static\\integrationTest.json");
+        f << ret;
+    }
 }
