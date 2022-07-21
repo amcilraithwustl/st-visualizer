@@ -79,6 +79,9 @@ export const CustomRenderer = () => {
   useEffect(() => {
     importPts().then((res) => setData(res));
   }, []);
+  const [activeSlices, setActiveSlices] = useState<
+    { name: string; on: boolean }[]
+  >([]);
   const rawPtData = data?.slices.map((slice) =>
     slice.map((pt) => new THREE.Vector3(pt[0], pt[1], pt[2]))
   );
@@ -96,6 +99,7 @@ export const CustomRenderer = () => {
         }))
       )
       .slice(1, -1)
+      .filter((v, i) => activeSlices[i]?.on)
       .reduce((prev, current) => [...prev, ...current], []);
 
   const colors: Color[] = [
@@ -119,7 +123,7 @@ export const CustomRenderer = () => {
   const center = rawPtData
     ?.reduce(
       (prev, slice) =>
-        slice.reduce((p, c) => p.add(c), new THREE.Vector3(0, 0, 0)),
+        prev.add(slice.reduce((p, c) => p.add(c), new THREE.Vector3(0, 0, 0))),
       new THREE.Vector3(0, 0, 0)
     )
     .divideScalar(numPoints || 1);
@@ -128,7 +132,7 @@ export const CustomRenderer = () => {
   const translate = center
     ? ([-center.x, -center.y, -center.z] as const)
     : ([0, 0, 0] as const);
-  const shrink = 0.005;
+  const shrink = 0.007;
   const renderArea = (
     <Grid item>
       <Canvas style={{ height: 500 }}>
@@ -156,17 +160,14 @@ export const CustomRenderer = () => {
         {/*  />*/}
         {/*))}*/}
         {Object.values(groups).map((g, i) => {
-          console.log(activeSlices, i, activeSlices?.[i]);
           return (
-            activeSlices?.[i]?.on && (
-              <Points
-                key={i}
-                points={g.pts}
-                translate={translate}
-                scale={shrink}
-                color={colors[g.group] || defaultColor}
-              />
-            )
+            <Points
+              key={i}
+              points={g.pts}
+              translate={translate}
+              scale={shrink}
+              color={colors[g.group] || defaultColor}
+            />
           );
         })}
         {/*<Points points={randomPoints} color={"rgb(224,113,4)"} />*/}
@@ -197,9 +198,7 @@ export const CustomRenderer = () => {
       </Canvas>
     </Grid>
   );
-  const [activeSlices, setActiveSlices] = useState<
-    { name: string; on: boolean }[]
-  >([]);
+
   useEffect(() => {
     setActiveSlices(
       data?.sliceNames.map((v) => ({
@@ -214,10 +213,11 @@ export const CustomRenderer = () => {
         {activeSlices.map((active, i) => (
           <FormControlLabel
             key={i}
-            control={<Checkbox value={active.on} />}
-            onChange={() => {
+            control={<Checkbox checked={active.on} />}
+            onChange={(_, checked) => {
               const oldData = activeSlices;
-              oldData[i].on = !oldData[i].on;
+              oldData[i].on = checked;
+
               setActiveSlices([...oldData]);
             }}
             label={active.name}
