@@ -4,7 +4,7 @@
     "module": "commonjs",
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noImplicitAny": true,
     "sourceMap": true,
     "baseUrl": ".",

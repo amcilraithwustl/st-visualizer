@@ -17,9 +17,9 @@ export function Line({
   // create a simple square shape. We duplicate the top left and bottom right
   // vertices because each vertex needs to appear once per triangle.
 
-  const ref = useRef<THREE.Line>();
+  const ref = useRef<THREE.Line | null>(null);
   useLayoutEffect(() => {
-    ref.current.geometry.setFromPoints(points);
+    ref.current?.geometry.setFromPoints(points);
   }, [points]);
   return (
     <line_ ref={ref}>

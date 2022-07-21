@@ -12,14 +12,14 @@ export function Points({
   points: THREE.Vector3[];
   color: JSX.IntrinsicElements["lineBasicMaterial"]["color"];
   scale: number;
-  translate: [number, number, number];
+  translate: readonly [number, number, number];
 }) {
   //create a blue LineBasicMaterial
 
   // create a simple square shape. We duplicate the top left and bottom right
   // vertices because each vertex needs to appear once per triangle.
 
-  const ref2 = useRef<THREE.Points>();
+  const ref2 = useRef<THREE.Points | null>(null);
   useLayoutEffect(() => {
     ref2.current?.geometry
       .setFromPoints(points)
