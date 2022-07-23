@@ -191,7 +191,7 @@ export const CustomRenderer = () => {
       >
         {renderSetup}
 
-        {/* {pointsDisplay} */}
+        {pointsDisplay}
         {curvesDisplay}
       </Canvas>
     </Grid>

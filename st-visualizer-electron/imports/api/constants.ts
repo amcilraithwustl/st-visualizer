@@ -16,7 +16,7 @@ export type datatype = {
   ctrs3Dclusters: unknown[];
   nClusters: number;
   ctrs2Dclusters: unknown[];
-  ctrs2Dvals: [point[], [number, number]][][]; //Slice, ctr, (points, segments)
+  ctrs2Dvals: [point[], [number, number][]][][]; //Slice, ctr, (points, segments)
   tris2Dvals: unknown[];
   ptValIndex: number;
   clusters: unknown[];

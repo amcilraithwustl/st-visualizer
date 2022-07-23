@@ -6,25 +6,32 @@ import "../../api/threejsHeadeers";
 export function Line({
   points,
   color,
+  scale,
+  translate,
 }: // cap,
 // join,
 {
   points: THREE.Vector3[];
   color: JSX.IntrinsicElements["lineBasicMaterial"]["color"];
+  scale: number;
+  translate: readonly [number, number, number];
 }) {
   //create a blue LineBasicMaterial
 
   // create a simple square shape. We duplicate the top left and bottom right
   // vertices because each vertex needs to appear once per triangle.
 
-  const ref = useRef<THREE.Line | null>(null);
+  const ref = useRef<THREE.LineSegments | null>(null);
   useLayoutEffect(() => {
-    ref.current?.geometry.setFromPoints(points);
+    ref.current?.geometry
+      .setFromPoints(points)
+      .translate(...translate)
+      .scale(scale, scale, scale);
   }, [points]);
   return (
-    <line_ ref={ref}>
+    <lineSegments ref={ref}>
       <bufferGeometry />
       <lineBasicMaterial color={color} />
-    </line_>
+    </lineSegments>
   );
 }
