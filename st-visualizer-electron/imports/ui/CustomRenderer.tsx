@@ -12,8 +12,9 @@ import _ from "lodash";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
-import "../../api/threejsHeadeers";
-import { datatype, importPts } from "../../api/constants";
+import { CurvesDisplay } from "./CurvesDisplay";
+import "../api/threejsHeadeers";
+import { datatype, importPts } from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
 
 //Display List WebGL
@@ -154,6 +155,10 @@ export const CustomRenderer = () => {
     />
   );
 
+  const curvesDisplay = data && center && (
+    <CurvesDisplay data={data} center={center} />
+  );
+
   const renderSetup = (
     <>
       <ambientLight />
@@ -186,7 +191,8 @@ export const CustomRenderer = () => {
       >
         {renderSetup}
 
-        {pointsDisplay}
+        {/* {pointsDisplay} */}
+        {curvesDisplay}
       </Canvas>
     </Grid>
   );

@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { Color } from "@react-three/fiber";
 
+type point = [number, number, number];
 export type datatype = {
   nat: number[];
-  slices: [number, number, number][][];
+  slices: point[][];
   shrink: number[];
   sliceNames: string[];
   values: number[][][];
@@ -15,11 +16,14 @@ export type datatype = {
   ctrs3Dclusters: unknown[];
   nClusters: number;
   ctrs2Dclusters: unknown[];
-  ctrs2Dvals: unknown[];
+  ctrs2Dvals: [point[], [number, number]][][]; //Slice, ctr, (points, segments)
   tris2Dvals: unknown[];
   ptValIndex: number;
   clusters: unknown[];
 };
+
+export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
+
 //This is a temporary implementation and will need to be dramatically improved
 export const importPts = async () => {
   const pts = (await import("../static/integrationTest.json")).default;

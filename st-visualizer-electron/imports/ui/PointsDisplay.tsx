@@ -1,6 +1,6 @@
-import { active, colors, defaultColor, shrink } from "../../api/constants";
+import { active, colors, defaultColor, shrink } from "../api/constants";
 import * as THREE from "three";
-import { Points } from "./Points";
+import { Points } from "./threejsComponents/Points";
 import * as React from "react";
 
 export const PointsDisplay = ({

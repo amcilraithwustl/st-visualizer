@@ -1,6 +1,6 @@
 import "react";
 import * as React from "react";
-import { CustomRenderer } from "./ui/threejsComponents/CustomRenderer";
+import { CustomRenderer } from "./ui/CustomRenderer";
 
 export const App = () => {
   return (
