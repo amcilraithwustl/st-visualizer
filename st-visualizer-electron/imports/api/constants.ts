@@ -11,7 +11,7 @@ export type datatype = {
   featureNames: string[];
   featureCols: number[];
   ptClusIndex: number;
-  ctrs3Dvals: unknown[];
+  ctrs3Dvals: [point[], number[][]][]; //Value, [points, point indices per face]
   tris2Dclusters: unknown[];
   ctrs3Dclusters: unknown[];
   nClusters: number;
@@ -32,7 +32,7 @@ export const importPts = async () => {
 };
 
 export const times = 4;
-export const defaultColor: Color = "transparent";
+export const defaultColor: Color = "white";
 export const colors: Color[] = [
   "black",
   "red",
@@ -42,6 +42,8 @@ export const colors: Color[] = [
   "orange",
   "black",
   "lightgreen",
+  "lightblue",
+  "purple",
 ];
 export const shrink = 0.007;
 export type active = { name: string; on: boolean };

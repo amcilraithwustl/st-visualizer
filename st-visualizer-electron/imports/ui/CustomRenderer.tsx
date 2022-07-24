@@ -17,7 +17,7 @@ import "../api/threejsHeadeers";
 import { datatype, importPts } from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
 import { AreaDisplay } from "./AreaDisplay";
-
+import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
 export const CustomRenderer = () => {
@@ -164,6 +164,10 @@ export const CustomRenderer = () => {
     <AreaDisplay data={data} center={center} />
   );
 
+  const volumeDisplay = data && center && (
+    <VolumeDisplay data={data} center={center} />
+  );
+
   const renderSetup = (
     <>
       <ambientLight />
@@ -196,9 +200,10 @@ export const CustomRenderer = () => {
       >
         {renderSetup}
 
-        {pointsDisplay}
-        {curvesDisplay}
-        {areaDisplay}
+        {/* {pointsDisplay} */}
+        {/* {curvesDisplay} */}
+        {/* {areaDisplay} */}
+        {volumeDisplay}
       </Canvas>
     </Grid>
   );
