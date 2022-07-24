@@ -7,12 +7,16 @@ export function GeometryCustom({
   color,
   points,
   opacity,
+  scale,
+  translate,
 }: // cap,
 // join,
 {
   color: JSX.IntrinsicElements["meshBasicMaterial"]["color"];
   opacity?: JSX.IntrinsicElements["meshBasicMaterial"]["opacity"];
   points: THREE.Vector3[];
+  scale: number;
+  translate: readonly [number, number, number];
 }) {
   //create a blue LineBasicMaterial
 
@@ -21,8 +25,12 @@ export function GeometryCustom({
 
   const ref = useRef<THREE.Mesh | null>(null);
   useLayoutEffect(() => {
-    ref.current?.geometry.setFromPoints(points);
-  }, [points]);
+    const temp = [...points, ...points.map((i) => i).reverse()]; //To ensure everything is double sided
+    ref.current?.geometry
+      .setFromPoints(temp)
+      .translate(...translate)
+      .scale(scale, scale, scale);
+  }, [points, scale, translate]);
   return (
     <mesh ref={ref}>
       <bufferGeometry />

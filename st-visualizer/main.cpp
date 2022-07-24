@@ -352,7 +352,10 @@ int main(int argc, char* argv[])
                 a.push_back(triangles);
 
                 auto& materials = std::get<2>(tris);
-                for (auto& mat : materials) { mat++; }
+                for (auto& mat : materials)
+                {
+// mat++;
+                }
                 a.push_back(materials);
 
                 tris2dValsJson.push_back(a);

@@ -16,6 +16,7 @@ import { CurvesDisplay } from "./CurvesDisplay";
 import "../api/threejsHeadeers";
 import { datatype, importPts } from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
+import { AreaDisplay } from "./AreaDisplay";
 
 //Display List WebGL
 
@@ -159,6 +160,10 @@ export const CustomRenderer = () => {
     <CurvesDisplay data={data} center={center} />
   );
 
+  const areaDisplay = data && center && (
+    <AreaDisplay data={data} center={center} />
+  );
+
   const renderSetup = (
     <>
       <ambientLight />
@@ -193,6 +198,7 @@ export const CustomRenderer = () => {
 
         {pointsDisplay}
         {curvesDisplay}
+        {areaDisplay}
       </Canvas>
     </Grid>
   );
