@@ -20,27 +20,6 @@ export const VolumeDisplay = ({
     ? ([-center.x, -center.y, -center.z] as const)
     : ([0, 0, 0] as const);
 
-  const ctrs = data.tris2Dvals.map((slice) => ({
-    points: slice[0],
-    tris: slice[1],
-    vals: slice[2],
-  }));
-
-  const sortedFinalContours = [...new Array(data.nat)].map(
-    () => [] as THREE.Vector3[]
-  );
-
-  ctrs.flatMap((slice) =>
-    slice.tris
-      .map((indices, indexIndex) => ({
-        triangle: indices.map((i) => pointToVector(slice.points[i])),
-        val: slice.vals[indexIndex],
-      }))
-      .forEach((triangle) =>
-        sortedFinalContours[triangle.val].push(...triangle.triangle)
-      )
-  );
-
   function createPolygon(poly: THREE.Vector3[]) {
     //Assuming the polygon is a star
     const centerPoint = poly
@@ -68,10 +47,9 @@ export const VolumeDisplay = ({
   );
   console.log("VOLUMES", volumes);
 
-  return (
-    <>
-      {volumes.flatMap((ctr, i) => {
-        console.log("COLOR", i, colors[i]);
+  const v = useMemo(
+    () =>
+      volumes.flatMap((ctr, i) => {
         return (
           <GeometryCustom
             key={i}
@@ -82,7 +60,8 @@ export const VolumeDisplay = ({
             opacity={0.5}
           />
         );
-      })}
-    </>
+      }),
+    [translate, volumes]
   );
+  return <>{v}</>;
 };
