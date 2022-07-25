@@ -73,8 +73,8 @@ export const CustomRenderer = () => {
     [pointsBySlice]
   );
 
-  const ptsByValue = useMemo(
-    () =>
+  const groups = useMemo(() => {
+    const ptsByValue =
       pointsBySlice &&
       data?.values
         .map(
@@ -88,19 +88,15 @@ export const CustomRenderer = () => {
         )
         .slice(1, -1)
         .filter((v, i) => activeSlices[i]?.on)
-        .reduce((prev, current) => [...prev, ...current], []),
-    [activeSlices, data?.values, pointsBySlice]
-  );
-
-  const groups = useMemo(
-    () =>
-      Object.entries(_.groupBy(ptsByValue, (v) => v.group)).map((entry) => ({
-        group: parseInt(entry[0]) + 1,
+        .reduce((prev, current) => [...prev, ...current], []);
+    return Object.entries(_.groupBy(ptsByValue, (v) => v.group)).map(
+      (entry) => ({
+        group: parseInt(entry[0]),
         pts: entry[1].map((v) => v.pt),
-      })),
-    [ptsByValue]
-  );
-
+      })
+    );
+  }, [activeSlices, data?.values, pointsBySlice]);
+  console.log("GROUPS", groups);
   const center = useMemo(
     () =>
       pointsBySlice

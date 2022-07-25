@@ -23,7 +23,7 @@ export const PointsDisplay = ({
     <>
       {Object.values(groups).map((g, i) => {
         return (
-          activeGroups?.[i]?.on && (
+          activeGroups?.[g.group]?.on && (
             <Points
               key={i}
               points={g.pts}
