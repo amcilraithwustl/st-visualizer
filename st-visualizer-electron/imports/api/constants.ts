@@ -3,7 +3,7 @@ import { Color } from "@react-three/fiber";
 
 type point = [number, number, number];
 export type datatype = {
-  nat: number[];
+  nat: number;
   slices: point[][];
   shrink: number[];
   sliceNames: string[];

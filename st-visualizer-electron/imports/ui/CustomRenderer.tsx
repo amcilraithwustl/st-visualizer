@@ -27,6 +27,13 @@ export const CustomRenderer = () => {
     importPts().then((res) => setData(res));
   }, []);
 
+  const [visuals, setVisuals] = useState({
+    area: true,
+    volume: true,
+    contour: true,
+    points: true,
+  });
+
   //Display User Settings
   const [activeSlices, setActiveSlices] = useState<
     { name: string; on: boolean }[]
@@ -144,6 +151,41 @@ export const CustomRenderer = () => {
             />
           ))}
         </FormGroup>
+
+        <Typography>Visualizations</Typography>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={visuals.points} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, points: !!checked }));
+            }}
+            label={"Points"}
+          />
+
+          <FormControlLabel
+            control={<Checkbox checked={visuals.contour} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, contour: !!checked }));
+            }}
+            label={"Contours"}
+          />
+
+          <FormControlLabel
+            control={<Checkbox checked={visuals.area} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, area: !!checked }));
+            }}
+            label={"Areas"}
+          />
+
+          <FormControlLabel
+            control={<Checkbox checked={visuals.volume} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, volume: !!checked }));
+            }}
+            label={"Volumes"}
+          />
+        </FormGroup>
       </Stack>
     </Grid>
   );
@@ -157,15 +199,32 @@ export const CustomRenderer = () => {
   );
 
   const curvesDisplay = data && center && (
-    <CurvesDisplay data={data} center={center} />
+    <CurvesDisplay
+      ctrs2Dvals={data.ctrs2Dvals}
+      center={center}
+      activeGroups={activeGroups}
+      activeSlices={activeSlices}
+      nVals={data.nat}
+    />
   );
 
   const areaDisplay = data && center && (
-    <AreaDisplay data={data} center={center} />
+    <AreaDisplay
+      data={data}
+      center={center}
+      activeGroups={activeGroups}
+      activeSlices={activeSlices}
+      nVals={data.nat}
+    />
   );
 
   const volumeDisplay = data && center && (
-    <VolumeDisplay data={data} center={center} />
+    <VolumeDisplay
+      data={data}
+      center={center}
+      activeSlices={activeSlices}
+      nVals={data.nat}
+    />
   );
 
   const renderSetup = (
@@ -200,10 +259,10 @@ export const CustomRenderer = () => {
       >
         {renderSetup}
 
-        {pointsDisplay}
-        {curvesDisplay}
-        {areaDisplay}
-        {volumeDisplay}
+        {visuals.points && pointsDisplay}
+        {visuals.contour && curvesDisplay}
+        {visuals.area && areaDisplay}
+        {visuals.volume && volumeDisplay}
       </Canvas>
     </Grid>
   );
