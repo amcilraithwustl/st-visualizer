@@ -4,6 +4,7 @@ import {
   defaultColor,
   shrink,
   pointToVector,
+  active,
 } from "../api/constants";
 import * as THREE from "three";
 import * as React from "react";
@@ -12,9 +13,11 @@ import { useMemo } from "react";
 export const VolumeDisplay = ({
   center,
   data,
+  activeGroups,
 }: {
   center: THREE.Vector3;
   data: datatype;
+  activeGroups: active[];
 }): JSX.Element => {
   const translate = center
     ? ([-center.x, -center.y, -center.z] as const)
@@ -49,7 +52,8 @@ export const VolumeDisplay = ({
 
   const v = useMemo(
     () =>
-      volumes.flatMap((ctr, i) => {
+      volumes.map((ctr, i) => {
+        if (!activeGroups[i].on) return undefined;
         return (
           <GeometryCustom
             key={i}
@@ -61,7 +65,7 @@ export const VolumeDisplay = ({
           />
         );
       }),
-    [translate, volumes]
+    [activeGroups, translate, volumes]
   );
   return <>{v}</>;
 };

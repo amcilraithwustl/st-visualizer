@@ -219,12 +219,7 @@ export const CustomRenderer = () => {
   );
 
   const volumeDisplay = data && center && (
-    <VolumeDisplay
-      data={data}
-      center={center}
-      activeSlices={activeSlices}
-      nVals={data.nat}
-    />
+    <VolumeDisplay data={data} center={center} activeGroups={activeGroups} />
   );
 
   const renderSetup = (
