@@ -377,21 +377,22 @@ export const CustomRenderer = () => {
             {leftControlArea}
           </Paper>
         </Grid>
-        <Grid item container md={6} lg={8}>
-          <Paper
-            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
-            elevation={9}
-          >
-            {primaryControlArea}
-            {renderArea}
-          </Paper>
-        </Grid>
+
         <Grid item md={3} lg={2}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
             // elevation={9}
           >
             {rightControlArea}
+          </Paper>
+        </Grid>
+        <Grid item container md={6} lg={8}>
+          <Paper
+            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
+            elevation={9}
+          >
+            {renderArea}
+            {primaryControlArea}
           </Paper>
         </Grid>
       </Grid>
