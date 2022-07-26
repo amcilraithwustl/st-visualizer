@@ -3,7 +3,7 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
-  Stack,
+  Paper,
   Typography,
 } from "@mui/material";
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
@@ -14,7 +14,7 @@ import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 import { CurvesDisplay } from "./CurvesDisplay";
 import "../api/threejsHeadeers";
-import { datatype, importPts } from "../api/constants";
+import { datatype, importPts, pointToVector } from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
 import { AreaDisplay } from "./AreaDisplay";
 import { VolumeDisplay } from "./VolumeDisplay";
@@ -52,9 +52,9 @@ export const CustomRenderer = () => {
   >([]);
   useEffect(() => {
     setActiveGroups(
-      data?.featureNames.map((v) => ({
+      data?.featureNames.map((v, i) => ({
         name: v,
-        on: true,
+        on: i + 1 !== data?.featureNames.length,
       })) || []
     );
   }, [data?.featureNames]);
@@ -68,12 +68,7 @@ export const CustomRenderer = () => {
     [data?.slices]
   );
 
-  const totalNumberOfPoints = useMemo(
-    () => pointsBySlice?.reduce((p, slice) => p + slice.length, 0),
-    [pointsBySlice]
-  );
-
-  const groups = useMemo(() => {
+  const pointsData = useMemo(() => {
     const ptsByValue =
       pointsBySlice &&
       data?.values
@@ -96,126 +91,141 @@ export const CustomRenderer = () => {
       })
     );
   }, [activeSlices, data?.values, pointsBySlice]);
-  console.log("GROUPS", groups);
-  const center = useMemo(
-    () =>
-      pointsBySlice
-        ?.reduce(
-          (prev, slice) =>
-            prev.add(
-              slice.reduce((p, c) => p.add(c), new THREE.Vector3(0, 0, 0))
-            ),
-          new THREE.Vector3(0, 0, 0)
-        )
-        .divideScalar(totalNumberOfPoints || 1),
-    [totalNumberOfPoints, pointsBySlice]
-  );
 
-  const controlArea = (
-    <Grid item xs={4}>
-      <Stack>
-        <Typography>Slices</Typography>
-        <FormGroup>
-          {activeSlices.map((active, i) => (
-            <FormControlLabel
-              key={i}
-              control={<Checkbox checked={active.on} />}
-              onChange={(_, checked) => {
-                const oldData = activeSlices;
-                oldData[i].on = checked;
+  const center = useMemo(() => {
+    const totalNumberOfPoints = pointsBySlice?.reduce(
+      (p, slice) => p + slice.length,
+      0
+    );
+    return pointsBySlice
+      ?.reduce(
+        (prev, slice) =>
+          prev.add(
+            slice.reduce((p, c) => p.add(c), new THREE.Vector3(0, 0, 0))
+          ),
+        new THREE.Vector3(0, 0, 0)
+      )
+      .divideScalar(totalNumberOfPoints || 1);
+  }, [pointsBySlice]);
 
-                setActiveSlices([...oldData]);
-              }}
-              label={active.name}
-            />
-          ))}
-        </FormGroup>
-
-        <Typography>Groups</Typography>
-        <FormGroup>
-          {activeGroups.map((active, i) => (
-            <FormControlLabel
-              key={i}
-              control={<Checkbox checked={active.on} />}
-              onChange={(_, checked) => {
-                const oldData = activeGroups;
-                oldData[i].on = checked;
-
-                setActiveGroups([...oldData]);
-              }}
-              label={active.name}
-            />
-          ))}
-        </FormGroup>
-
-        <Typography>Visualizations</Typography>
-        <FormGroup>
-          <FormControlLabel
-            control={<Checkbox checked={visuals.points} />}
-            onChange={(_, checked) => {
-              setVisuals((v) => ({ ...v, points: !!checked }));
-            }}
-            label={"Points"}
-          />
-
-          <FormControlLabel
-            control={<Checkbox checked={visuals.contour} />}
-            onChange={(_, checked) => {
-              setVisuals((v) => ({ ...v, contour: !!checked }));
-            }}
-            label={"Contours"}
-          />
-
-          <FormControlLabel
-            control={<Checkbox checked={visuals.area} />}
-            onChange={(_, checked) => {
-              setVisuals((v) => ({ ...v, area: !!checked }));
-            }}
-            label={"Areas"}
-          />
-
-          <FormControlLabel
-            control={<Checkbox checked={visuals.volume} />}
-            onChange={(_, checked) => {
-              setVisuals((v) => ({ ...v, volume: !!checked }));
-            }}
-            label={"Volumes"}
-          />
-        </FormGroup>
-      </Stack>
-    </Grid>
+  const filteredPointsData = useMemo(
+    () => pointsData.filter((e) => activeGroups[e.group]?.on),
+    [activeGroups, pointsData]
   );
 
   const pointsDisplay = center && (
-    <PointsDisplay
-      activeGroups={activeGroups}
-      center={center}
-      groups={groups}
-    />
+    <PointsDisplay center={center} groups={filteredPointsData} />
   );
 
+  const curvesFinalData = useMemo(() => {
+    if (!data) return [];
+    const ctrs = data.ctrs2Dvals
+      .slice(1, -1)
+      .filter((_, i) => activeSlices[i]?.on)
+      .map((slice) =>
+        slice
+          .map((ctr) => ({
+            points: ctr[0].map((p) => pointToVector(p)),
+            segs: ctr[1],
+          }))
+          .map((ctr, i) => ({
+            segments: ctr.segs.flatMap((v) => {
+              return v.map((v1) => ctr.points[v1]);
+            }),
+            val: i,
+          }))
+      );
+
+    return ctrs
+      .reduce(
+        (acc, slice) => {
+          slice.forEach((ctr) => acc[ctr.val].push(...ctr.segments));
+          return acc;
+        },
+        [...new Array(data.nat)].map(() => [] as THREE.Vector3[])
+      )
+      .map((pts, group) => ({ pts, group }));
+  }, [activeSlices, data]);
+
+  const filteredCurvesFinalData = useMemo(
+    () => curvesFinalData.filter((e) => activeGroups[e.group]?.on),
+    [activeGroups, curvesFinalData]
+  );
   const curvesDisplay = data && center && (
-    <CurvesDisplay
-      ctrs2Dvals={data.ctrs2Dvals}
-      center={center}
-      activeGroups={activeGroups}
-      activeSlices={activeSlices}
-      nVals={data.nat}
-    />
+    <CurvesDisplay center={center} curvesFinalData={filteredCurvesFinalData} />
+  );
+
+  const areaDisplayData = React.useMemo(() => {
+    if (!data) return [];
+    const ctrs = data.tris2Dvals
+      .slice(1, -1)
+      .filter((_, i) => activeSlices[i]?.on)
+      .map((slice) => ({
+        points: slice[0],
+        tris: slice[1],
+        vals: slice[2],
+      }));
+
+    const finalData = [...new Array(data.nat)].map(() => [] as THREE.Vector3[]);
+
+    ctrs.flatMap((slice) =>
+      slice.tris
+        .map((indices, indexIndex) => ({
+          triangle: indices.map((i) => pointToVector(slice.points[i])),
+          val: slice.vals[indexIndex],
+        }))
+        .forEach((triangle) =>
+          finalData[triangle.val].push(...triangle.triangle)
+        )
+    );
+    return finalData.map((pts, group) => ({ pts, group }));
+  }, [activeSlices, data]);
+
+  const filteredAreaDisplayData = useMemo(
+    () => areaDisplayData.filter((e) => activeGroups[e.group]?.on),
+    [activeGroups, areaDisplayData]
   );
 
   const areaDisplay = data && center && (
-    <AreaDisplay
-      data={data}
-      center={center}
-      activeGroups={activeGroups}
-      activeSlices={activeSlices}
-      nVals={data.nat}
-    />
+    <AreaDisplay center={center} areaDisplayData={filteredAreaDisplayData} />
   );
 
+  const volumes = useMemo(() => {
+    if (!data) return [];
+    function createPolygon(poly: THREE.Vector3[]) {
+      //Assuming the polygon is a star
+      const centerPoint = poly
+        .reduce((a, b) => a.add(b), new THREE.Vector3(0, 0, 0))
+        .divideScalar(poly.length);
+
+      return poly.flatMap((e, i) => {
+        return [poly[i], poly[(i + 1) % poly.length], centerPoint];
+      });
+    }
+
+    return data.ctrs3Dvals
+      .map((val) => ({
+        points: val[0].map((p) => pointToVector(p)),
+        rings: val[1],
+      }))
+      .map((val) =>
+        val.rings.flatMap((indices) =>
+          createPolygon(indices.map((index) => val.points[index]))
+        )
+      )
+      .map((pts, group) => ({ pts, group }));
+  }, [data]);
+
+  const filteredVolumes = useMemo(
+    () => volumes.filter((e) => activeGroups[e.group]?.on),
+    [activeGroups, volumes]
+  );
   const volumeDisplay = data && center && (
-    <VolumeDisplay data={data} center={center} activeGroups={activeGroups} />
+    <VolumeDisplay
+      center={center}
+      activeGroups={activeGroups}
+      volumes={filteredVolumes}
+    />
   );
 
   const renderSetup = (
@@ -238,7 +248,7 @@ export const CustomRenderer = () => {
   );
 
   const renderArea = (
-    <Grid item xs={8}>
+    <Grid item xs={12}>
       <Canvas
         style={{
           height: 500,
@@ -257,10 +267,134 @@ export const CustomRenderer = () => {
       </Canvas>
     </Grid>
   );
+
+  const primaryControlArea = (
+    <Grid item container>
+      <Grid item xs={3}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={visuals.points} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, points: !!checked }));
+            }}
+            label={"Points"}
+          />
+        </FormGroup>
+      </Grid>
+
+      <Grid item xs={3}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={visuals.contour} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, contour: !!checked }));
+            }}
+            label={"Contours"}
+          />
+        </FormGroup>
+      </Grid>
+
+      <Grid item xs={3}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={visuals.area} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, area: !!checked }));
+            }}
+            label={"Areas"}
+          />
+        </FormGroup>
+      </Grid>
+
+      <Grid item xs={3}>
+        <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={visuals.volume} />}
+            onChange={(_, checked) => {
+              setVisuals((v) => ({ ...v, volume: !!checked }));
+            }}
+            label={"Volumes"}
+          />
+        </FormGroup>
+      </Grid>
+    </Grid>
+  );
+
+  const leftControlArea = (
+    <Grid item container xs={12}>
+      <Grid item>
+        <Typography variant={"h5"}>Slices</Typography>
+        <FormGroup>
+          {activeSlices.map((active, i) => (
+            <FormControlLabel
+              key={i}
+              control={<Checkbox checked={active.on} />}
+              onChange={(_, checked) => {
+                const oldData = activeSlices;
+                oldData[i].on = checked;
+
+                setActiveSlices([...oldData]);
+              }}
+              label={active.name}
+            />
+          ))}
+        </FormGroup>
+      </Grid>
+    </Grid>
+  );
+
+  const rightControlArea = (
+    <Grid item container xs={12}>
+      <Grid item>
+        <Typography variant={"h5"}>Groups</Typography>
+        <FormGroup>
+          {activeGroups.map((active, i) => (
+            <FormControlLabel
+              key={i}
+              control={<Checkbox checked={active.on} />}
+              onChange={(_, checked) => {
+                const oldData = activeGroups;
+                oldData[i].on = checked;
+
+                setActiveGroups([...oldData]);
+              }}
+              label={active.name}
+            />
+          ))}
+        </FormGroup>
+      </Grid>
+    </Grid>
+  );
+
   return (
     <Grid container style={{ width: "100%" }}>
-      {controlArea}
-      {renderArea}
+      <Grid item container xs={12} spacing={3}>
+        <Grid item md={3} lg={2}>
+          <Paper
+            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
+            // elevation={9}
+          >
+            {leftControlArea}
+          </Paper>
+        </Grid>
+        <Grid item container md={6} lg={8}>
+          <Paper
+            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
+            elevation={9}
+          >
+            {primaryControlArea}
+            {renderArea}
+          </Paper>
+        </Grid>
+        <Grid item md={3} lg={2}>
+          <Paper
+            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
+            // elevation={9}
+          >
+            {rightControlArea}
+          </Paper>
+        </Grid>
+      </Grid>
     </Grid>
   );
 };

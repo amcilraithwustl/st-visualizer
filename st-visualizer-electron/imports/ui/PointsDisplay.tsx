@@ -1,14 +1,12 @@
-import { active, colors, defaultColor, shrink } from "../api/constants";
+import { colors, defaultColor, shrink } from "../api/constants";
 import * as THREE from "three";
 import { Points } from "./threejsComponents/Points";
 import * as React from "react";
 
 export const PointsDisplay = ({
-  activeGroups,
   center,
   groups,
 }: {
-  activeGroups: active[];
   center: THREE.Vector3;
   groups: {
     group: number;
@@ -21,17 +19,15 @@ export const PointsDisplay = ({
 
   return (
     <>
-      {Object.values(groups).map((g, i) => {
+      {Object.values(groups).map((g) => {
         return (
-          activeGroups?.[g.group]?.on && (
-            <Points
-              key={i}
-              points={g.pts}
-              translate={translate}
-              scale={shrink}
-              color={colors[g.group] || defaultColor}
-            />
-          )
+          <Points
+            key={g.group}
+            points={g.pts}
+            translate={translate}
+            scale={shrink}
+            color={colors[g.group] || defaultColor}
+          />
         );
       })}
     </>
