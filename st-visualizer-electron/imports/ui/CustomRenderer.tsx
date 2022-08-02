@@ -6,7 +6,14 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
+import {
+  GizmoHelper,
+  GizmoViewcube,
+  GizmoViewport,
+  OrbitControls,
+  PerspectiveCamera,
+
+} from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import _ from "lodash";
 import * as React from "react";
@@ -20,12 +27,8 @@ import { AreaDisplay } from "./AreaDisplay";
 import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
-export const CustomRenderer = () => {
+export const CustomRenderer = ({ data }: { data: datatype }) => {
   //Data to display
-  const [data, setData] = useState<datatype | undefined>(undefined);
-  useEffect(() => {
-    importPts().then((res) => setData(res));
-  }, []);
 
   const [visuals, setVisuals] = useState({
     area: true,
@@ -108,15 +111,6 @@ export const CustomRenderer = () => {
       .divideScalar(totalNumberOfPoints || 1);
   }, [pointsBySlice]);
 
-  const filteredPointsData = useMemo(
-    () => pointsData.filter((e) => activeGroups[e.group]?.on),
-    [activeGroups, pointsData]
-  );
-
-  const pointsDisplay = center && (
-    <PointsDisplay center={center} groups={filteredPointsData} />
-  );
-
   const curvesFinalData = useMemo(() => {
     if (!data) return [];
     const ctrs = data.ctrs2Dvals
@@ -147,14 +141,6 @@ export const CustomRenderer = () => {
       .map((pts, group) => ({ pts, group }));
   }, [activeSlices, data]);
 
-  const filteredCurvesFinalData = useMemo(
-    () => curvesFinalData.filter((e) => activeGroups[e.group]?.on),
-    [activeGroups, curvesFinalData]
-  );
-  const curvesDisplay = data && center && (
-    <CurvesDisplay center={center} curvesFinalData={filteredCurvesFinalData} />
-  );
-
   const areaDisplayData = React.useMemo(() => {
     if (!data) return [];
     const ctrs = data.tris2Dvals
@@ -180,15 +166,6 @@ export const CustomRenderer = () => {
     );
     return finalData.map((pts, group) => ({ pts, group }));
   }, [activeSlices, data]);
-
-  const filteredAreaDisplayData = useMemo(
-    () => areaDisplayData.filter((e) => activeGroups[e.group]?.on),
-    [activeGroups, areaDisplayData]
-  );
-
-  const areaDisplay = data && center && (
-    <AreaDisplay center={center} areaDisplayData={filteredAreaDisplayData} />
-  );
 
   const volumes = useMemo(() => {
     if (!data) return [];
@@ -216,16 +193,55 @@ export const CustomRenderer = () => {
       .map((pts, group) => ({ pts, group }));
   }, [data]);
 
-  const filteredVolumes = useMemo(
-    () => volumes.filter((e) => activeGroups[e.group]?.on),
-    [activeGroups, volumes]
+  const data2 = useMemo(
+    () => ({
+      volumes: volumes,
+      areaDisplayData,
+      curvesFinalData,
+      pointsData,
+    }),
+    [areaDisplayData, curvesFinalData, pointsData, volumes]
   );
-  const volumeDisplay = data && center && (
-    <VolumeDisplay
+  const transformedData = useMemo(
+    () => ({
+      volumeDisplay: data2.volumes.filter((e) => activeGroups[e.group]?.on),
+      areaDisplay: data2.areaDisplayData.filter(
+        (e) => activeGroups[e.group]?.on
+      ),
+      curvesDisplay: data2.curvesFinalData.filter(
+        (e) => activeGroups[e.group]?.on
+      ),
+      pointsDisplay: data2.pointsData.filter((e) => activeGroups[e.group]?.on),
+    }),
+    [
+      activeGroups,
+      data2.areaDisplayData,
+      data2.curvesFinalData,
+      data2.pointsData,
+      data2.volumes,
+    ]
+  );
+
+  const pointsDisplay = center && (
+    <PointsDisplay center={center} groups={transformedData.pointsDisplay} />
+  );
+
+  const curvesDisplay = data && center && (
+    <CurvesDisplay
       center={center}
-      activeGroups={activeGroups}
-      volumes={filteredVolumes}
+      curvesFinalData={transformedData.curvesDisplay}
     />
+  );
+
+  const areaDisplay = data && center && (
+    <AreaDisplay
+      center={center}
+      areaDisplayData={transformedData.areaDisplay}
+    />
+  );
+
+  const volumeDisplay = data && center && (
+    <VolumeDisplay center={center} volumes={transformedData.volumeDisplay} />
   );
 
   const renderSetup = (
@@ -239,7 +255,7 @@ export const CustomRenderer = () => {
       >
         <GizmoViewport
           axisColors={["red", "green", "blue"]}
-          labelColor="black"
+          labelColor="white"
         />
       </GizmoHelper>
       <pointLight position={[10, 10, 10]} />
@@ -372,7 +388,7 @@ export const CustomRenderer = () => {
         <Grid item md={3} lg={2}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
-            // elevation={9}
+            elevation={4}
           >
             {leftControlArea}
           </Paper>
@@ -381,7 +397,7 @@ export const CustomRenderer = () => {
         <Grid item md={3} lg={2}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
-            // elevation={9}
+            elevation={4}
           >
             {rightControlArea}
           </Paper>
