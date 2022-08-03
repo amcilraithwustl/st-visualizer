@@ -5,21 +5,14 @@ import { useState } from "react";
 import { datatype, importPts } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
 import { ImportPage } from "./ui/ImportPage/ImportPage";
-
 const Hidden = ({
-  targetVal,
-  currentVal,
+  on,
   children,
 }: {
-  currentVal: number;
-  targetVal: number;
+  on: boolean;
   children: JSX.Element | null;
 }) => {
-  return (
-    <div style={{ display: targetVal == currentVal ? undefined : "none" }}>
-      {children}
-    </div>
-  );
+  return <div style={{ display: on ? undefined : "none" }}>{children}</div>;
 };
 
 export const App = () => {
@@ -31,7 +24,6 @@ export const App = () => {
   React.useEffect(() => {
     importPts().then((res) => setData(res));
   }, []);
-
   return (
     <div
       style={{
@@ -44,11 +36,16 @@ export const App = () => {
       <div style={{ width: "100%" }}>
         <Tabs value={value} onChange={handleChange}>
           <Tab label="Data Import" id={0 + "tab"} />
-          <Tab label="Data Display" id={1 + "tab"} />
-          <Tab label="Data Export" id={2 + "tab"} />
+          <Tab label="Data Alignment" id={1 + "tab"} />
+          <Tab label="Data Display" id={2 + "tab"} />
         </Tabs>
-        {value === 0 && <ImportPage />}
-        <Hidden currentVal={value} targetVal={1}>
+        <Hidden on={value === 0}>
+          <ImportPage />
+        </Hidden>
+        <Hidden on={value == 1}>
+          <div>Alignment Page</div>
+        </Hidden>
+        <Hidden on={value === 2}>
           {data ? <CustomRenderer data={data} /> : null}
         </Hidden>
       </div>
