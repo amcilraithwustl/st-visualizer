@@ -1,22 +1,20 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
+import { ipcConstants } from "./ipcConstants";
 
-export interface IElectronAPI {
-  loadPreferences: () => Promise<void>;
-}
-
-console.log("EXPOSING IN MAIN WORLD");
-
-contextBridge.exposeInMainWorld("electronAPI", {
+const DeclaredAPI = {
   doAThing: () => {
     console.log("Hello world!");
   },
-});
+  basicInvoke: () => ipcRenderer.invoke(ipcConstants.openFile),
+};
+
+contextBridge.exposeInMainWorld("electronAPI", DeclaredAPI);
 
 declare global {
   interface Window {
-    electronAPI: IElectronAPI;
+    electronAPI: typeof DeclaredAPI;
   }
 }
