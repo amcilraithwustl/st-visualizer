@@ -247,7 +247,6 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
   const renderSetup = (
     <>
       <ambientLight />
-      <gridHelper args={[100, 10]} />
       <OrbitControls makeDefault enableDamping={false} />
       <GizmoHelper
         alignment="top-right" // widget alignment within scene

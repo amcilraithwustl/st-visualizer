@@ -24,6 +24,7 @@ export const App = () => {
   React.useEffect(() => {
     importPts().then((res) => setData(res));
   }, []);
+  console.log(window.electronAPI);
   return (
     <div
       style={{
