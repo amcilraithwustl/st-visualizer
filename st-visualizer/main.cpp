@@ -114,11 +114,11 @@ int main(int argc, char* argv[])
         auto allpts = concatMatrixes(results.slices);
         auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
         auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
-        auto ptClusIndex = mapVector(results.clusters , std::function([](std::vector<std::vector<float>> layer)
+        auto ptClusIndex = mapVector(results.clusters , std::function([](const std::vector<std::vector<float>>& layer, size_t)
             {
                 return mapVector(layer , std::function(getMaxPos));
             }));
-        auto ptValIndex = mapVector(results.values, std::function([](std::vector<std::vector<float>> layer)
+        auto ptValIndex = mapVector(results.values, std::function([](const std::vector<std::vector<float>>& layer)
             {
                 return mapVector(layer, std::function(getMaxPos));
             }));

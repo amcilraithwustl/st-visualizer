@@ -82,7 +82,7 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
 
     auto nsegs = concat(
         subset(segs, inds1),
-        mapVector(subset(segs, inds2), std::function([](std::pair<int, int> i) { return std::pair(i.second, i.first); }))
+        mapVector(subset(segs, inds2), std::function([](const std::pair<int, int>& i, size_t) { return std::pair(i.second, i.first); }))
     );
 
     /*prune unused vertices*/

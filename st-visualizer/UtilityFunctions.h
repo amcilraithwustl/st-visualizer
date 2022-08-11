@@ -80,40 +80,18 @@ std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(const 
     return mapVector(vec, new_op);
 }
 
-template <typename T, typename G>
-std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T)>& op)
-{
-    std::function<G(const T&, size_t)> new_op([op](const T& val, size_t) { return op(val); });
-    return mapVector(vec, new_op);
-}
-
-template <typename T, typename G>
-std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
-{
-    std::function<G(const T&, size_t)> new_op([op](const T& val, size_t i) { return op(val, i); });
-    return mapVector(vec, new_op);
-}
-
-//Operator overloads. First two are by reference functions, second two are by copy functions
 // template <typename T, typename G>
-// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&)>& op)
+// std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T)>& op)
 // {
-//     return mapVector(vec, op);
+//     std::function<G(const T&, size_t)> new_op([op](const T& val, size_t) { return op(val); });
+//     return mapVector(vec, new_op);
 // }
-//
-// template <typename T, typename 
-// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&, size_t)>& op)
+
+// template <typename T, typename G>
+// std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
 // {
-//     return mapVector(vec, op);
-// }
-//
-// template <typename T, typename 
-// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) { return mapVector(vec, op); }
-//
-// template <typename T, typename 
-// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
-// {
-//     return mapVector(vec, op);
+//     std::function<G(const T&, size_t)> new_op([op](const T& val, size_t i) { return op(val, i); });
+//     return mapVector(vec, new_op);
 // }
 
 //mapThread and its overloads
@@ -151,17 +129,6 @@ Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& orig
 
 Eigen::Vector2i roundPtToCoord(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
                                const Eigen::Vector2f& v2);
-
-template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, int, const std::vector<T>&)>& op)
-{
-    std::vector<G> c;
-    for(int i = 0; i < vec.size(); i++)
-    {
-        c.push_back(op(vec[i], i, vec));
-    }
-    return c;
-}
 
 template <typename T>
 std::vector<T> filter(const std::vector<T>& vec, std::function<bool(const T&)> op)

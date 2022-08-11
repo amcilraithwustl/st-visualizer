@@ -49,9 +49,9 @@ std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<floa
 }
 
 /// Any impossible fields default to inf
-vector<float> convertRowToFloat(vector<string> input)
+vector<float> convertRowToFloat(const vector<string>& input, size_t)
 {
-    return mapVector(input, std::function([](string s)
+    return mapVector(input, std::function([](const string& s, size_t)
         {
             try
             {
@@ -154,7 +154,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     }
     tock();
 
-    vector<string> names = mapVector(feature_indices, std::function([rawData](unsigned index)
+    vector<string> names = mapVector(feature_indices, std::function([rawData](const unsigned& index, size_t)
     {
         return rawData.front()[index];
     }));
@@ -186,7 +186,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
     //Extract the relevant records
     //Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    auto sliced_records = mapVector(slice_names, std::function([&](const string& name)
+    auto sliced_records = mapVector(slice_names, std::function([&](const string& name, size_t)
     {
         return filter(tab, std::function([&](const vector<string>& row)
         {
@@ -201,7 +201,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     vector<Eigen::Matrix2Xf> slices = mapVector(sliced_records, std::function(
         [&](const std::vector<vector<string>>& record, size_t i)
         {
-            const auto raw_slice_coordinates = mapVector(record, std::function([&](const vector<string>& row)
+            const auto raw_slice_coordinates = mapVector(record, std::function([&](const vector<string>& row, size_t)
             {
                 return std::pair(std::stof(row[xy_indices.first]), std::stof(row[xy_indices.second]));
             }));
@@ -221,9 +221,9 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
     auto original_clusters = mapVector(sliced_records, std::function(
-        [&](const std::vector<vector<string>>& record)
+        [&](const std::vector<vector<string>>& record, size_t)
         {
-            return mapVector(record, std::function([&](const vector<string>& row)
+            return mapVector(record, std::function([&](const vector<string>& row, size_t)
                 {
                     return getClusterArray(
                         newClusters + 1,
@@ -238,16 +238,16 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
 
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
-    auto values = mapVector(sliced_records, std::function([&](const std::vector<vector<string>>& record)
+    auto values = mapVector(sliced_records, std::function([&](const std::vector<vector<string>>& record, size_t)
     {
-        return mapVector(record, std::function([&](const vector<string>& row)
+        return mapVector(record, std::function([&](const vector<string>& row, size_t)
         {
             if(row[tissue_index] == "0")
             {
                 return getClusterArray(newFeatures + 1, newFeatures);
             }
 
-            vector<float> a = mapVector(feature_indices, std::function([row](unsigned index) { return std::stof(row[index]); }));
+            vector<float> a = mapVector(feature_indices, std::function([row](const unsigned& index, size_t) { return std::stof(row[index]); }));
             a.emplace_back(0);
             return a;
         }));
