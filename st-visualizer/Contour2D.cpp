@@ -262,7 +262,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
-    auto temp = std::function([facePointByIndex](const int& item, size_t) { return item + static_cast<int>(facePointByIndex.size()); });
+    auto temp = std::function([&](const int& item, size_t) { return item + static_cast<int>(facePointByIndex.size()); });
     for (int currentTriangleIndex = 0; currentTriangleIndex < triangleIndexToCornerIndices.size(); currentTriangleIndex++)
     {
         //If There is no change at all

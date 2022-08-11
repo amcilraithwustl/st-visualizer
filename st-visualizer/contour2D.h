@@ -124,7 +124,7 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
         vertnorms[seg.second].second += nm(1);
     }
 
-    nverts = mapVector(nverts, std::function([vertnorms, shrink](const Eigen::Vector2f& pt, size_t i)
+    nverts = mapVector(nverts, std::function([&](const Eigen::Vector2f& pt, size_t i)
     {
         return (pt + shrink * Eigen::Vector2f(vertnorms[i].first, vertnorms[i].second).normalized()).eval();
     }));

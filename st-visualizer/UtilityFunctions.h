@@ -80,19 +80,7 @@ std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(const 
     return mapVector(vec, new_op);
 }
 
-// template <typename T, typename G>
-// std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T)>& op)
-// {
-//     std::function<G(const T&, size_t)> new_op([op](const T& val, size_t) { return op(val); });
-//     return mapVector(vec, new_op);
-// }
 
-// template <typename T, typename G>
-// std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
-// {
-//     std::function<G(const T&, size_t)> new_op([op](const T& val, size_t i) { return op(val, i); });
-//     return mapVector(vec, new_op);
-// }
 
 //mapThread and its overloads
 template <typename A, typename B, typename C>

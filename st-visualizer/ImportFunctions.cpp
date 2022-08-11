@@ -186,9 +186,9 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
     //Extract the relevant records
     //Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    auto sliced_records = mapVector(slice_names, std::function([&](const string& name, size_t)
+    auto sliced_records = mapVector(slice_names, std::function([&tab, &slice_index, &tissue_index](const string& name, size_t)
     {
-        return filter(tab, std::function([&](const vector<string>& row)
+        return filter(tab, std::function([&tab, &slice_index, &tissue_index, &name](const vector<string>& row)
         {
             return row[slice_index] == name && row[tissue_index] == "1";
         }));
@@ -199,14 +199,14 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
     std::pair xy_indices(row_col_indices.second, row_col_indices.first);
     vector<Eigen::Matrix2Xf> slices = mapVector(sliced_records, std::function(
-        [&](const std::vector<vector<string>>& record, size_t i)
+        [&xy_indices, &source_targets](const std::vector<vector<string>>& record, size_t i)
         {
-            const auto raw_slice_coordinates = mapVector(record, std::function([&](const vector<string>& row, size_t)
+            const auto raw_slice_coordinates_vector = mapVector(record, std::function([&xy_indices](const vector<string>& row, size_t)
             {
                 return std::pair(std::stof(row[xy_indices.first]), std::stof(row[xy_indices.second]));
             }));
 
-            const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
+            // const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
 
             if(i == 0) //If it's the first slice, no adjustment necessary
             {
@@ -247,7 +247,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                 return getClusterArray(newFeatures + 1, newFeatures);
             }
 
-            vector<float> a = mapVector(feature_indices, std::function([row](const unsigned& index, size_t) { return std::stof(row[index]); }));
+            vector<float> a = mapVector(feature_indices, std::function([&](const unsigned& index, size_t) { return std::stof(row[index]); }));
             a.emplace_back(0);
             return a;
         }));
@@ -255,7 +255,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
 
     //Add buffer to each slice and grow and cover neighboring slices
-    vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([slices](const Eigen::Matrix2Xf&, size_t i)
+    vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([&](const Eigen::Matrix2Xf&, size_t i)
     {
         if(i == 0)
         {
