@@ -49,7 +49,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     const std::vector<std::pair<int, int>> triangle_edges = { {0, 1}, {1, 2}, {2, 0} };
 
     //Primary Material index at each point
-    auto primaryMaterialIndexByPointIndex = pointIndexToMaterialValues << std::function(getMaxPos);
+    auto primaryMaterialIndexByPointIndex =mapVector( pointIndexToMaterialValues, std::function(getMaxPos));
 
     const size_t number_of_points = pointIndexToPoint.cols();
     std::vector endpointIndicesToEdgeIndex(number_of_points, std::vector(number_of_points, -1));
@@ -268,7 +268,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
         //If There is no change at all
         if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][1]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] && primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]])
         {
-            resultingTriangleIndexToResultingCornerIndices.push_back(triangleIndexToCornerIndices[currentTriangleIndex] << temp);
+            resultingTriangleIndexToResultingCornerIndices.push_back(mapVector(triangleIndexToCornerIndices[currentTriangleIndex], temp));
             fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]]);
         }
         else

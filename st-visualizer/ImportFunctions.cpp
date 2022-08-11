@@ -51,7 +51,7 @@ std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<floa
 /// Any impossible fields default to inf
 vector<float> convertRowToFloat(vector<string> input)
 {
-    return input << std::function([](string s)
+    return mapVector(input, std::function([](string s)
         {
             try
             {
@@ -63,7 +63,7 @@ vector<float> convertRowToFloat(vector<string> input)
             }
             return std::numeric_limits<float>::infinity();
         }
-    );
+    ));
 }
 
 std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const string& alignment_file)
@@ -95,7 +95,7 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
 
 
     // Transform cells into ints
-    const auto transformCells = csvCells << std::function(convertRowToFloat);
+    const auto transformCells = mapVector(csvCells, std::function(convertRowToFloat));
 
     //Now we have n columns and m*4 rows of ints
     //This part transforms that into an m by 2 by n structure of coords
@@ -154,10 +154,10 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     }
     tock();
 
-    vector<string> names = feature_indices << std::function([rawData](unsigned index)
+    vector<string> names = mapVector(feature_indices, std::function([rawData](unsigned index)
     {
         return rawData.front()[index];
-    });
+    }));
     names.emplace_back("No Tissue");
 
     std::vector tab(rawData.begin()+1, rawData.end()) ; //TODO: Slow Process
@@ -186,25 +186,25 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
     //Extract the relevant records
     //Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    auto sliced_records = slice_names << std::function([&](const string& name)
+    auto sliced_records = mapVector(slice_names, std::function([&](const string& name)
     {
         return filter(tab, std::function([&](const vector<string>& row)
         {
             return row[slice_index] == name && row[tissue_index] == "1";
         }));
-    });
+    }));
 
     //This is the point where parallel vectors are created
 
     //Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
     std::pair xy_indices(row_col_indices.second, row_col_indices.first);
-    vector<Eigen::Matrix2Xf> slices = sliced_records << std::function(
+    vector<Eigen::Matrix2Xf> slices = mapVector(sliced_records, std::function(
         [&](const std::vector<vector<string>>& record, size_t i)
         {
-            const auto raw_slice_coordinates = record << std::function([&](const vector<string>& row)
+            const auto raw_slice_coordinates = mapVector(record, std::function([&](const vector<string>& row)
             {
                 return std::pair(std::stof(row[xy_indices.first]), std::stof(row[xy_indices.second]));
-            });
+            }));
 
             const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
 
@@ -216,14 +216,14 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
             //Base the remaining slices coordinate adjustment off of the previous one
             const std::function transform = getTransSVD(source_targets[i - 1].first, source_targets[i - 1].second);
             return vectorToMatrix(transform(raw_slice_coordinates_vector));
-        });
+        }));
     
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
-    auto original_clusters = sliced_records << std::function(
+    auto original_clusters = mapVector(sliced_records, std::function(
         [&](const std::vector<vector<string>>& record)
         {
-            return record << std::function([&](const vector<string>& row)
+            return mapVector(record, std::function([&](const vector<string>& row)
                 {
                     return getClusterArray(
                         newClusters + 1,
@@ -233,29 +233,29 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                             //If the data point doesn't contain tissue, give it a "none" value, otherwise use the cluster value it is a part of
                         ));
                 }
-            );
-        });
+            ));
+        }));
 
 
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
-    auto values = sliced_records << std::function([&](const std::vector<vector<string>>& record)
+    auto values = mapVector(sliced_records, std::function([&](const std::vector<vector<string>>& record)
     {
-        return record << std::function([&](const vector<string>& row)
+        return mapVector(record, std::function([&](const vector<string>& row)
         {
             if(row[tissue_index] == "0")
             {
                 return getClusterArray(newFeatures + 1, newFeatures);
             }
 
-            vector<float> a = feature_indices << std::function([row](unsigned index) { return std::stof(row[index]); });
+            vector<float> a = mapVector(feature_indices, std::function([row](unsigned index) { return std::stof(row[index]); }));
             a.emplace_back(0);
             return a;
-        });
-    });
+        }));
+    }));
 
 
     //Add buffer to each slice and grow and cover neighboring slices
-    vector<Eigen::Matrix2Xf> new_slice_data = slices << std::function([slices](const Eigen::Matrix2Xf&, size_t i)
+    vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([slices](const Eigen::Matrix2Xf&, size_t i)
     {
         if(i == 0)
         {
@@ -271,7 +271,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         Eigen::Matrix2Xf top_and_bottom_slice(2, slices[i + 1].cols() + slices[i - 1].cols());
         top_and_bottom_slice << slices[i + 1], slices[i - 1];
         return growAndCover(slices[i], top_and_bottom_slice, wid_buffer, num_ransac);
-    });
+    }));
 
     tock();
     vector<Eigen::Matrix3Xf> slices3d = mapThread(

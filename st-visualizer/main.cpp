@@ -114,15 +114,15 @@ int main(int argc, char* argv[])
         auto allpts = concatMatrixes(results.slices);
         auto ctrs3dVals = getVolumeContours(allpts, flatten<std::vector<float>>(results.values), shrink);
         auto ctrs3dClusters = getVolumeContours(allpts, flatten<std::vector<float>>(results.clusters), shrink);
-        auto ptClusIndex = results.clusters << std::function([](std::vector<std::vector<float>> layer)
+        auto ptClusIndex = mapVector(results.clusters , std::function([](std::vector<std::vector<float>> layer)
             {
-                return layer << std::function(getMaxPos);
-            });
-        auto ptValIndex = results.values << std::function([](std::vector<std::vector<float>> layer)
+                return mapVector(layer , std::function(getMaxPos));
+            }));
+        auto ptValIndex = mapVector(results.values, std::function([](std::vector<std::vector<float>> layer)
             {
-                return layer << std::function(getMaxPos);
-            });
-        auto slices = results.slices << std::function([](const Eigen::Matrix3Xf& layer)
+                return mapVector(layer, std::function(getMaxPos));
+            }));
+        auto slices =mapVector( results.slices , std::function([](const Eigen::Matrix3Xf& layer)
             {
                 std::vector<Eigen::Vector3f> temp;
                 temp.reserve(layer.cols());
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                     temp.emplace_back(pt);
                 }
                 return temp;
-            });
+            }));
 
         auto convertCtrs = [](
             std::vector<std::vector<std::pair<

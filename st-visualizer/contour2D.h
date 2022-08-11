@@ -55,8 +55,11 @@ inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
 
 // getContourByMat2D returns new verticies, new segments
 inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
-    std::vector<Eigen::Vector2f> verts, std::vector<std::pair<int, int>> segs,
-    std::vector<std::pair<int, int>> segmats, int mat, float shrink)
+    const std::vector<Eigen::Vector2f>& verts, 
+    const std::vector<std::pair<int, int>>& segs,
+    const std::vector<std::pair<int, int>>& segmats, 
+    const int& mat, 
+    const float& shrink)
 {
     //select segments by mat
     std::vector<int> inds1;
@@ -79,7 +82,7 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
 
     auto nsegs = concat(
         subset(segs, inds1),
-        subset(segs, inds2) << std::function([](std::pair<int, int> i) { return std::pair(i.second, i.first); })
+        mapVector(subset(segs, inds2), std::function([](std::pair<int, int> i) { return std::pair(i.second, i.first); }))
     );
 
     /*prune unused vertices*/
@@ -121,10 +124,10 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
         vertnorms[seg.second].second += nm(1);
     }
 
-    nverts = nverts << std::function([vertnorms, shrink](const Eigen::Vector2f& pt, size_t i)
+    nverts = mapVector(nverts, std::function([vertnorms, shrink](const Eigen::Vector2f& pt, size_t i)
     {
         return (pt + shrink * Eigen::Vector2f(vertnorms[i].first, vertnorms[i].second).normalized()).eval();
-    });
+    }));
 
     return {nverts, adjusted_nsegs};
 }
@@ -134,12 +137,15 @@ inline std::vector<std::pair<std::vector<Eigen::Matrix<float, 2, 1, 0>>, std::ve
 getContourAllMats2D(const std::vector<Eigen::Vector2f>& verts, const std::vector<std::pair<int, int>>& segs,
                     const std::vector<std::pair<int, int>>& segmats, const int& nmat, const float& shrink)
 {
-    return table(
-        nmat, std::function([&](size_t i)
-            {
-                return getContourByMat2D(verts, segs, segmats, static_cast<int>(i), shrink);
-            }
-        ));
+    std::vector<std::pair<std::vector<Eigen::Matrix<float, 2, 1, 0>>, std::vector<std::pair<int, int>>>> ret;
+    {
+        ret.reserve(nmat);
+        for(int i = 0; i < nmat; ++i)
+        {
+            ret.push_back(getContourByMat2D(verts, segs, segmats, i, shrink));
+        }
+    }
+    return ret;
 }
 
 // getSectionContours
@@ -170,31 +176,36 @@ getSectionContours(
     }
 
     auto reg = triangulateMatrix(npts);
-    auto tris = table(static_cast<size_t>(reg.numberoftriangles), std::function([reg](size_t i)
+    std::vector<std::vector<int>> tris;
     {
-        return getTriangleCornerIndices(reg, i);
-    }));
+        tris.reserve(reg.numberoftriangles);
+        for(int i = 0; i < reg.numberoftriangles; i++)
+        {
+            tris.push_back(getTriangleCornerIndices(reg, i));
+        }
+    }
 
     auto res = contourTriMultiDC(npts, tris, vals);
 
     auto ctrs = getContourAllMats2D(res.verts, res.segs, res.segMats, nmat, shrink);
 
-    std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>> ctrNewPtsAndSegs;
+    std::vector<std::pair<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::pair<int, int>>>>
+        ctrNewPtsAndSegs;
     ctrNewPtsAndSegs.reserve(ctrs.size());
-    for(auto& ctr: ctrs)
+    for(auto& ctr : ctrs)
     {
         const auto& newVertices = ctr.first;
         const auto& newSegments = ctr.second;
         std::vector<Eigen::Vector3f> dimIncreased;
         dimIncreased.reserve(newVertices.size());
-        for(auto& vert: newVertices)
+        for(auto& vert : newVertices)
         {
-            dimIncreased.push_back(Eigen::Vector3f({ vert(0), vert(1), z }));
+            dimIncreased.push_back(Eigen::Vector3f({vert(0), vert(1), z}));
         }
 
         ctrNewPtsAndSegs.emplace_back(
             dimIncreased,
-        newSegments);
+            newSegments);
     }
 
     const auto& ftris = res.fillTris;
@@ -203,9 +214,9 @@ getSectionContours(
     std::vector<Eigen::Vector3f> fverts;
     {
         fverts.reserve(res.fillVerts.size());
-        for (auto& vert : res.fillVerts)
+        for(auto& vert : res.fillVerts)
         {
-            fverts.push_back(Eigen::Vector3f({ vert(0), vert(1), z }));
+            fverts.push_back(Eigen::Vector3f({vert(0), vert(1), z}));
         }
     }
     return {ctrNewPtsAndSegs, {fverts, ftris, fmats}};

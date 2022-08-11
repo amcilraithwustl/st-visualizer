@@ -95,26 +95,26 @@ std::vector<G> mapVector(const std::vector<T>& vec, const std::function<G(T, siz
 }
 
 //Operator overloads. First two are by reference functions, second two are by copy functions
-template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&)>& op)
-{
-    return mapVector(vec, op);
-}
-
-template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&, size_t)>& op)
-{
-    return mapVector(vec, op);
-}
-
-template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) { return mapVector(vec, op); }
-
-template <typename T, typename G>
-std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
-{
-    return mapVector(vec, op);
-}
+// template <typename T, typename G>
+// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&)>& op)
+// {
+//     return mapVector(vec, op);
+// }
+//
+// template <typename T, typename 
+// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(const T&, size_t)>& op)
+// {
+//     return mapVector(vec, op);
+// }
+//
+// template <typename T, typename 
+// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T)>& op) { return mapVector(vec, op); }
+//
+// template <typename T, typename 
+// std::vector<G> operator<<(const std::vector<T>& vec, const std::function<G(T, size_t)>& op)
+// {
+//     return mapVector(vec, op);
+// }
 
 //mapThread and its overloads
 template <typename A, typename B, typename C>
@@ -216,13 +216,13 @@ std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
 }
 
 //Runs function over range []
-template <typename T>
-std::vector<T> table(size_t length, std::function<T(size_t)> op)
-{
-    return std::vector(length, 0)
-        << std::function<size_t(int, size_t)>([](int, size_t i) { return i; })
-        << op;
-}
+// template <typename T>
+// std::vector<T> table(size_t length, std::function<T(size_t)> op)
+// {
+//     return std::vector(length, 0)
+//         << std::function<size_t(int, size_t)>([](int, size_t i) { return i; })
+//         << op;
+// }
 
 
 //Functions for ease of use with triangle and tetgen
@@ -318,12 +318,23 @@ json toJson(std::vector<T> v)
 
 inline json extractTriangleMathematicaMesh(const triangulateio& obj)
 {
-    const auto points = table(obj.numberofpoints, std::function([obj](size_t i)
+    std::vector<Eigen::Matrix<float, 2, 1, 0>> points;
     {
-        return getCornerVector(obj, i);
-    }));
-    const auto triangles = table(obj.numberoftriangles,
-                                 std::function([obj](size_t i) { return getTriangleCornerIndices(obj, i); }));
+        points.reserve(obj.numberofpoints);
+        for(int i = 0; i < obj.numberofpoints; ++i)
+        {
+            points.push_back(getCornerVector(obj, i));
+        }
+    }
+
+    std::vector<std::vector<int>> triangles;
+    {
+        triangles.reserve(obj.numberoftriangles);
+        for(int i = 0; i < obj.numberoftriangles; ++i)
+        {
+            triangles.push_back(getTriangleCornerIndices(obj, i));
+        }
+    }
 
 
     json pointJson = json::array();
