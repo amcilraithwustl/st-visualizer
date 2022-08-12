@@ -18,14 +18,16 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf&
 {
 	const Eigen::Vector2f v2 = hexM * v1;
 	Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
+	const float errorMargin = HEX_ROUNDING_ERROR * v1.norm();
 
 	//Check which indices are within the appropriate bounds
 	std::vector<int> indices;
+	indices.reserve(pts.cols());
 	for (int i = 0; i < pts.cols(); i++)
 	{
-		Eigen::Vector2f pt = pts.col(i);
+		const auto& pt = pts.col(i);
 		Eigen::Vector2f returnPt = getPoint(int_coords.col(i).cast<float>(), origin, v1, v2);
-		const float errorMargin = HEX_ROUNDING_ERROR * v1.norm();
+		
 		const float realMargin = (pt - returnPt).norm();
 		if (realMargin < errorMargin)
 		{
@@ -38,8 +40,7 @@ std::pair<std::vector<int>, Eigen::Matrix2Xi> getInliers(const Eigen::Matrix2Xf&
 	{
 		revisedCoords.col(i) = int_coords.col(indices[i]);
 	}
-
-
+	
 	return { indices, revisedCoords };
 }
 
@@ -102,8 +103,8 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int
 	return std::pair(std::pair(best_origin, best_v1), best_inliers);
 }
 
-std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::vector<int> indices,
-													Eigen::Matrix2Xi intCoords)
+std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts, const std::vector<int>& indices,
+                                                    const Eigen::Matrix2Xi& intCoords)
 {
 
 	Eigen::Matrix4f ata = Eigen::Matrix4f::Zero();

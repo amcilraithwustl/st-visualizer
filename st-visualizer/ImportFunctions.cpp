@@ -51,19 +51,22 @@ std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<floa
 /// Any impossible fields default to inf
 vector<float> convertRowToFloat(const vector<string>& input, size_t)
 {
-    return mapVector(input, std::function([](const string& s, size_t)
+    std::vector<float> a;
+    a.reserve(input.size());
+    for(size_t i = 0; i < input.size(); i++)
+    {
+        auto& s = input[i];
+        try
         {
-            try
-            {
-                return std::stof(s);
-            }
-            catch(...)
-            {
-                std::cerr << "WARNING: Invalid std::stoi attempt. Please check data: " << s << std::endl;
-            }
-            return std::numeric_limits<float>::infinity();
+            a.push_back(std::stof(s));
         }
-    ));
+        catch(...)
+        {
+            a.push_back(std::numeric_limits<float>::infinity());
+        }
+    }
+
+    return a;
 }
 
 std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const string& alignment_file)
@@ -71,16 +74,16 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
     //Import raw file data
     std::ifstream aFile(alignment_file);
     std::vector<string> lines;
-    if (aFile.is_open())
+    if(aFile.is_open())
     {
         string line;
-        while (std::getline(aFile, line))
+        while(std::getline(aFile, line))
         {
             lines.push_back(line);
         }
         aFile.close();
     }
-    else { throw "ALIGNMENT FILE NOT FOUND"; };
+    else { throw "ALIGNMENT FILE NOT FOUND"; }
 
     //Split into cells
     vector<vector<string>> csvCells;
@@ -126,16 +129,16 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                         const std::vector<unsigned>& feature_indices, unsigned int z_distance,
                         std::vector<std::pair<std::vector<coord>, std::vector<coord>>> source_targets)
 {
-
     //Import raw file data
     std::ifstream aFile(file_name);
-    
+
 
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     auto tock = [begin]()
     {
-        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds > (std::chrono::steady_clock::now() - begin).count() << "[ms]" << std::endl;
+        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - begin).count() << "[ms]" << std::endl;
     };
 
     tock();
@@ -160,7 +163,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     }));
     names.emplace_back("No Tissue");
 
-    std::vector tab(rawData.begin()+1, rawData.end()) ; //TODO: Slow Process
+    std::vector tab(rawData.begin() + 1, rawData.end()); //TODO: Slow Process
     tock();
     std::cout << "MADE IT HERE 0" << std::endl;
     int max = 0;
@@ -186,55 +189,66 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 
     //Extract the relevant records
     //Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    auto sliced_records = mapVector(slice_names, std::function([&tab, &slice_index, &tissue_index](const string& name, size_t)
-    {
-        return filter(tab, std::function([&tab, &slice_index, &tissue_index, &name](const vector<string>& row)
-        {
-            return row[slice_index] == name && row[tissue_index] == "1";
-        }));
-    }));
+    auto sliced_records = mapVector(slice_names, std::function(
+                                        [&tab, &slice_index, &tissue_index](const string& name, size_t)
+                                        {
+                                            return filter(tab, std::function(
+                                                              [&tab, &slice_index, &tissue_index, &name](
+                                                              const vector<string>& row)
+                                                              {
+                                                                  return row[slice_index] == name && row[tissue_index]
+                                                                      == "1";
+                                                              }));
+                                        }));
 
     //This is the point where parallel vectors are created
 
     //Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
     std::pair xy_indices(row_col_indices.second, row_col_indices.first);
     vector<Eigen::Matrix2Xf> slices = mapVector(sliced_records, std::function(
-        [&xy_indices, &source_targets](const std::vector<vector<string>>& record, size_t i)
-        {
-            const auto raw_slice_coordinates_vector = mapVector(record, std::function([&xy_indices](const vector<string>& row, size_t)
-            {
-                return std::pair(std::stof(row[xy_indices.first]), std::stof(row[xy_indices.second]));
-            }));
+                                                    [&xy_indices, &source_targets](
+                                                    const std::vector<vector<string>>& record, size_t i)
+                                                    {
+                                                        const auto raw_slice_coordinates_vector = mapVector(
+                                                            record, std::function(
+                                                                [&xy_indices](const vector<string>& row, size_t)
+                                                                {
+                                                                    return std::pair(
+                                                                        std::stof(row[xy_indices.first]),
+                                                                        std::stof(row[xy_indices.second]));
+                                                                }));
 
-            // const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
+                                                        // const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
 
-            if(i == 0) //If it's the first slice, no adjustment necessary
-            {
-                return vectorToMatrix(raw_slice_coordinates_vector);
-            }
+                                                        if(i == 0) //If it's the first slice, no adjustment necessary
+                                                        {
+                                                            return vectorToMatrix(raw_slice_coordinates_vector);
+                                                        }
 
-            //Base the remaining slices coordinate adjustment off of the previous one
-            const std::function transform = getTransSVD(source_targets[i - 1].first, source_targets[i - 1].second);
-            return vectorToMatrix(transform(raw_slice_coordinates_vector));
-        }));
-    
+                                                        //Base the remaining slices coordinate adjustment off of the previous one
+                                                        const std::function transform = getTransSVD(
+                                                            source_targets[i - 1].first, source_targets[i - 1].second);
+                                                        return vectorToMatrix(transform(raw_slice_coordinates_vector));
+                                                    }));
+
     //Convert the clusters into an array of 1/0 based on the cluster index.
     //Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
     auto original_clusters = mapVector(sliced_records, std::function(
-        [&](const std::vector<vector<string>>& record, size_t)
-        {
-            return mapVector(record, std::function([&](const vector<string>& row, size_t)
-                {
-                    return getClusterArray(
-                        newClusters + 1,
-                        row[tissue_index] == "0"
-                        ? newClusters
-                        : std::stoi(row[cluster_ind]
-                            //If the data point doesn't contain tissue, give it a "none" value, otherwise use the cluster value it is a part of
-                        ));
-                }
-            ));
-        }));
+                                           [&](const std::vector<vector<string>>& record, size_t)
+                                           {
+                                               return mapVector(record, std::function(
+                                                                    [&](const vector<string>& row, size_t)
+                                                                    {
+                                                                        return getClusterArray(
+                                                                            newClusters + 1,
+                                                                            row[tissue_index] == "0"
+                                                                            ? newClusters
+                                                                            : std::stoi(row[cluster_ind]
+                                                                                //If the data point doesn't contain tissue, give it a "none" value, otherwise use the cluster value it is a part of
+                                                                            ));
+                                                                    }
+                                                                ));
+                                           }));
 
 
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
@@ -247,7 +261,10 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                 return getClusterArray(newFeatures + 1, newFeatures);
             }
 
-            vector<float> a = mapVector(feature_indices, std::function([&](const unsigned& index, size_t) { return std::stof(row[index]); }));
+            vector<float> a = mapVector(feature_indices, std::function([&](const unsigned& index, size_t)
+            {
+                return std::stof(row[index]);
+            }));
             a.emplace_back(0);
             return a;
         }));
@@ -411,16 +428,16 @@ std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vec
 {
     const auto sourceMatrix = vectorToMatrix(source);
     const auto targetMatrix = vectorToMatrix(target);
-    
+
     //Convert to matrices
     const auto r = getSVDRotation(sourceMatrix, targetMatrix);
     const Eigen::Rotation2D<float> rotation(r);
-    
+
     const Eigen::Vector2f sourceCentroid = getCentroid(sourceMatrix);
     const Eigen::Vector2f targetCentroid = getCentroid(targetMatrix);
     const Eigen::Vector2f targetCentroidTransform = targetCentroid - sourceCentroid;
-    
-    
+
+
     const Eigen::Translation2f netTranslation(targetCentroidTransform);
     const Eigen::Translation2f toZero(-1 * sourceCentroid);
     const Eigen::Translation2f fromZero(sourceCentroid);

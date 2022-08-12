@@ -20,8 +20,8 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int
 	const Eigen::Matrix2Xf& pts, const int& num);
 
 //Gets the best origin and v1 based on the points and the grid passed in to minimize variance
-std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(Eigen::Matrix2Xf pts, std::vector<int> indices,
-                                                    Eigen::Matrix2Xi intCoords);
+std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts, const std::vector<int>& indices,
+                                                    const Eigen::Matrix2Xi& intCoords);
 
 //Refine Grid
 std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& pts,

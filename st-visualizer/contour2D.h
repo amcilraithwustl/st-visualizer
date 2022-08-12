@@ -51,7 +51,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
                                           const std::vector<std::vector<float>>& pointIndexToMaterialValues);
 
 // perp
-inline Eigen::Vector2f perp(Eigen::Vector2f a) { return {-1 * a[1], a[0]}; }
+inline Eigen::Vector2f perp(const Eigen::Vector2f& a) { return {-1 * a[1], a[0]}; }
 
 // getContourByMat2D returns new verticies, new segments
 inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>> getContourByMat2D(
@@ -126,10 +126,11 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
         vertnorms[seg.second].second += nm(1);
     }
 
-    nverts = mapVector(nverts, std::function([&](const Eigen::Vector2f& pt, size_t i)
+    for (int i = 0; i < nverts.size(); i++)
     {
-        return (pt + shrink * Eigen::Vector2f(vertnorms[i].first, vertnorms[i].second).normalized()).eval();
-    }));
+        auto& pt = nverts[i];
+        pt = pt + shrink * Eigen::Vector2f(vertnorms[i].first, vertnorms[i].second).normalized();
+    }
 
     return {nverts, adjusted_nsegs};
 }
