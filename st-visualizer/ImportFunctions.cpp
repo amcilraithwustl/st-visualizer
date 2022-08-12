@@ -257,17 +257,19 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     //Add buffer to each slice and grow and cover neighboring slices
     vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([&](const Eigen::Matrix2Xf&, size_t i)
     {
+        //If it's the first slice
         if(i == 0)
         {
             return growAndCover(slices[i], slices[i + 1], wid_buffer, num_ransac);
         }
 
+        //If it's the last slice
         if(i == slices.size() - 1)
         {
             return growAndCover(slices[i], slices[i - 1], wid_buffer, num_ransac);
         }
 
-
+        //All other slices
         Eigen::Matrix2Xf top_and_bottom_slice(2, slices[i + 1].cols() + slices[i - 1].cols());
         top_and_bottom_slice << slices[i + 1], slices[i - 1];
         return growAndCover(slices[i], top_and_bottom_slice, wid_buffer, num_ransac);

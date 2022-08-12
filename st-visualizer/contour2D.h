@@ -62,32 +62,34 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
     const float& shrink)
 {
     //select segments by mat
-    std::vector<int> inds1;
-    for(size_t i = 0; i < segmats.size(); i++) //TODO: This maybe should be based of segmats, not segs
-    {
-        if(segmats[i].first == mat)
-        {
-            inds1.push_back(static_cast<int>(i));
-        }
-    }
 
-    std::vector<int> inds2;
-    for(size_t i = 0; i < segmats.size(); i++) //TODO: This maybe should be based of segmats, not segs
+    std::vector<std::pair<int, int>> newSegments;
     {
-        if(segmats[i].second == mat)
+        newSegments.reserve(segmats.size() * 2);
+        for (size_t i = 0; i < segmats.size(); i++)
         {
-            inds2.push_back(static_cast<int>(i));
+            if (segmats[i].first == mat)
+            {
+                const auto& segment = segs[i];
+                newSegments.emplace_back(segment.first, segment.second);
+            }
         }
-    }
 
-    auto nsegs = concat(
-        subset(segs, inds1),
-        mapVector(subset(segs, inds2), std::function([](const std::pair<int, int>& i, size_t) { return std::pair(i.second, i.first); }))
-    );
+        for (size_t i = 0; i < segmats.size(); i++)
+        {
+            if (segmats[i].second == mat)
+            {
+                const auto& segment = segs[i];
+                newSegments.emplace_back(segment.second, segment.first);
+            }
+        }
+
+        
+    }
 
     /*prune unused vertices*/
     std::vector vertsUsed(verts.size(), false);
-    for(auto& seg : nsegs)
+    for(auto& seg : newSegments)
     {
         vertsUsed[seg.first] = true;
         vertsUsed[seg.second] = true;
@@ -105,8 +107,8 @@ inline std::pair<std::vector<Eigen::Vector2f>, std::vector<std::pair<int, int>>>
     auto nverts = subset(verts, nvertInds);
     std::vector<std::pair<int, int>> adjusted_nsegs;
     {
-        adjusted_nsegs.reserve(nsegs.size());
-        for(auto& seg : nsegs)
+        adjusted_nsegs.reserve(newSegments.size());
+        for(auto& seg : newSegments)
         {
             adjusted_nsegs.emplace_back(vertNewInds[seg.first], vertNewInds[seg.second]);
         }

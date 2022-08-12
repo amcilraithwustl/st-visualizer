@@ -262,13 +262,22 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     
     /* second type of triangles: original mesh triangle, if there is no material change,
      or a third of the triangle, if there is some edge with no material change */
-    auto temp = std::function([&](const int& item, size_t) { return item + static_cast<int>(facePointByIndex.size()); });
+    const int startingSize = facePointByIndex.size();
     for (int currentTriangleIndex = 0; currentTriangleIndex < triangleIndexToCornerIndices.size(); currentTriangleIndex++)
     {
         //If There is no change at all
         if (primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][1]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] && primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][2]] == primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]])
         {
-            resultingTriangleIndexToResultingCornerIndices.push_back(mapVector(triangleIndexToCornerIndices[currentTriangleIndex], temp));
+            auto& corner_indices = triangleIndexToCornerIndices[currentTriangleIndex];
+            std::vector<int> resulting_corner_indices;
+            {
+                resulting_corner_indices.reserve(corner_indices.size());
+                for(int corner_index : corner_indices)
+                {
+                    resulting_corner_indices.push_back(corner_index + startingSize);
+                }
+            }
+            resultingTriangleIndexToResultingCornerIndices.push_back(std::move(resulting_corner_indices));
             fillMats.push_back(primaryMaterialIndexByPointIndex[triangleIndexToCornerIndices[currentTriangleIndex][0]]);
         }
         else
