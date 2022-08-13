@@ -240,12 +240,12 @@ getSectionContoursAll(std::vector<Eigen::Matrix3Xf> sections,
     std::vector<std::tuple<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>, std::vector<int>>> triangleInfo;
     triangleInfo.reserve(sections.size());
 
+    log("Contouring Slices.");
     for(int i = 0; i < sections.size(); i++)
     {
         const auto& pts = sections[i];
         const auto& v = vals[i];
-
-
+        log("  ", i+1, "/", sections.size(), " slices");
         auto contour = getSectionContours(pts, v, shrink);
         newPointsAndSegs.push_back(std::move(contour.first));
         triangleInfo.push_back(std::move(contour.second));

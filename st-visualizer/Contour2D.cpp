@@ -39,7 +39,6 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     ////////////
     //Step 1: Set up a structure to define geometry
     ////////////
-    log("Setting Structure");
     const auto numberOfTriangles = triangleIndexToCornerIndices.size();
 
     //This is a list of the combinations of edges on a triangle by corner

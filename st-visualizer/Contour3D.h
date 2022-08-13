@@ -276,7 +276,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                                                     const std::vector<std::vector<int>>& tets_by_index,
                                                     std::vector<std::vector<float>> vals_by_point_index)
 {
-    
+    log("Contouring.");
     auto number_of_materials = vals_by_point_index[0].size();
     auto number_of_points = points_by_index.size();
     auto number_of_tets = tets_by_index.size();
@@ -308,6 +308,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
         //For each tet
         //O(n)
+        log("Mapping Tets to Edges");
         for(size_t tet_index = 0; tet_index < number_of_tets; tet_index++)
         {
             const auto& tet = tets_by_index[tet_index];
@@ -341,7 +342,6 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 log("  ", static_cast<float>(100 * tet_index / display_fraction) / LOADING_SIZE, "%");
 
         }
-        log("Adj table DONE.");
     }
 
     //create interpolation points_by_index, one per edge with material change
@@ -372,7 +372,6 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
             }
         }
     }
-    log("Adj table DONE.");
 
     //create vertices, one per tet with material change
     std::vector<Eigen::Vector3f> vertex_by_index;
@@ -406,7 +405,6 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 temp.resize(0);
             }
         }
-        log("Tet points_by_index DONE.");
     }
 
     //Create Segments
@@ -415,6 +413,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
     std::vector<std::vector<int>> segments_by_index;
     std::vector<std::pair<int, int>> segmentMaterials_by_index;
     {
+        log("Creating Contour Segements.");
         segments_by_index.reserve(edges_by_index.size());
         segmentMaterials_by_index.reserve(edges_by_index.size());
 
@@ -524,6 +523,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
 inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
 {
+    log("Tetrahedralizing Data.");
     tetgenio in;
 
     in.firstnumber = 0; //Arrays start at 0
@@ -539,8 +539,8 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
     }
     tetrahedralize(_strdup(
                        "z" //Start arrays at zero
-                       "V" //Verbose for debugging
-                       ""
+                       // "V" //Verbose for debugging
+                       "Q" //Quiet for production
                        // "O0" //Level of mesh optimization (none)
                        // "S0" //Max number of added points (none)
                    ), &in, &out);
