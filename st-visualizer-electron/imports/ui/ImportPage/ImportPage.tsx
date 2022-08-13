@@ -31,7 +31,15 @@ export const ImportPage = (): JSX.Element => {
         <Typography variant="h4">Files</Typography>
         <Button variant="contained" component="label">
           Data File
-          <input hidden accept=".tsv" type="file" />
+          <input
+            hidden
+            multiple={false}
+            accept=".tsv"
+            type="file"
+            onChange={(e) => {
+              console.log(e.target?.files?.[0].path);
+            }}
+          />
         </Button>
         <Button variant="contained" component="label">
           Alignment File
