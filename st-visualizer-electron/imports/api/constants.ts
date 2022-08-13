@@ -24,19 +24,16 @@ export type datatype = {
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
 
-const getData = (path: string) =>
-  fetch(path, {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  }).then((response) => response.json());
-
+//This is a temporary implementation and will need to be dramatically improved
 export const importPts = async () => {
-  console.log("GETTING PTS");
-  const pts = await getData("./integrationTest.json");
-  console.log("PTS", pts);
-  return (pts as unknown) as datatype;
+  try {
+    const pts = (await import("../static/integrationTest.json")).default;
+    console.log("PTS", pts);
+    return (pts as unknown) as datatype;
+  } catch (error) {
+    console.error("File Import Error", error);
+    return undefined;
+  }
 };
 
 export const times = 4;
