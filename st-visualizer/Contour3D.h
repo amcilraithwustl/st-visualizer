@@ -1,12 +1,9 @@
 #pragma once
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
-#include <iomanip>
 #include "tetgen1.6.0/tetgen.h"
 
-#define LOADING_SIZE 50
-#define UNLOADED_SYMBOL char(176)
-#define LOADED_SYMBOL char(219)
+#define LOADING_SIZE 10
 #define DEBUG true
 
 
@@ -340,11 +337,9 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 //Track the tet part no matter what
                 tets_by_edge_index[edge_index].push_back(tet_index);
             }
-#if DEBUG
-            if(tet_index % display_fraction == 0)
-                std::cout << std::string(tet_index / display_fraction, LOADED_SYMBOL) + std::string(
-                    LOADING_SIZE - (tet_index / display_fraction), UNLOADED_SYMBOL) << "\r";
-#endif
+            if (tet_index % display_fraction == 0)
+                log("  ", static_cast<float>(100 * tet_index / display_fraction) / LOADING_SIZE, "%");
+
         }
         log("Adj table DONE.");
     }
@@ -516,11 +511,11 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
 
                 segments_by_index.push_back(new_segment_vertices_set_ordered);
             }
-#if DEBUG
-            if(edgeIndex % print_constant == 0)
-                std::cout << std::string(edgeIndex / print_constant, LOADED_SYMBOL) + std::string(
-                    LOADING_SIZE - (edgeIndex / print_constant), UNLOADED_SYMBOL) << "\r";
-#endif
+
+            if (edgeIndex % print_constant == 0)
+                log("  ", static_cast<float>(100 * edgeIndex / print_constant) / LOADING_SIZE, "%");
+            
+
         }
     }
     return {vertex_by_index, segments_by_index, segmentMaterials_by_index};

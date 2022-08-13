@@ -62,7 +62,7 @@ void log(Rest&& ...rest)
     std::cout << std::setprecision(0);
     std::cout << "";
     log2(std::forward<Rest>(rest)...);
-    std::cout << std::endl;
+    std::cout <<"" << std::endl;
 }
 
 

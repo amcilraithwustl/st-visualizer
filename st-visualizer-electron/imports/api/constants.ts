@@ -23,7 +23,7 @@ export type datatype = {
 };
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
-const getData = (path: string) =>
+const getJsonData = (path: string) =>
   fetch(path, {
     headers: {
       "Content-Type": "application/json",

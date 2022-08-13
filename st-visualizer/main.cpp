@@ -89,7 +89,8 @@ std::vector<T> flatten(const std::vector<std::vector<T>>& input)
 
 int main(int argc, char* argv[])
 {
-    {
+    std::vector<std::string> a(argv, argv+argc);
+    
         constexpr float shrink = 0.04;
         std::vector<std::string> sliceNames({ "NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4" });
         std::vector<unsigned> featureCols({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
             2,
             std::pair<unsigned, unsigned>(3, 4),
             5,
-            std::vector<unsigned>({ 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }),
+            featureCols,
             60,
             alignmentValues
         );
@@ -226,7 +227,7 @@ int main(int argc, char* argv[])
 
             return ctrs3dJson;
         };
-       log("Calculations complete. Writing to file." << std::endl;
+        log("Calculations complete. Writing to file.");
         json ret = json::object();
         ret["nat"]=(results.values[0][0].size()); //nMat,
         ret["shrink"]=(shrink); //shrink,
@@ -248,6 +249,6 @@ int main(int argc, char* argv[])
 
         std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\st-visualizer-electron\\imports\\static\\integrationTest.json");
         f << ret;
-        std::cout << "Complete. Deconstructing." << std::endl;
-    }
+        log("Complete. Deconstructing.");
+    
 }

@@ -24,9 +24,58 @@ type importType = {
   z_distance: number;
 };
 export const ImportPage = (): JSX.Element => {
-  const [nCols, setNCols] = useState<number>(1);
+  const [tsvLabels, setTSVLabels] = useState<string[]>([]);
+  const nCols = tsvLabels.length;
+  const [importState, setImportState] = useState<importType>({
+    sliceNames: [],
+    shrink: 0,
+    alignmentFile: "",
+    fileName: "",
+    slice_index: 1,
+    tissueIndex: 2,
+    row_col_indices: [3, 4],
+    clusterIndex: 5,
+    featureCols: [],
+    z_distance: 100,
+  });
+  const getValue = (i: number) => {
+    switch (i) {
+      case importState.slice_index:
+        return 1;
+        break;
+      case importState.tissueIndex:
+        return 2;
+        break;
+      case importState.row_col_indices[0]:
+        return 3;
+        break;
+      case importState.row_col_indices[1]:
+        return 4;
+        break;
+      case importState.clusterIndex:
+        return 6;
+        break;
+      default:
+        if (importState.featureCols.includes(i)) return 7;
+        return null;
+        break;
+    }
+  };
+
+  const changeSelection = (i: number, selection: number) => {
+    switch (selection) {
+      case 0:
+        break;
+      case 1:
+        setImportState((s) => ({ ...s, slice_index: i }));
+        break;
+      case 2:
+        setImportState((s) => ({ ...s, slice_index: i }));
+        break;
+    }
+  };
   return (
-    <Stack container style={{ padding: 20 }}>
+    <Stack style={{ padding: 20 }}>
       <Grid item>
         <Typography variant="h4">Files</Typography>
         <Button variant="contained" component="label">
@@ -36,8 +85,22 @@ export const ImportPage = (): JSX.Element => {
             multiple={false}
             accept=".tsv"
             type="file"
-            onChange={(e) => {
-              console.log(e.target?.files?.[0].path);
+            onChange={async (e) => {
+              const file = e.target?.files?.[0];
+              if (!file) return;
+              const tsvPath = file.path;
+              const rawText = await file.text();
+              const tsvData = rawText.split("\n").map((l) => l.split("\t"));
+              //TODO: Add guess logic here
+              console.log("TSV Label Row", tsvData[0]);
+              setTSVLabels(tsvData[0]);
+              setImportState((s) => ({
+                ...s,
+                fileName: tsvPath,
+                featureCols: [...new Array(tsvData[0].length - 5)].map(
+                  (_, i) => i + 5
+                ),
+              }));
             }}
           />
         </Button>
@@ -48,25 +111,19 @@ export const ImportPage = (): JSX.Element => {
       </Grid>
       <Grid item container>
         <Typography variant="h4">Column Management</Typography>
-        <TextField
-          id="outlined-number"
-          label="Number of Columns"
-          type="number"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          value={nCols}
-          onChange={(v) =>
-            parseInt(v.target.value) > 0 && setNCols(parseInt(v.target.value))
-          }
-        />
         <Grid item>
           {[...new Array(nCols)].map((_, i) => (
             <FormControl key={i}>
               <InputLabel id="demo-simple-select-label">
-                {"Column " + (i + 1)}
+                {tsvLabels[i]}
               </InputLabel>
-              <Select label={"Column " + (i + 1)} style={{ minWidth: 130 }}>
+              <Select
+                label={tsvLabels[i]}
+                style={{ minWidth: 130 }}
+                value={getValue(i)}
+                onChange={(e) => changeSelection(i, e.target.value as number)}
+              >
+                <MenuItem value={0}>None</MenuItem>
                 <MenuItem value={1}>Slice</MenuItem>
                 <MenuItem value={2}>Tissue</MenuItem>
                 <MenuItem value={3}>Row Location</MenuItem>
@@ -93,7 +150,7 @@ export const ImportPage = (): JSX.Element => {
           id="outlined-number"
           type="number"
           label={"Slice Width (Microns)"}
-          placeholder={100}
+          value={importState.z_distance}
           InputLabelProps={{
             shrink: true,
           }}
