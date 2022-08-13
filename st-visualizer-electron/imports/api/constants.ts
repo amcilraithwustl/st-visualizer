@@ -24,20 +24,17 @@ export type datatype = {
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
 
-const getData = (path: string) => {
-  return fetch(path, {
+const getData = (path: string) =>
+  fetch(path, {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-  }).then(function (response) {
-    return response.json();
-  });
-};
+  }).then((response) => response.json());
 
-//This is a temporary implementation and will need to be dramatically improved
 export const importPts = async () => {
-  const pts = getData("../static/integrationTest.json");
+  console.log("GETTING PTS");
+  const pts = await getData("./integrationTest.json");
   console.log("PTS", pts);
   return (pts as unknown) as datatype;
 };
