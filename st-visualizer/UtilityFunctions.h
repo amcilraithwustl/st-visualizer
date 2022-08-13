@@ -45,6 +45,28 @@ colCoordMat vectorToMatrix(std::vector<coord> source);
 
 std::vector<coord> matrixToVector(colCoordMat sourceMatrix);
 
+inline void log2() {}
+
+template<typename First, typename ...Rest>
+void log2(First first, Rest&& ...rest)
+{
+    std::cout << std::forward<First>(first);
+    log2(std::forward<Rest>(rest)...);
+}
+
+
+template<typename ...Rest>
+void log(Rest&& ...rest)
+{
+    std::cout << std::fixed;
+    std::cout << std::setprecision(0);
+    std::cout << "";
+    log2(std::forward<Rest>(rest)...);
+    std::cout << std::endl;
+}
+
+
+
 //List Mapping Functions and overloads
 template <typename T, typename G>
 std::list<G> mapList(const std::list<T>& vec, const std::function<G(const T&)>& op)

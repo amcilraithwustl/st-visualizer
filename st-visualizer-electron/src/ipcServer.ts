@@ -2,15 +2,27 @@ import { ipcConstants } from "./ipcConstants";
 
 import { app, ipcMain } from "electron";
 
+import { execFile } from "child_process";
+import path from "path";
+
 //This is nodejs
 const ipcHandlers: Record<
   typeof ipcConstants[keyof typeof ipcConstants],
   Parameters<typeof ipcMain.handle>[1]
 > = {
   [ipcConstants.openFile]: () => {
-    console.log("HELLO WORLD SERVER");
-    console.log("PROCESS NAME", process);
-    return "RETURNED VALUE";
+    return new Promise((res, rej) => {
+      const exePath = path.resolve(
+        __dirname,
+        "../../imports/static/st-visualizer.exe"
+      );
+      execFile(exePath, [], {}, (err, data) => {
+        console.log("ERR", err);
+        console.log("DATA", data);
+        if (err) rej(err);
+        res(data);
+      });
+    });
   },
 };
 

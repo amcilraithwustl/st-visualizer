@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 
             return ctrs3dJson;
         };
-
+        log("Calculations complete. Writing to file.");
         json ret = json::object();
         ret["nat"]=(results.values[0][0].size()); //nMat,
         ret["shrink"]=(shrink); //shrink,
@@ -248,5 +248,6 @@ int main(int argc, char* argv[])
 
         std::ofstream f("C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\st-visualizer-electron\\imports\\static\\integrationTest.json");
         f << ret;
+        log("Complete. Deconstructing.");
     }
 }

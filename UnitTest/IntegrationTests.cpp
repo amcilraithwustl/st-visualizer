@@ -17,7 +17,7 @@ namespace IntegrationTests
     std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
     getVolumeContours(const Eigen::Matrix3Xf& pts, std::vector<std::vector<float>> vals, float shrink)
     {
-        const auto nmat = vals[0].size();
+        const auto number_of_materials = vals[0].size();
         tetgenio reg;
         tetralizeMatrix(pts, reg);
         const auto tets = tetgenToTetVector(reg);
@@ -30,7 +30,7 @@ namespace IntegrationTests
         }
         auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
         return getContourAllMats3D(
-            verts, segs, segmats, nmat, shrink);
+            verts, segs, segmats, number_of_materials, shrink);
     }
 
 

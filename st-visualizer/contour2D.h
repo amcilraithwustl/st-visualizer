@@ -4,7 +4,7 @@
 #include "UtilityFunctions.h"
 // orientation (not sure if this should be i or f)
 // Returns 1 if left, 0 if none, -1 if right (right hand rule)
-int orientation(Eigen::Vector2f a, Eigen::Vector2f b);
+int orientation(const Eigen::Vector2f& a, const Eigen::Vector2f& b);
 
 // getMaxPos
 int getMaxPos(const std::vector<float>& material_values);

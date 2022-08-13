@@ -131,20 +131,10 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 {
     //Import raw file data
     std::ifstream aFile(file_name);
-
-
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
-    auto tock = [begin]()
-    {
-        std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - begin).count() << "[ms]" << std::endl;
-    };
-
-    tock();
+      
+    log("Loading TSV.");
 
     std::vector<std::vector<std::string>> rawData;
-    tock();
     if(aFile.is_open())
     {
         string line;
@@ -155,7 +145,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         }
         aFile.close();
     }
-    tock();
+    log("Loading names.");
 
     vector<string> names = mapVector(feature_indices, std::function([rawData](const unsigned& index, size_t)
     {
@@ -164,8 +154,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
     names.emplace_back("No Tissue");
 
     std::vector tab(rawData.begin() + 1, rawData.end()); //TODO: Slow Process
-    tock();
-    std::cout << "MADE IT HERE 0" << std::endl;
     int max = 0;
 
     for(const auto& row : tab)
@@ -182,7 +170,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
             }
         }
     }
-    tock();
 
     unsigned int newClusters = static_cast<unsigned int>(max) + 1;
     auto newFeatures = feature_indices.size();
@@ -251,6 +238,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                                            }));
 
 
+    log("Parsing Values.");
     //Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
     auto values = mapVector(sliced_records, std::function([&](const std::vector<vector<string>>& record, size_t)
     {
@@ -270,10 +258,12 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         }));
     }));
 
+    log("Growing Slices.");
 
     //Add buffer to each slice and grow and cover neighboring slices
     vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([&](const Eigen::Matrix2Xf&, size_t i)
     {
+        log("  ", i + 1, "/", slices.size(), " slices");
         //If it's the first slice
         if(i == 0)
         {
@@ -292,7 +282,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         return growAndCover(slices[i], top_and_bottom_slice, wid_buffer, num_ransac);
     }));
 
-    tock();
     vector<Eigen::Matrix3Xf> slices3d = mapThread(
         new_slice_data, slices, std::function(
             [z_distance](const Eigen::Matrix2Xf& new_slice,
@@ -326,6 +315,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
             }));
 
 
+
     vector<vector<vector<float>>> grown_values = mapThread(
         new_slice_data, values, std::function(
             [&](const Eigen::Matrix2Xf& new_coordinates,
@@ -338,6 +328,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                 return concat(old_clusters, tempVector);
             }));
 
+    log("Adding bounding slices.");
 
     //Add empty top and bottom slices
     {
@@ -358,7 +349,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         slices3d.insert(slices3d.begin(), bottom);
         //TODO: Inefficient O(n) call. Consider changing in all three locations.
     }
-    tock();
     {
         auto& topSlice = grown_clusters[grown_clusters.size() - 1];
         vector top(topSlice.size(), getClusterArray(newClusters + 1, newClusters));
@@ -379,14 +369,13 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
         grown_values.insert(grown_values.begin(), bottom);
     }
 
-    tock();
-
     //TODO: std::move for speed reasons
     tsv_return_type ret;
     ret.names = std::move(names);
     ret.slices = std::move(slices3d);
     ret.values = std::move(grown_values);
     ret.clusters = std::move(grown_clusters);
+    log("TSV Import Complete.");
     return ret;
 }
 

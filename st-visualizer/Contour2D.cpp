@@ -1,11 +1,8 @@
 #include <chrono>
 #include "Contour2D.h"
 
-#define BEGIN std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now(); int count = 0;
 
-#define TOCK std::cout << count++ << ", Time difference = " << static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count())/1000 << " [milliseconds]" << std::endl; begin = std::chrono::steady_clock::now();
-
-int orientation(Eigen::Vector2f a, Eigen::Vector2f b)
+int orientation(const Eigen::Vector2f& a, const Eigen::Vector2f& b)
 {
     Eigen::Vector3f intermediateA;
     intermediateA(0) = a(0);
@@ -42,7 +39,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     ////////////
     //Step 1: Set up a structure to define geometry
     ////////////
-    BEGIN
+    log("Setting Structure");
     const auto numberOfTriangles = triangleIndexToCornerIndices.size();
 
     //This is a list of the combinations of edges on a triangle by corner
@@ -55,7 +52,6 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     std::vector endpointIndicesToEdgeIndex(number_of_points, std::vector(number_of_points, -1));
 
     //Might be good to eventually make this a pair
-    TOCK
     std::vector<std::vector<int>> edgeIndexToEndpointIndices;
     edgeIndexToEndpointIndices.reserve(triangle_edges.size());
     //Stores which face index an edge belongs to
@@ -93,7 +89,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
         }
     }
 
-    TOCK
+    
     /*create interpolation points if they exist, one per edge with material change*/
 
     std::vector<std::pair<Eigen::Vector2f, bool>> edgeIndexToMidPoints(edgeIndexToFaceIndices.size(), { {0,0},false }); //Second value is whether it has been set
@@ -215,8 +211,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
     std::vector<int> fillMats;
     fillMats.reserve(numberOfTriangles * 6);
 
-    TOCK
-
+    
     /*first type of triangles : dual to mesh edges with a material change*/
     for (int currentEdgeIndex = 0; currentEdgeIndex < edgeIndexToEndpointIndices.size(); currentEdgeIndex++)
     {
@@ -301,7 +296,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf& pointIndexToPo
             }
         }
     }
-    TOCK
+    
 
     return {
         std::move(facePointByIndex),

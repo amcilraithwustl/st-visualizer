@@ -279,8 +279,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                                                     const std::vector<std::vector<int>>& tets_by_index,
                                                     std::vector<std::vector<float>> vals_by_point_index)
 {
-    std::cout << std::fixed;
-    std::cout << std::setprecision(0);
+    
     auto number_of_materials = vals_by_point_index[0].size();
     auto number_of_points = points_by_index.size();
     auto number_of_tets = tets_by_index.size();
@@ -347,7 +346,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                     LOADING_SIZE - (tet_index / display_fraction), UNLOADED_SYMBOL) << "\r";
 #endif
         }
-        std::cout << "Adj table DONE." << std::endl;
+        log("Adj table DONE.");
     }
 
     //create interpolation points_by_index, one per edge with material change
@@ -378,7 +377,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
             }
         }
     }
-    std::cout << "Adj table DONE." << std::endl;
+    log("Adj table DONE.");
 
     //create vertices, one per tet with material change
     std::vector<Eigen::Vector3f> vertex_by_index;
@@ -412,7 +411,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                 temp.resize(0);
             }
         }
-        std::cout << "Tet points_by_index DONE." << std::endl;
+        log("Tet points_by_index DONE.");
     }
 
     //Create Segments
@@ -659,11 +658,11 @@ inline std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vect
     const std::vector<Eigen::Vector3f>& verts,
     const std::vector<std::vector<int>>& segs,
     const std::vector<std::pair<int, int>>& segmats,
-    const int& nmats,
+    const int& number_of_materials,
     const float& shrink)
 {
     std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> a;
-    for(int i = 0; i < nmats; i++)
+    for(int i = 0; i < number_of_materials; i++)
     {
         a.push_back(getContourByMat3D(verts, segs, segmats, i, shrink));
     }
