@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState } from "react";
 import { datatype, importPts } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
+import { AlignmentPage } from "./ui/AligmentPage/AlignmentPage";
 import { ImportPage } from "./ui/ImportPage/ImportPage";
 const Hidden = ({
   on,
@@ -44,7 +45,7 @@ export const App = () => {
           <ImportPage />
         </Hidden>
         <Hidden on={value == 1}>
-          <div>Alignment Page</div>
+          <AlignmentPage />
         </Hidden>
         <Hidden on={value === 2}>
           {data ? <CustomRenderer data={data} /> : null}
