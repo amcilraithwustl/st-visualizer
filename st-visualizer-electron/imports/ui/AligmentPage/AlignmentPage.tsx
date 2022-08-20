@@ -128,7 +128,6 @@ export const AlignmentPage = ({
                   src={img}
                   style={{ maxWidth: "100%" }}
                 />
-                {JSON.stringify(transforms[i])}
               </Grid>
             </Tooltip>
             <Grid item>

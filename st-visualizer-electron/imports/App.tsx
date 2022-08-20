@@ -10,7 +10,11 @@ import {
   blankImportState,
 } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
-import { AlignmentPage, transformType } from "./ui/AligmentPage/AlignmentPage";
+import {
+  AlignmentPage,
+  transformType,
+  calcTransforms,
+} from "./ui/AligmentPage/AlignmentPage";
 import _ from "lodash";
 import { ImportPage } from "./ui/ImportPage/ImportPage";
 const Hidden = ({
@@ -72,7 +76,17 @@ export const App = () => {
                 : "Alignment mismatch. " + numSlices + " slices required"
             }
           >
-            <Button color={lengthsMatch ? "secondary" : "error"}>
+            <Button
+              color={lengthsMatch ? "secondary" : "error"}
+              onClick={() => {
+                if (lengthsMatch) {
+                  window.electronAPI.doCalculation({
+                    transforms: calcTransforms(currentImages),
+                    importState,
+                  });
+                }
+              }}
+            >
               Run Final Calculation{lengthsMatch ? "" : " (Not Ready)"}
             </Button>
           </Tooltip>
