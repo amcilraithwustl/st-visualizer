@@ -16,6 +16,42 @@ export const AlignmentPage = (): JSX.Element => {
   >([]);
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
   const [imgUrls, setImgUrls] = useState<string[]>([]);
+  const startRadius = 1000;
+  const startPointLocations = [
+    { x: 0, y: 0 },
+    { x: startRadius, y: startRadius },
+    { x: -startRadius, y: -startRadius },
+    { x: -startRadius, y: startRadius },
+    { x: startRadius, y: -startRadius },
+  ];
+  const rotate = ({ x, y, angle }: { x: number; y: number; angle: number }) => {
+    const radAngle = (angle * Math.PI) / 180;
+    return {
+      x: x * Math.cos(radAngle) + y * Math.sin(radAngle),
+      y: y * Math.cos(radAngle) - x * Math.sin(radAngle),
+    };
+  };
+
+  const transforms = currentImages.reduceRight((arr, { alignments }) => {
+    const appendedArray = [startPointLocations, ...arr];
+    //Rotate then transform
+    const transformed = appendedArray.map((prev) =>
+      prev
+        .map((p) =>
+          rotate({
+            x: p.x,
+            y: p.y,
+            angle: alignments.rotZ,
+          })
+        )
+        .map((rotated) => ({
+          x: rotated.x + alignments.x,
+          y: rotated.y + alignments.y,
+        }))
+    );
+    return transformed;
+  }, [] as { x: number; y: number }[][]);
+  console.log("CURRENT Transforms", transforms);
   useEffect(() => {
     const func = async () => {
       const urls = await Promise.all(
@@ -72,6 +108,7 @@ export const AlignmentPage = (): JSX.Element => {
                   src={img}
                   style={{ maxWidth: "100%" }}
                 />
+                {JSON.stringify(transforms[i])}
               </Grid>
             </Tooltip>
             <Grid item>
