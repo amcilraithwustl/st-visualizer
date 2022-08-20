@@ -10,12 +10,16 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
-export const AlignmentPage = (): JSX.Element => {
-  const [currentImages, setCurrentImages] = useState<
-    { file: File; alignments: { x: number; y: number; rotZ: number } }[]
-  >([]);
-  const [selectedImg, setSelectedImg] = useState<number | null>(null);
-  const [imgUrls, setImgUrls] = useState<string[]>([]);
+export type transformType = {
+  file: File;
+  alignments: {
+    x: number;
+    y: number;
+    rotZ: number;
+  };
+};
+
+export const calcTransforms = (currentImages: transformType[]) => {
   const startRadius = 1000;
   const startPointLocations = [
     { x: 0, y: 0 },
@@ -51,9 +55,25 @@ export const AlignmentPage = (): JSX.Element => {
     );
     return transformed;
   }, [] as { x: number; y: number }[][]);
+  return transforms;
+};
+
+export const AlignmentPage = ({
+  currentImages,
+  setCurrentImages,
+}: {
+  setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
+  currentImages: transformType[];
+}): JSX.Element => {
+  const [selectedImg, setSelectedImg] = useState<number | null>(null);
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
+
+  const transforms = calcTransforms(currentImages);
   console.log("CURRENT Transforms", transforms);
+
   useEffect(() => {
     const func = async () => {
+      console.log("RUNNING");
       const urls = await Promise.all(
         currentImages.map(
           (file) =>

@@ -1,10 +1,10 @@
-import { Tabs, Tab } from "@mui/material";
+import { Tabs, Tab, Button, Tooltip } from "@mui/material";
 import "react";
 import * as React from "react";
 import { useState } from "react";
 import { datatype, importPts } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
-import { AlignmentPage } from "./ui/AligmentPage/AlignmentPage";
+import { AlignmentPage, transformType } from "./ui/AligmentPage/AlignmentPage";
 import { ImportPage } from "./ui/ImportPage/ImportPage";
 const Hidden = ({
   on,
@@ -26,6 +26,8 @@ export const App = () => {
     importPts().then((res) => setData(res));
   }, []);
   console.log(window.electronAPI);
+  const [currentImages, setCurrentImages] = useState<transformType[]>([]);
+  const lengthsMatch = currentImages.length === data?.slices.length;
   return (
     <div
       style={{
@@ -38,15 +40,34 @@ export const App = () => {
       <div style={{ width: "100%" }}>
         <Tabs value={value} onChange={handleChange}>
           <Tab label="Data Import" id={0 + "tab"} />
-          <Tab label="Data Alignment" id={1 + "tab"} />
+          {data ? <Tab label="Data Alignment" id={1 + "tab"} /> : null}
           <Tab label="Data Display" id={2 + "tab"} />
         </Tabs>
         <Hidden on={value === 0}>
           <ImportPage />
         </Hidden>
         <Hidden on={value == 1}>
-          <AlignmentPage />
+          <Tooltip
+            title={
+              lengthsMatch
+                ? "Press to calculate volumes"
+                : "Alignment mismatch. " +
+                  data?.slices.length +
+                  " slices required"
+            }
+          >
+            <Button color={lengthsMatch ? "secondary" : "error"}>
+              Run Final Calculation{lengthsMatch ? "" : " (Not Ready)"}
+            </Button>
+          </Tooltip>
         </Hidden>
+        <Hidden on={value == 1}>
+          <AlignmentPage
+            currentImages={currentImages}
+            setCurrentImages={setCurrentImages}
+          />
+        </Hidden>
+
         <Hidden on={value === 2}>
           {data ? <CustomRenderer data={data} /> : null}
         </Hidden>

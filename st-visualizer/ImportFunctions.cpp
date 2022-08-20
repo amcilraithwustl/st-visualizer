@@ -36,7 +36,7 @@ std::vector<string> splitString(const string& s, const string& delimiter)
     return res;
 }
 
-std::vector<coord> extractCoordinateSet(std::vector<float> top, std::vector<float> bottom)
+std::vector<coord> zip(std::vector<float> top, std::vector<float> bottom)
 {
     if(top.size() != bottom.size()) throw std::exception("Size Mismatch");
     std::vector<coord> a;
@@ -107,7 +107,7 @@ std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(
     vector<vector<coord>> coordinateSet;
     for(size_t i = 0; i < transformCells.size(); i += 2)
     {
-        coordinateSet.push_back(extractCoordinateSet(transformCells[i], transformCells[i + 1]));
+        coordinateSet.push_back(zip(transformCells[i], transformCells[i + 1]));
     }
 
     vector<std::pair<vector<coord>, vector<coord>>> finalSet;
@@ -205,7 +205,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                                                                         std::stof(row[xy_indices.second]));
                                                                 }));
 
-                                                        // const std::vector raw_slice_coordinates_vector(raw_slice_coordinates.begin(), raw_slice_coordinates.end());//TODO: This might be slow
 
                                                         if(i == 0) //If it's the first slice, no adjustment necessary
                                                         {
@@ -213,6 +212,8 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                                                         }
 
                                                         //Base the remaining slices coordinate adjustment off of the previous one
+                                                        //Basically the other slices get transformed so that they match the coordinates of the first
+                                                        //All the transforms are independent.
                                                         const std::function transform = getTransSVD(
                                                             source_targets[i - 1].first, source_targets[i - 1].second);
                                                         return vectorToMatrix(transform(raw_slice_coordinates_vector));

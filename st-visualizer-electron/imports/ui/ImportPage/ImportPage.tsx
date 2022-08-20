@@ -20,23 +20,27 @@ enum colTypes {
   cluster,
   feature,
 }
+const blankImportState = {
+  sliceNames: [],
+  shrink: 0,
+  alignmentFile: "",
+  fileName: "",
+  [colTypes.slice]: 1,
+  [colTypes.tissue]: 2,
+  [colTypes.row]: 3,
+  [colTypes.column]: 4,
+  [colTypes.cluster]: 5,
+  [colTypes.feature]: [] as number[],
+  tsvData: [] as string[][],
+  z_distance: 100,
+};
+
+export type importStateType = typeof blankImportState;
 export const ImportPage = (): JSX.Element => {
-  const [tsvLabels, setTSVLabels] = useState<string[]>([]);
-  const nCols = tsvLabels.length;
-  const [importState, setImportState] = useState({
-    sliceNames: [],
-    shrink: 0,
-    alignmentFile: "",
-    fileName: "",
-    [colTypes.slice]: 1,
-    [colTypes.tissue]: 2,
-    [colTypes.row]: 3,
-    [colTypes.column]: 4,
-    [colTypes.cluster]: 5,
-    [colTypes.feature]: [] as number[],
-    tsvData: [] as string[][],
-    z_distance: 100,
+  const [importState, setImportState] = useState<importStateType>({
+    ...blankImportState,
   });
+  const tsvLabels = importState.tsvData.at(0) || [];
   const getValue = (i: number) => {
     switch (i) {
       case importState[colTypes.slice]:
@@ -53,6 +57,7 @@ export const ImportPage = (): JSX.Element => {
     if (importState[colTypes.feature].includes(i)) return colTypes.feature;
     return colTypes.none;
   };
+  const nCols = tsvLabels.length;
 
   const changeSelection = (i: number, selection: number) => {
     const currentValue = getValue(i);
@@ -153,7 +158,6 @@ export const ImportPage = (): JSX.Element => {
             const rawText = await file.text();
             const tsvData = rawText.split("\n").map((l) => l.split("\t"));
 
-            setTSVLabels(tsvData[0]);
             setImportState((s) => ({
               ...s,
               tsvData: tsvData,
