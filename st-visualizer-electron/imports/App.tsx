@@ -5,7 +5,13 @@ import { useState } from "react";
 import { datatype, importPts } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
 import { AlignmentPage, transformType } from "./ui/AligmentPage/AlignmentPage";
-import { ImportPage } from "./ui/ImportPage/ImportPage";
+import _ from "lodash";
+import {
+  blankImportState,
+  colTypes,
+  ImportPage,
+  importStateType,
+} from "./ui/ImportPage/ImportPage";
 const Hidden = ({
   on,
   children,
@@ -27,7 +33,15 @@ export const App = () => {
   }, []);
   console.log(window.electronAPI);
   const [currentImages, setCurrentImages] = useState<transformType[]>([]);
-  const lengthsMatch = currentImages.length === data?.slices.length;
+  const [importState, setImportState] = useState<importStateType>({
+    ...blankImportState,
+  });
+  const slicesRow = importState.tsvData.map(
+    (row) => row[importState[colTypes.slice]]
+  );
+  //Slice to remove the title and the compact to remove undefined
+  const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
+  const lengthsMatch = currentImages.length === numSlices;
   return (
     <div
       style={{
@@ -40,20 +54,21 @@ export const App = () => {
       <div style={{ width: "100%" }}>
         <Tabs value={value} onChange={handleChange}>
           <Tab label="Data Import" id={0 + "tab"} />
-          {data ? <Tab label="Data Alignment" id={1 + "tab"} /> : null}
+          <Tab disabled={!numSlices} label="Data Alignment" id={1 + "tab"} />
           <Tab label="Data Display" id={2 + "tab"} />
         </Tabs>
         <Hidden on={value === 0}>
-          <ImportPage />
+          <ImportPage
+            importState={importState}
+            setImportState={setImportState}
+          />
         </Hidden>
         <Hidden on={value == 1}>
           <Tooltip
             title={
               lengthsMatch
                 ? "Press to calculate volumes"
-                : "Alignment mismatch. " +
-                  data?.slices.length +
-                  " slices required"
+                : "Alignment mismatch. " + numSlices + " slices required"
             }
           >
             <Button color={lengthsMatch ? "secondary" : "error"}>

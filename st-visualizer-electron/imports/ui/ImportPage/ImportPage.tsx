@@ -9,9 +9,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React from "react";
 
-enum colTypes {
+export enum colTypes {
   none,
   slice,
   tissue,
@@ -20,8 +20,8 @@ enum colTypes {
   cluster,
   feature,
 }
-const blankImportState = {
-  sliceNames: [],
+export const blankImportState = {
+  sliceNames: [] as string[],
   shrink: 0,
   alignmentFile: "",
   fileName: "",
@@ -35,32 +35,37 @@ const blankImportState = {
   z_distance: 100,
 };
 
+const getValue = (importState: importStateType, i: number) => {
+  switch (i) {
+    case importState[colTypes.slice]:
+      return colTypes.slice;
+    case importState[colTypes.tissue]:
+      return colTypes.tissue;
+    case importState[colTypes.row]:
+      return colTypes.row;
+    case importState[colTypes.column]:
+      return colTypes.column;
+    case importState[colTypes.cluster]:
+      return colTypes.cluster;
+  }
+  if (importState[colTypes.feature].includes(i)) return colTypes.feature;
+  return colTypes.none;
+};
+
 export type importStateType = typeof blankImportState;
-export const ImportPage = (): JSX.Element => {
-  const [importState, setImportState] = useState<importStateType>({
-    ...blankImportState,
-  });
+export const ImportPage = ({
+  importState,
+  setImportState,
+}: {
+  importState: importStateType;
+  setImportState: React.Dispatch<React.SetStateAction<importStateType>>;
+}): JSX.Element => {
   const tsvLabels = importState.tsvData.at(0) || [];
-  const getValue = (i: number) => {
-    switch (i) {
-      case importState[colTypes.slice]:
-        return colTypes.slice;
-      case importState[colTypes.tissue]:
-        return colTypes.tissue;
-      case importState[colTypes.row]:
-        return colTypes.row;
-      case importState[colTypes.column]:
-        return colTypes.column;
-      case importState[colTypes.cluster]:
-        return colTypes.cluster;
-    }
-    if (importState[colTypes.feature].includes(i)) return colTypes.feature;
-    return colTypes.none;
-  };
+
   const nCols = tsvLabels.length;
 
   const changeSelection = (i: number, selection: number) => {
-    const currentValue = getValue(i);
+    const currentValue = getValue(importState, i);
     if (currentValue === colTypes.feature) {
       setImportState((s) => ({
         ...s,
@@ -90,8 +95,8 @@ export const ImportPage = (): JSX.Element => {
               <Select
                 label={tsvLabels[i]}
                 style={{ minWidth: 130 }}
-                value={getValue(i)}
-                onChange={(e) => changeSelection(i, e.target.value as number)}
+                value={getValue(importState, i)}
+                onChange={(e) => changeSelection(i, e.target.value as colTypes)}
               >
                 <MenuItem value={colTypes.none}>
                   <em>None</em>
