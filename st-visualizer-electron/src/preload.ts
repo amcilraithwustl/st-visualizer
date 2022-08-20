@@ -2,13 +2,13 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from "electron";
-import { ipcConstants } from "./ipcConstants";
+import { ipcConstants, ipcHandlers } from "./ipcConstants";
 
 const DeclaredAPI = {
-  doAThing: () => {
-    console.log("Hello world!");
-  },
-  basicInvoke: () => ipcRenderer.invoke(ipcConstants.openFile),
+  doCalculation: (args: Parameters<typeof ipcHandlers["doCalculation"]>[1]) =>
+    ipcRenderer.invoke(ipcConstants.doCalculation, args) as Promise<
+      ReturnType<typeof ipcHandlers["doCalculation"]>
+    >,
 };
 
 contextBridge.exposeInMainWorld("electronAPI", DeclaredAPI);

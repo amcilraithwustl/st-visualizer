@@ -43,6 +43,49 @@ export const importPts = async () => {
   }
 };
 
+export enum colTypes {
+  none,
+  slice,
+  tissue,
+  row,
+  column,
+  cluster,
+  feature,
+}
+export const blankImportState = {
+  sliceNames: [] as string[],
+  shrink: 0,
+  alignmentFile: "",
+  fileName: "",
+  [colTypes.slice]: 1,
+  [colTypes.tissue]: 2,
+  [colTypes.row]: 3,
+  [colTypes.column]: 4,
+  [colTypes.cluster]: 5,
+  [colTypes.feature]: [] as number[],
+  tsvData: [] as string[][],
+  z_distance: 100,
+};
+
+export const getValue = (importState: importStateType, i: number) => {
+  switch (i) {
+    case importState[colTypes.slice]:
+      return colTypes.slice;
+    case importState[colTypes.tissue]:
+      return colTypes.tissue;
+    case importState[colTypes.row]:
+      return colTypes.row;
+    case importState[colTypes.column]:
+      return colTypes.column;
+    case importState[colTypes.cluster]:
+      return colTypes.cluster;
+  }
+  if (importState[colTypes.feature].includes(i)) return colTypes.feature;
+  return colTypes.none;
+};
+
+export type importStateType = typeof blankImportState;
+
 export const times = 4;
 export const defaultColor: Color = "white";
 export const colors: Color[] = [

@@ -148,7 +148,7 @@ export const AlignmentPage = ({
       })}
     </Stack>
   );
-  const [opacity, setOpacity] = useState(0.5);
+  const [opacity, setOpacity] = useState(0.8);
   const alignments = selectedImg && currentImages[selectedImg]?.alignments;
   const handleXChange = (_: unknown, n: number) => {
     if (null === selectedImg) return;
@@ -176,11 +176,12 @@ export const AlignmentPage = ({
         direction="row"
         spacing={2}
       >
+        {/* Image Display */}
         <Grid item>
           <div
             style={{
               width: "100%",
-              height: 700,
+              height: 500,
               position: "relative",
               pointerEvents: "none",
             }}
@@ -216,11 +217,15 @@ export const AlignmentPage = ({
             />
           </div>
         </Grid>
+        {/* Control Area */}
         <Grid item container sx={{ minWidth: 300 }} xs={12}>
           <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>Opacity: </Typography>
+            <Typography>
+              <em>Bottom</em>
+            </Typography>
             <Grid item xs>
               <Slider
+                color="secondary"
                 value={opacity}
                 step={0.01}
                 min={0}
@@ -228,6 +233,9 @@ export const AlignmentPage = ({
                 onChange={(_, n) => typeof n === "number" && setOpacity(n)}
               />
             </Grid>
+            <Typography>
+              <em>Top</em>
+            </Typography>
           </Grid>
 
           {/* X Position */}

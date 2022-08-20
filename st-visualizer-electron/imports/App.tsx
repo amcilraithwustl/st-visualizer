@@ -2,16 +2,17 @@ import { Tabs, Tab, Button, Tooltip } from "@mui/material";
 import "react";
 import * as React from "react";
 import { useState } from "react";
-import { datatype, importPts } from "./api/constants";
+import {
+  datatype,
+  importPts,
+  colTypes,
+  importStateType,
+  blankImportState,
+} from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
 import { AlignmentPage, transformType } from "./ui/AligmentPage/AlignmentPage";
 import _ from "lodash";
-import {
-  blankImportState,
-  colTypes,
-  ImportPage,
-  importStateType,
-} from "./ui/ImportPage/ImportPage";
+import { ImportPage } from "./ui/ImportPage/ImportPage";
 const Hidden = ({
   on,
   children,
