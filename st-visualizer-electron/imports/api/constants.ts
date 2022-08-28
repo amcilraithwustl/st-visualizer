@@ -34,7 +34,11 @@ const getJsonData = (path: string) =>
 //This is a temporary implementation and will need to be dramatically improved
 export const importPts = async () => {
   try {
-    const pts = (await import("../static/integrationTest.json")).default;
+    const pts = (
+      await import(
+        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer-electron/.webpack/main/output.json"
+      )
+    ).default;
     console.log("PTS", pts);
     return (pts as unknown) as datatype;
   } catch (error) {
