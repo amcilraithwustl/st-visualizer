@@ -53,7 +53,7 @@ export enum colTypes {
   feature,
 }
 export const blankImportState = {
-  sliceNames: [] as string[],
+  sliceOrder: [] as number[],
   shrink: 0,
   alignmentFile: "",
   fileName: "",

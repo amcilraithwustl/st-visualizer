@@ -1,4 +1,4 @@
-import { Tabs, Tab, Button, Tooltip } from "@mui/material";
+import { Tabs, Tab } from "@mui/material";
 import "react";
 import * as React from "react";
 import { useState } from "react";
@@ -10,11 +10,7 @@ import {
   blankImportState,
 } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
-import {
-  AlignmentPage,
-  transformType,
-  calcTransforms,
-} from "./ui/AligmentPage/AlignmentPage";
+import { AlignmentPage, transformType } from "./ui/AligmentPage/AlignmentPage";
 import _ from "lodash";
 import { ImportPage } from "./ui/ImportPage/ImportPage";
 const Hidden = ({
@@ -41,12 +37,13 @@ export const App = () => {
   const [importState, setImportState] = useState<importStateType>({
     ...blankImportState,
   });
+  console.log("DATA", importState);
+
   const slicesRow = importState.tsvData.map(
     (row) => row[importState[colTypes.slice]]
   );
   //Slice to remove the title and the compact to remove undefined
   const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
-  const lengthsMatch = currentImages.length === numSlices;
   return (
     <div
       style={{
@@ -68,33 +65,13 @@ export const App = () => {
             setImportState={setImportState}
           />
         </Hidden>
-        <Hidden on={value == 1}>
-          <Tooltip
-            title={
-              lengthsMatch
-                ? "Press to calculate volumes"
-                : "Alignment mismatch. " + numSlices + " slices required"
-            }
-          >
-            <Button
-              color={lengthsMatch ? "secondary" : "error"}
-              onClick={() => {
-                if (lengthsMatch) {
-                  window.electronAPI.doCalculation({
-                    transforms: calcTransforms(currentImages),
-                    importState,
-                  });
-                }
-              }}
-            >
-              Run Final Calculation{lengthsMatch ? "" : " (Not Ready)"}
-            </Button>
-          </Tooltip>
-        </Hidden>
+
         <Hidden on={value == 1}>
           <AlignmentPage
+            setImportState={setImportState}
             currentImages={currentImages}
             setCurrentImages={setCurrentImages}
+            importState={importState}
           />
         </Hidden>
 

@@ -121,7 +121,6 @@ export const ImportPage = ({
             const tsvPath = file.path;
             const rawText = await file.text();
             const tsvData = rawText.split("\n").map((l) => l.split("\t"));
-
             setImportState((s) => ({
               ...s,
               tsvData: tsvData,

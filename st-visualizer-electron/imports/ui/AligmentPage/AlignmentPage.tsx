@@ -10,6 +10,8 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
+import { importStateType, colTypes } from "../../api/constants";
+import _ from "lodash";
 export type transformType = {
   file: File;
   alignments: {
@@ -19,7 +21,10 @@ export type transformType = {
   };
 };
 
-export const calcTransforms = (currentImages: transformType[]) => {
+export const calcTransforms = (
+  currentImages: transformType[],
+  scale: number
+) => {
   const startRadius = 1000;
   const startPointLocations = [
     { x: 0, y: 0 },
@@ -55,22 +60,53 @@ export const calcTransforms = (currentImages: transformType[]) => {
     );
     return transformed;
   }, [] as { x: number; y: number }[][]);
-  return transforms;
+  return transforms.map((slice) =>
+    slice.map((pt) => ({ x: pt.x * scale, y: pt.y * scale }))
+  );
 };
 
 export const AlignmentPage = ({
+  importState,
+  setImportState,
   currentImages,
   setCurrentImages,
 }: {
+  importState: importStateType;
+  setImportState: React.Dispatch<React.SetStateAction<importStateType>>;
   setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
   currentImages: transformType[];
 }): JSX.Element => {
+  const sliceNames = _.compact(
+    _.uniq(
+      importState.tsvData.map((row, i) =>
+        i > 0 ? row[importState[colTypes.slice]] : undefined
+      )
+    )
+  );
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
   const [imgUrls, setImgUrls] = useState<string[]>([]);
-
-  const transforms = calcTransforms(currentImages);
-  console.log("CURRENT Transforms", transforms);
-
+  const [scale, setScale] = useState<number>(100);
+  const transforms = calcTransforms(currentImages, scale);
+  const slicesRow = importState.tsvData.map(
+    (row) => row[importState[colTypes.slice]]
+  );
+  //Slice to remove the title and the compact to remove undefined
+  const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
+  console.log("CURRENT Transforms", transforms, sliceNames);
+  const xCol = importState[colTypes.column];
+  const yCol = importState[colTypes.row];
+  const currentVals = importState.tsvData
+    .map((row, i) =>
+      i === 0
+        ? undefined
+        : {
+            x: parseFloat(row[xCol]),
+            y: parseFloat(row[yCol]),
+            slice: importState.tsvData[importState[colTypes.slice]],
+          }
+    )
+    .filter((v) => !!v);
+  console.log(currentVals);
   useEffect(() => {
     const func = async () => {
       console.log("RUNNING");
@@ -91,60 +127,97 @@ export const AlignmentPage = ({
     func();
   }, [currentImages]);
   const imageOrdering = (
-    <Stack direction="row">
-      {imgUrls?.map((img, i) => {
-        return (
-          <Stack
-            direction="row"
-            key={img}
-            style={{
-              borderBottom:
-                selectedImg !== null &&
-                (i === selectedImg || i === selectedImg - 1)
-                  ? "solid 1px black"
-                  : undefined,
-            }}
-          >
-            <Grid item>
-              <IconButton
-                onClick={() => {
-                  if (i === 0) return;
-                  const temp = [...currentImages];
-                  [temp[i], temp[i - 1]] = [temp[i - 1], temp[i]];
-                  setCurrentImages(temp);
-                }}
-              >
-                <ArrowLeft />
-              </IconButton>
-            </Grid>
-            <Tooltip key={img} title={currentImages[i]?.file.name}>
-              <Grid
-                item
-                sx={{ width: 100 }}
-                onClick={() => i && setSelectedImg(i)}
-              >
-                <img
-                  alt={currentImages[i]?.file.name}
-                  src={img}
-                  style={{ maxWidth: "100%" }}
-                />
+    <Stack>
+      <Stack direction="row">
+        {imgUrls?.map((img, i) => {
+          return (
+            <Stack
+              direction="row"
+              key={img}
+              style={{
+                borderBottom:
+                  selectedImg !== null &&
+                  (i === selectedImg || i === selectedImg - 1)
+                    ? "solid 1px black"
+                    : undefined,
+              }}
+            >
+              <Grid item>
+                <IconButton
+                  onClick={() => {
+                    if (i === 0) return;
+                    const temp = [...currentImages];
+                    [temp[i], temp[i - 1]] = [temp[i - 1], temp[i]];
+                    setCurrentImages(temp);
+                  }}
+                >
+                  <ArrowLeft />
+                </IconButton>
               </Grid>
-            </Tooltip>
-            <Grid item>
-              <IconButton
-                onClick={() => {
-                  if (i === currentImages.length - 1) return;
-                  const temp = [...currentImages];
-                  [temp[i], temp[i + 1]] = [temp[i + 1], temp[i]];
-                  setCurrentImages(temp);
-                }}
-              >
-                <ArrowRight />
-              </IconButton>
-            </Grid>
-          </Stack>
-        );
-      })}
+              <Tooltip key={img} title={currentImages[i]?.file.name}>
+                <Grid
+                  item
+                  sx={{ width: 100 }}
+                  onClick={() => i && setSelectedImg(i)}
+                >
+                  <img
+                    alt={currentImages[i]?.file.name}
+                    src={img}
+                    style={{ maxWidth: "100%" }}
+                  />
+                </Grid>
+              </Tooltip>
+              <Grid item>
+                <IconButton
+                  onClick={() => {
+                    if (i === currentImages.length - 1) return;
+                    const temp = [...currentImages];
+                    [temp[i], temp[i + 1]] = [temp[i + 1], temp[i]];
+                    setCurrentImages(temp);
+                  }}
+                >
+                  <ArrowRight />
+                </IconButton>
+              </Grid>
+            </Stack>
+          );
+        })}
+      </Stack>
+      <Stack direction="row">
+        {importState.sliceOrder?.map((nameIndex, i) => {
+          return (
+            <Stack direction="row" key={nameIndex}>
+              <Grid item>
+                <IconButton
+                  onClick={() => {
+                    if (i === 0) return;
+                    const temp = [...importState.sliceOrder];
+                    [temp[i], temp[i - 1]] = [temp[i - 1], temp[i]];
+                    setImportState((s) => ({ ...s, sliceOrder: temp }));
+                  }}
+                >
+                  <ArrowLeft />
+                </IconButton>
+              </Grid>
+              <Grid item sx={{ width: 100 }}>
+                {sliceNames[nameIndex]}
+              </Grid>
+              <Grid item>
+                <IconButton
+                  onClick={() => {
+                    if (i === currentImages.length - 1) return;
+                    const temp = [...importState.sliceOrder];
+                    [temp[i], temp[i + 1]] = [temp[i + 1], temp[i]];
+                    setImportState((s) => ({ ...s, sliceOrder: temp }));
+                  }}
+                >
+                  <ArrowRight />
+                </IconButton>
+              </Grid>
+            </Stack>
+          );
+        })}
+      </Stack>
     </Stack>
   );
   const [opacity, setOpacity] = useState(0.8);
@@ -179,8 +252,8 @@ export const AlignmentPage = ({
         <Grid item>
           <div
             style={{
-              width: "100%",
-              height: 500,
+              width: "500px",
+              height: "500px",
               position: "relative",
               pointerEvents: "none",
             }}
@@ -207,9 +280,9 @@ export const AlignmentPage = ({
                 transform:
                   "translateX(" +
                   alignments.x +
-                  "%)translateY(" +
+                  "px)translateY(" +
                   alignments.y +
-                  "%)rotate(" +
+                  "px)rotate(" +
                   alignments.rotZ +
                   "deg)",
               }}
@@ -329,10 +402,33 @@ export const AlignmentPage = ({
         </Grid>
       </Grid>
     );
+  const lengthsMatch = currentImages.length === numSlices;
+
   return (
     <Stack style={{ padding: 20 }}>
+      <Tooltip
+        title={
+          lengthsMatch
+            ? "Press to calculate volumes"
+            : "Alignment mismatch. " + numSlices + " slices required"
+        }
+      >
+        <Button
+          color={lengthsMatch ? "secondary" : "error"}
+          onClick={() => {
+            if (lengthsMatch) {
+              window.electronAPI.doCalculation({
+                transforms: calcTransforms(currentImages, scale),
+                importState,
+              });
+            }
+          }}
+        >
+          Run Final Calculation{lengthsMatch ? "" : " (Not Ready)"}
+        </Button>
+      </Tooltip>
       <Button variant="contained" component="label">
-        Alignment Images
+        Alignment Images ({numSlices} needed)
         <input
           hidden
           multiple
@@ -345,12 +441,35 @@ export const AlignmentPage = ({
             setCurrentImages(
               [...new Array(files.length)]
                 .map((_, i) => files[i])
-                .map((f) => ({ file: f, alignments: { x: 0, y: 0, rotZ: 0 } }))
+                .map((f) => ({
+                  file: f,
+                  alignments: { x: 0, y: 0, rotZ: 0 },
+                }))
             );
+            setImportState((s) => ({
+              ...s,
+              sliceOrder: [...new Array(numSlices)].map((_, i) => i),
+            }));
           }}
         />
       </Button>
       {imageOrdering}
+      <Grid container item spacing={2} alignItems="center" xs={12}>
+        <Typography>Scale (pixels per micron): </Typography>
+        <Grid item>
+          <Input
+            size="small"
+            inputProps={{
+              step: 0.01,
+              min: 0,
+              max: 360,
+              type: "number",
+            }}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            value={scale}
+          />
+        </Grid>
+      </Grid>
       {displayArea}
     </Stack>
   );
