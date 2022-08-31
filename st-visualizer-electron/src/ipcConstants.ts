@@ -14,7 +14,8 @@ export const ipcHandlers = {
     _event: Electron.IpcMainInvokeEvent,
     { path }: { path: string }
   ) => {
-    return await fs.readFile(path);
+    const string = await fs.readFile(path, { encoding: "utf-8" });
+    return string;
   },
   [ipcConstants.doCalculation]: async (
     _event: Electron.IpcMainInvokeEvent,

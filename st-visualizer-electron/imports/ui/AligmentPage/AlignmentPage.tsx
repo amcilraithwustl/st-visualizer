@@ -424,13 +424,24 @@ export const AlignmentPage = ({
           color={lengthsMatch ? "secondary" : "error"}
           onClick={async () => {
             if (lengthsMatch) {
+              console.log("BEGINNING");
               const path = await window.electronAPI.doCalculation({
                 transforms: calcTransforms(currentImages, scale),
                 importState,
               });
               if (!path) return;
+              console.log("PATH", path);
               const result = await importPts(path);
               if (!result) return;
+              console.log("RESULT", result);
+              setData(result);
+            } else {
+              console.log("DING DING");
+              const result = await importPts(
+                "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer-electron/.webpack/main/output.json"
+              );
+              if (!result) return;
+              console.log("RESULT", result);
               setData(result);
             }
           }}

@@ -25,13 +25,13 @@ export type datatype = {
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
 const getJsonData = async (path: string) => {
   const buffer = await window.electronAPI.getFile({ path });
-  const string = buffer.toString();
-  console.log("BUFFER", buffer, string);
-  return JSON.parse(string);
+  console.log("STRING", buffer);
+  return JSON.parse(buffer.toString());
 };
 //This is a temporary implementation and will need to be dramatically improved
 export const importPts = async (path: string) => {
   try {
+    console.log("TRYING TO DO JSON");
     const pts = await getJsonData(path);
     console.log("PTS", pts);
     return (pts as unknown) as datatype;
