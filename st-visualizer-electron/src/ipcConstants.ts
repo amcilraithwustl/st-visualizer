@@ -7,6 +7,7 @@ export const ipcConstants = {
 import path from "path";
 import { execFile } from "child_process";
 import _ from "lodash";
+import { app } from "electron";
 
 //This is nodejs
 export const ipcHandlers = {
@@ -28,10 +29,9 @@ export const ipcHandlers = {
     }
   ) => {
     // const exePath = `C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer/x64/Debug/st-visualizer.exe`;
-    const exePath = path.resolve(
-      __dirname,
-      "../../imports/static/st-visualizer.exe"
-    );
+    const exePath = app.isPackaged
+      ? path.resolve(process.resourcesPath, "./st-visualizer.exe")
+      : path.resolve(__dirname, "../../imports/static/st-visualizer.exe");
 
     const split = transforms.map(
       (slice) =>
@@ -91,6 +91,7 @@ export const ipcHandlers = {
     });
     console.log(runResults);
     console.log("___COMPLETE___");
+    console.log("Data output to ", outputPath);
 
     return outputPath;
   },
