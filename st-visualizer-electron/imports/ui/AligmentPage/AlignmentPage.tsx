@@ -10,7 +10,12 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
-import { importStateType, colTypes } from "../../api/constants";
+import {
+  importStateType,
+  colTypes,
+  importPts,
+  datatype,
+} from "../../api/constants";
 import _ from "lodash";
 export type transformType = {
   file: File;
@@ -70,10 +75,12 @@ export const AlignmentPage = ({
   setImportState,
   currentImages,
   setCurrentImages,
+  setData,
 }: {
   importState: importStateType;
   setImportState: React.Dispatch<React.SetStateAction<importStateType>>;
   setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
+  setData: React.Dispatch<React.SetStateAction<datatype>>;
   currentImages: transformType[];
 }): JSX.Element => {
   const sliceNames = _.compact(
@@ -415,12 +422,16 @@ export const AlignmentPage = ({
       >
         <Button
           color={lengthsMatch ? "secondary" : "error"}
-          onClick={() => {
+          onClick={async () => {
             if (lengthsMatch) {
-              window.electronAPI.doCalculation({
+              const path = await window.electronAPI.doCalculation({
                 transforms: calcTransforms(currentImages, scale),
                 importState,
               });
+              if (!path) return;
+              const result = await importPts(path);
+              if (!result) return;
+              setData(result);
             }
           }}
         >

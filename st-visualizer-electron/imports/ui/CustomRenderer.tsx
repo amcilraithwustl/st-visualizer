@@ -12,7 +12,6 @@ import {
   GizmoViewport,
   OrbitControls,
   PerspectiveCamera,
-
 } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import _ from "lodash";

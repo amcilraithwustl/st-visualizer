@@ -29,9 +29,7 @@ export const App = () => {
     setValue(newValue);
   };
   const [data, setData] = useState<datatype | undefined>(undefined);
-  React.useEffect(() => {
-    importPts().then((res) => setData(res));
-  }, []);
+
   console.log(window.electronAPI);
   const [currentImages, setCurrentImages] = useState<transformType[]>([]);
   const [importState, setImportState] = useState<importStateType>({
@@ -72,6 +70,7 @@ export const App = () => {
             currentImages={currentImages}
             setCurrentImages={setCurrentImages}
             importState={importState}
+            setData={setData}
           />
         </Hidden>
 

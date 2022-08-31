@@ -4,11 +4,17 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { ipcConstants, ipcHandlers } from "./ipcConstants";
 
+const genHandler = <T extends keyof typeof ipcConstants>(name: T) => {
+  type functionType = typeof ipcHandlers[typeof ipcConstants[T]];
+  return (args: Parameters<functionType>[1]) =>
+    ipcRenderer.invoke(ipcConstants[name], args) as Promise<
+      ReturnType<functionType>
+    >;
+};
+
 const DeclaredAPI = {
-  doCalculation: (args: Parameters<typeof ipcHandlers["doCalculation"]>[1]) =>
-    ipcRenderer.invoke(ipcConstants.doCalculation, args) as Promise<
-      ReturnType<typeof ipcHandlers["doCalculation"]>
-    >,
+  doCalculation: genHandler("doCalculation"),
+  getFile: genHandler("getFile"),
 };
 
 contextBridge.exposeInMainWorld("electronAPI", DeclaredAPI);

@@ -23,22 +23,16 @@ export type datatype = {
 };
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
-const getJsonData = (path: string) =>
-  fetch(path, {
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  }).then((response) => response.json());
-
+const getJsonData = async (path: string) => {
+  const buffer = await window.electronAPI.getFile({ path });
+  const string = buffer.toString();
+  console.log("BUFFER", buffer, string);
+  return JSON.parse(string);
+};
 //This is a temporary implementation and will need to be dramatically improved
-export const importPts = async () => {
+export const importPts = async (path: string) => {
   try {
-    const pts = (
-      await import(
-        "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer-electron/.webpack/main/output.json"
-      )
-    ).default;
+    const pts = await getJsonData(path);
     console.log("PTS", pts);
     return (pts as unknown) as datatype;
   } catch (error) {

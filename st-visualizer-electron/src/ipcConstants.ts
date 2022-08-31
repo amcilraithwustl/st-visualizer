@@ -1,9 +1,8 @@
-import { ipcMain } from "electron";
 import { colTypes, importStateType } from "../imports/api/constants";
 import * as fs from "fs/promises";
 export const ipcConstants = {
-  openFile: "openFile",
   doCalculation: "doCalculation",
+  getFile: "getFile",
 } as const;
 import path from "path";
 import { execFile } from "child_process";
@@ -11,19 +10,11 @@ import _ from "lodash";
 
 //This is nodejs
 export const ipcHandlers = {
-  [ipcConstants.openFile]: () => {
-    return new Promise((res, rej) => {
-      const exePath = path.resolve(
-        __dirname,
-        "../../imports/static/st-visualizer.exe"
-      );
-      execFile(exePath, [], {}, (err, data) => {
-        console.log("ERR", err);
-        console.log("DATA", data);
-        if (err) rej(err);
-        res(data);
-      });
-    });
+  [ipcConstants.getFile]: async (
+    _event: Electron.IpcMainInvokeEvent,
+    { path }: { path: string }
+  ) => {
+    return await fs.readFile(path);
   },
   [ipcConstants.doCalculation]: async (
     _event: Electron.IpcMainInvokeEvent,
@@ -35,8 +26,11 @@ export const ipcHandlers = {
       importState: importStateType;
     }
   ) => {
-    const exePath = `C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer/x64/Debug/st-visualizer.exe`;
-    //const exePath = path.resolve(__dirname, "../../imports/static/st-visualizer.exe");
+    // const exePath = `C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer/x64/Debug/st-visualizer.exe`;
+    const exePath = path.resolve(
+      __dirname,
+      "../../imports/static/st-visualizer.exe"
+    );
 
     const split = transforms.map(
       (slice) =>
@@ -68,7 +62,7 @@ export const ipcHandlers = {
       )
     );
     console.log("___BEGIN PROCESS___");
-    const runResults = await new Promise((res, rej) => {
+    const runResults = await new Promise<string>((res, rej) => {
       execFile(
         exePath,
         [
@@ -97,6 +91,6 @@ export const ipcHandlers = {
     console.log(runResults);
     console.log("___COMPLETE___");
 
-    return runResults;
+    return outputPath;
   },
 } as const;
