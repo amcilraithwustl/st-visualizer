@@ -9,6 +9,7 @@ export const VolumeDisplay = ({
   center,
   volumes,
   colors,
+  opacity,
 }: {
   center: THREE.Vector3;
   volumes: {
@@ -16,6 +17,7 @@ export const VolumeDisplay = ({
     pts: THREE.Vector3[];
   }[];
   colors: Color[];
+  opacity: number;
 }): JSX.Element => {
   const translate = useMemo(
     () =>
@@ -34,11 +36,11 @@ export const VolumeDisplay = ({
             color={colors[ctr.group] || defaultColor}
             translate={translate}
             scale={shrink}
-            opacity={0.5}
+            opacity={opacity}
           />
         );
       }),
-    [colors, translate, volumes]
+    [colors, opacity, translate, volumes]
   );
   return <>{v}</>;
 };

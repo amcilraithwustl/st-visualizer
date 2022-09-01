@@ -4,6 +4,7 @@ import {
   FormGroup,
   Grid,
   Paper,
+  Slider,
   Typography,
 } from "@mui/material";
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
@@ -195,7 +196,7 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
       )
       .map((pts, group) => ({ pts, group }));
   }, [data]);
-
+  const [opacity, setOpacity] = useState(1);
   const data2 = useMemo(
     () => ({
       volumes: volumes,
@@ -254,6 +255,7 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
       center={center}
       volumes={transformedData.volumeDisplay}
       colors={colors}
+      opacity={opacity}
     />
   );
 
@@ -344,6 +346,16 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
             label={"Volumes"}
           />
         </FormGroup>
+      </Grid>
+      <Grid item>
+        <Typography>Volume Opacity</Typography>
+        <Slider
+          value={opacity}
+          onChange={(_e, v) => setOpacity(v as number)}
+          max={1}
+          step={0.1}
+          min={0}
+        ></Slider>
       </Grid>
     </Grid>
   );
