@@ -79,10 +79,10 @@ export const ImportPage = ({
       <TextField
         id="outlined-number"
         type="number"
-        label={"Shrink (%)"}
+        label={"Shrink (microns)"}
         value={importState.shrink}
         onChange={(e) =>
-          setImportState((s) => ({ ...s, shrink: parseInt(e.target.value) }))
+          setImportState((s) => ({ ...s, shrink: parseFloat(e.target.value) }))
         }
         InputLabelProps={{
           shrink: true,

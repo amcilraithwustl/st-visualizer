@@ -69,7 +69,7 @@ export const ipcHandlers = {
         [
           JSON.stringify({
             fileName: importState.fileName,
-            shrink: importState.shrink / 100,
+            shrink: importState.shrink,
             sliceNames: importState.sliceOrder.map((i) => sliceNames[i]),
             featureCols: importState[colTypes.feature],
             sliceIndex: importState[colTypes.slice],

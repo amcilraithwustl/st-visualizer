@@ -26,8 +26,8 @@ import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
 export const CustomRenderer = ({ data }: { data: datatype }) => {
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
-
   const [visuals, setVisuals] = useState({
     area: true,
     volume: true,
@@ -406,7 +406,10 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
                 onChange={(e) => {
                   const c = [...colors];
                   c[i] = e.target.value;
-                  setColors(c);
+                  if (debounceRef.current) {
+                    clearTimeout(debounceRef.current);
+                  }
+                  debounceRef.current = setTimeout(() => setColors(c), 100);
                 }}
               />
             </>
