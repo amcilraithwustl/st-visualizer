@@ -85,19 +85,21 @@ export const getValue = (importState: importStateType, i: number) => {
 export type importStateType = typeof blankImportState;
 
 export const times = 4;
-export const defaultColor: Color = "white";
-export const colors: Color[] = [
-  "black",
-  "red",
-  "green",
-  "blue",
-  "yellow",
-  "orange",
-  "black",
-  "lightgreen",
-  "lightblue",
-  "purple",
-];
+export const defaultColor: Color = "#FFFFFF";
+
+//Good for 90 inputs before it runs out
+export const colors: Color[] = [...new Array(10)].flatMap(() => [
+  "#000000",
+  "#000080",
+  "#0000FF",
+  "#808000",
+  "#800000",
+  "#00FFFF",
+  "#008000",
+  "#FF0000",
+  "#FF00FF",
+  "#FFFF00",
+]);
 export const shrink = 0.007;
 export type active = { name: string; on: boolean };
 

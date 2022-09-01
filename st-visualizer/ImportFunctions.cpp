@@ -131,7 +131,7 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
 {
     //Import raw file data
     std::ifstream aFile(file_name);
-      
+
     log("Loading TSV.");
 
     std::vector<std::vector<std::string>> rawData;
@@ -314,7 +314,6 @@ tsv_return_type loadTsv(const std::string& file_name, const std::vector<std::str
                 const vector new_clusters(new_coordinates.cols(), getClusterArray(newClusters + 1, newClusters));
                 return concat(old_clusters, new_clusters);
             }));
-
 
 
     vector<vector<vector<float>>> grown_values = mapThread(

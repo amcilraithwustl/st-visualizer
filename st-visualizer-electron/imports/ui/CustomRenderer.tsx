@@ -6,13 +6,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import {
-  GizmoHelper,
-  GizmoViewcube,
-  GizmoViewport,
-  OrbitControls,
-  PerspectiveCamera,
-} from "@react-three/drei";
+import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import _ from "lodash";
 import * as React from "react";
@@ -20,7 +14,11 @@ import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 import { CurvesDisplay } from "./CurvesDisplay";
 import "../api/threejsHeadeers";
-import { datatype, importPts, pointToVector } from "../api/constants";
+import {
+  datatype,
+  pointToVector,
+  colors as defaultColorArray,
+} from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
 import { AreaDisplay } from "./AreaDisplay";
 import { VolumeDisplay } from "./VolumeDisplay";
@@ -60,6 +58,12 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
       })) || []
     );
   }, [data?.featureNames]);
+
+  const [colors, setColors] = useState(defaultColorArray);
+  useEffect(() => {
+    const num = activeGroups.length;
+    setColors(defaultColorArray.slice(0, num));
+  }, [activeGroups.length]);
 
   //Calculated Data
   const pointsBySlice = useMemo(
@@ -222,13 +226,18 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
   );
 
   const pointsDisplay = center && (
-    <PointsDisplay center={center} groups={transformedData.pointsDisplay} />
+    <PointsDisplay
+      center={center}
+      groups={transformedData.pointsDisplay}
+      colors={colors}
+    />
   );
 
   const curvesDisplay = data && center && (
     <CurvesDisplay
       center={center}
       curvesFinalData={transformedData.curvesDisplay}
+      colors={colors}
     />
   );
 
@@ -236,11 +245,16 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
     <AreaDisplay
       center={center}
       areaDisplayData={transformedData.areaDisplay}
+      colors={colors}
     />
   );
 
   const volumeDisplay = data && center && (
-    <VolumeDisplay center={center} volumes={transformedData.volumeDisplay} />
+    <VolumeDisplay
+      center={center}
+      volumes={transformedData.volumeDisplay}
+      colors={colors}
+    />
   );
 
   const renderSetup = (
@@ -363,17 +377,27 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
         <Typography variant={"h5"}>Groups</Typography>
         <FormGroup>
           {activeGroups.map((active, i) => (
-            <FormControlLabel
-              key={i}
-              control={<Checkbox checked={active.on} />}
-              onChange={(_, checked) => {
-                const oldData = activeGroups;
-                oldData[i].on = checked;
-
-                setActiveGroups([...oldData]);
-              }}
-              label={active.name}
-            />
+            <>
+              <FormControlLabel
+                key={i}
+                control={<Checkbox checked={active.on} />}
+                onChange={(_, checked) => {
+                  const oldData = activeGroups;
+                  oldData[i].on = checked;
+                  setActiveGroups([...oldData]);
+                }}
+                label={active.name}
+              />
+              <input
+                type="color"
+                value={colors[i] as string}
+                onChange={(e) => {
+                  const c = [...colors];
+                  c[i] = e.target.value;
+                  setColors(c);
+                }}
+              />
+            </>
           ))}
         </FormGroup>
       </Grid>

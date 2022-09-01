@@ -89,14 +89,15 @@ int main(int argc, char* argv[])
     float shrink = tempFile.at("shrink").get<float>();
     std::cout << "shrink" << shrink << std::endl;
     std::vector<std::string> sliceNames;
-    for (const auto & name : tempFile.at("sliceNames"))
+    for(const auto& name : tempFile.at("sliceNames"))
     {
-        if (name.is_string()) {
+        if(name.is_string())
+        {
             sliceNames.push_back(name.get<std::string>());
         }
     } //({"NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4"});
     std::vector<unsigned> featureCols;
-    for (const auto& name : tempFile.at("featureCols"))
+    for(const auto& name : tempFile.at("featureCols"))
     {
         featureCols.push_back(name.get<unsigned>());
     }
@@ -239,23 +240,23 @@ int main(int argc, char* argv[])
     };
     log("Calculations complete. Writing to file.");
     json ret = json::object();
-    ret["nat"] = (results.values[0][0].size()); //nMat,
-    ret["shrink"] = (shrink); //shrink,
-    ret["clusters"] = (results.clusters); //clusters,
-    ret["slices"] = (slices); //slices,
-    ret["ptClusIndex"] = (ptClusIndex); //ptClusIndex,
-    ret["ctrs2Dvals"] = (convertCtrs(ctrs2dVals)); //ctrs2Dvals,
-    ret["ctrs3Dvals"] = (convert3D(ctrs3dVals)); //ctrs3Dvals,
-    ret["featureNames"] = (results.names); //featureNames,
-    ret["ptValIndex"] = (ptValIndex); //ptValIndex,
-    ret["tris2Dvals"] = (convertTris(tris2dVals)); //tris2Dvals
-    ret["ctrs2Dclusters"] = (convertCtrs(ctrs2dclusters)); //ctrs2Dclusters,
-    ret["ctrs3Dclusters"] = (convert3D(ctrs3dClusters)); //ctrs3Dclusters,
-    ret["nClusters"] = (results.clusters[0][0].size()); //nClusters,
-    ret["tris2Dclusters"] = (convertTris(tris2dclusters)); //tris2Dclusters,
-    ret["featureCols"] = (featureCols); //featureCols,
-    ret["sliceNames"] = (sliceNames); //sliceNames
-    ret["values"] = (results.values);
+    ret["nat"] = results.values[0][0].size(); //nMat,
+    ret["shrink"] = shrink; //shrink,
+    ret["clusters"] = results.clusters; //clusters,
+    ret["slices"] = slices; //slices,
+    ret["ptClusIndex"] = ptClusIndex; //ptClusIndex,
+    ret["ctrs2Dvals"] = convertCtrs(ctrs2dVals); //ctrs2Dvals,
+    ret["ctrs3Dvals"] = convert3D(ctrs3dVals); //ctrs3Dvals,
+    ret["featureNames"] = results.names; //featureNames,
+    ret["ptValIndex"] = ptValIndex; //ptValIndex,
+    ret["tris2Dvals"] = convertTris(tris2dVals); //tris2Dvals
+    ret["ctrs2Dclusters"] = convertCtrs(ctrs2dclusters); //ctrs2Dclusters,
+    ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters); //ctrs3Dclusters,
+    ret["nClusters"] = results.clusters[0][0].size(); //nClusters,
+    ret["tris2Dclusters"] = convertTris(tris2dclusters); //tris2Dclusters,
+    ret["featureCols"] = featureCols; //featureCols,
+    ret["sliceNames"] = sliceNames; //sliceNames
+    ret["values"] = results.values;
 
     std::ofstream f(target);
     f << ret;

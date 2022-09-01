@@ -1,18 +1,29 @@
-import { colors, defaultColor, shrink } from "../api/constants";
+import { defaultColor, shrink } from "../api/constants";
 import * as THREE from "three";
 import * as React from "react";
 import { GeometryCustom } from "./threejsComponents/GeometryCustom";
 import { useMemo } from "react";
+import { Color } from "@react-three/fiber";
+
 export const VolumeDisplay = ({
   center,
   volumes,
+  colors,
 }: {
   center: THREE.Vector3;
   volumes: {
     group: number;
     pts: THREE.Vector3[];
   }[];
+  colors: Color[];
 }): JSX.Element => {
+  const translate = useMemo(
+    () =>
+      center
+        ? ([-center.x, -center.y, -center.z] as const)
+        : ([0, 0, 0] as const),
+    [center]
+  );
   const v = useMemo(
     () =>
       volumes.map((ctr) => {
@@ -21,17 +32,13 @@ export const VolumeDisplay = ({
             key={ctr.group}
             points={ctr.pts}
             color={colors[ctr.group] || defaultColor}
-            translate={
-              center
-                ? ([-center.x, -center.y, -center.z] as const)
-                : ([0, 0, 0] as const)
-            }
+            translate={translate}
             scale={shrink}
             opacity={0.5}
           />
         );
       }),
-    [center, volumes]
+    [colors, translate, volumes]
   );
   return <>{v}</>;
 };
