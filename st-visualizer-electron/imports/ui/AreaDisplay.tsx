@@ -8,6 +8,7 @@ export const AreaDisplay = ({
   center,
   areaDisplayData,
   colors,
+  opacity,
 }: {
   center: THREE.Vector3;
   areaDisplayData: {
@@ -15,6 +16,7 @@ export const AreaDisplay = ({
     pts: THREE.Vector3[];
   }[];
   colors: Color[];
+  opacity: number;
 }): JSX.Element => {
   const translate = React.useMemo(
     () =>
@@ -33,11 +35,11 @@ export const AreaDisplay = ({
             color={colors[ctr.group] || defaultColor}
             translate={translate}
             scale={shrink}
-            opacity={0.5}
+            opacity={opacity}
           />
         );
       }),
-    [areaDisplayData, colors, translate]
+    [areaDisplayData, colors, opacity, translate]
   );
   return <>{v}</>;
 };

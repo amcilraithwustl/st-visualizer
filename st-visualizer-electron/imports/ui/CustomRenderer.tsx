@@ -247,6 +247,7 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
       center={center}
       areaDisplayData={transformedData.areaDisplay}
       colors={colors}
+      opacity={opacity}
     />
   );
 
