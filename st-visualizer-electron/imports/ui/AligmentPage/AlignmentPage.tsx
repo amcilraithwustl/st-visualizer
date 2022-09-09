@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Stack,
   Button,
@@ -25,6 +25,15 @@ export type transformType = {
     rotZ: number;
   };
 };
+
+const getImg = (src: string) =>
+  new Promise<HTMLImageElement>((res) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      res(img);
+    };
+  });
 
 export const calcTransforms = (
   currentImages: transformType[],
@@ -247,6 +256,21 @@ export const AlignmentPage = ({
     newCurrImgs[selectedImg].alignments.rotZ = n;
     setCurrentImages(newCurrImgs);
   };
+  const mainImg = useRef<HTMLImageElement | null>(null);
+  const [height, setHeight] = useState(0);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!selectedImg) return;
+    getImg(imgUrls[selectedImg]).then((img) => {
+      setHeight(img.naturalHeight);
+      setWidth(img.naturalWidth);
+    });
+  }, [imgUrls, selectedImg]);
+  const naturalHeight = height;
+  const naturalWidth = width;
+  console.log(naturalWidth, naturalHeight);
+
   const displayArea = alignments &&
     selectedImg &&
     selectedImg < currentImages.length && (
@@ -275,6 +299,7 @@ export const AlignmentPage = ({
               }}
             />
             <img
+              ref={mainImg}
               src={imgUrls[selectedImg]}
               style={{
                 position: "absolute",
@@ -286,10 +311,10 @@ export const AlignmentPage = ({
                 opacity,
                 transform:
                   "translateX(" +
-                  alignments.x +
-                  "px)translateY(" +
-                  alignments.y +
-                  "px)rotate(" +
+                  (alignments.x / naturalWidth) * 100 +
+                  "%)translateY(" +
+                  (alignments.y / naturalHeight) * 100 +
+                  "%)rotate(" +
                   alignments.rotZ +
                   "deg)",
               }}
@@ -323,8 +348,8 @@ export const AlignmentPage = ({
 
             <Grid item xs>
               <Slider
-                min={-100}
-                max={100}
+                min={-naturalWidth}
+                max={naturalWidth}
                 step={0.1}
                 value={alignments.x}
                 onChange={handleXChange}
@@ -335,8 +360,8 @@ export const AlignmentPage = ({
                 size="small"
                 inputProps={{
                   step: 0.01,
-                  min: -100,
-                  max: 100,
+                  min: -naturalWidth,
+                  max: naturalWidth,
                   type: "number",
                 }}
                 onChange={(e) =>
@@ -353,8 +378,8 @@ export const AlignmentPage = ({
 
             <Grid item xs>
               <Slider
-                min={-100}
-                max={100}
+                min={-naturalHeight}
+                max={naturalHeight}
                 step={0.1}
                 value={alignments.y}
                 onChange={handleYChange}
@@ -365,8 +390,8 @@ export const AlignmentPage = ({
                 size="small"
                 inputProps={{
                   step: 0.01,
-                  min: -100,
-                  max: 100,
+                  min: -naturalHeight,
+                  max: naturalHeight,
                   type: "number",
                 }}
                 onChange={(e) =>
