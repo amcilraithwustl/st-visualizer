@@ -343,7 +343,7 @@ export const AlignmentPage = ({
             <Grid item xs>
               <Slider
                 min={-naturalWidth}
-                max={naturalWidth}
+                max={naturalWidth + naturalHeight} //To handle all rotations
                 step={0.1}
                 value={alignments.x}
                 onChange={handleXChange}
@@ -355,7 +355,7 @@ export const AlignmentPage = ({
                 inputProps={{
                   step: 0.01,
                   min: -naturalWidth,
-                  max: naturalWidth,
+                  max: naturalWidth + naturalHeight,
                   type: "number",
                 }}
                 onChange={(e) =>
@@ -372,11 +372,12 @@ export const AlignmentPage = ({
 
             <Grid item xs>
               <Slider
+                //Inverted for UI feel
+                max={naturalHeight + naturalWidth} //To handle all rotation angles
                 min={-naturalHeight}
-                max={naturalHeight}
                 step={0.1}
-                value={alignments.y}
-                onChange={handleYChange}
+                value={-alignments.y}
+                onChange={(_, n) => handleYChange(null, -n)}
               />
             </Grid>
             <Grid item>
@@ -384,7 +385,7 @@ export const AlignmentPage = ({
                 size="small"
                 inputProps={{
                   step: 0.01,
-                  min: -naturalHeight,
+                  min: -naturalHeight - naturalWidth,
                   max: naturalHeight,
                   type: "number",
                 }}
