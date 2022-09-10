@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Stack,
   Button,
@@ -35,11 +35,8 @@ const getImg = (src: string) =>
     };
   });
 
-export const calcTransforms = (
-  currentImages: transformType[],
-  scale: number
-) => {
-  const startRadius = 1000;
+export const calcTransforms = (currentImages: transformType[]) => {
+  const startRadius = 100;
   const startPointLocations = [
     { x: 0, y: 0 },
     { x: startRadius, y: startRadius },
@@ -54,7 +51,6 @@ export const calcTransforms = (
       y: y * Math.cos(radAngle) - x * Math.sin(radAngle),
     };
   };
-
   const transforms = currentImages.reduceRight((arr, { alignments }) => {
     const appendedArray = [startPointLocations, ...arr];
     //Rotate then transform
@@ -68,15 +64,13 @@ export const calcTransforms = (
           })
         )
         .map((rotated) => ({
-          x: rotated.x + alignments.x,
-          y: rotated.y + alignments.y,
+          x: rotated.x - alignments.x,
+          y: rotated.y - alignments.y,
         }))
     );
     return transformed;
   }, [] as { x: number; y: number }[][]);
-  return transforms.map((slice) =>
-    slice.map((pt) => ({ x: pt.x * scale, y: pt.y * scale }))
-  );
+  return transforms.map((slice) => slice.map((pt) => ({ x: pt.x, y: pt.y })));
 };
 
 export const AlignmentPage = ({
@@ -101,8 +95,7 @@ export const AlignmentPage = ({
   );
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
   const [imgUrls, setImgUrls] = useState<string[]>([]);
-  const [scale, setScale] = useState<number>(100);
-  const transforms = calcTransforms(currentImages, scale);
+  const transforms = calcTransforms(currentImages);
   const slicesRow = importState.tsvData.map(
     (row) => row[importState[colTypes.slice]]
   );
@@ -236,6 +229,16 @@ export const AlignmentPage = ({
       </Stack>
     </Stack>
   );
+  const [height, setHeight] = useState(0);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!selectedImg) return;
+    getImg(imgUrls[selectedImg]).then((img) => {
+      setHeight(img.naturalHeight);
+      setWidth(img.naturalWidth);
+    });
+  }, [imgUrls, selectedImg]);
   const [opacity, setOpacity] = useState(0.8);
   const alignments = selectedImg && currentImages[selectedImg]?.alignments;
   const handleXChange = (_: unknown, n: number) => {
@@ -257,16 +260,7 @@ export const AlignmentPage = ({
     setCurrentImages(newCurrImgs);
   };
   const mainImg = useRef<HTMLImageElement | null>(null);
-  const [height, setHeight] = useState(0);
-  const [width, setWidth] = useState(0);
 
-  useEffect(() => {
-    if (!selectedImg) return;
-    getImg(imgUrls[selectedImg]).then((img) => {
-      setHeight(img.naturalHeight);
-      setWidth(img.naturalWidth);
-    });
-  }, [imgUrls, selectedImg]);
   const naturalHeight = height;
   const naturalWidth = width;
   console.log(naturalWidth, naturalHeight);
@@ -314,9 +308,9 @@ export const AlignmentPage = ({
                   (alignments.x / naturalWidth) * 100 +
                   "%)translateY(" +
                   (alignments.y / naturalHeight) * 100 +
-                  "%)rotate(" +
+                  "%)translateY(50%)translateX(-50%)rotate(" +
                   alignments.rotZ +
-                  "deg)",
+                  "deg)translateY(-50%)translateX(50%)",
               }}
             />
           </div>
@@ -451,7 +445,7 @@ export const AlignmentPage = ({
             if (lengthsMatch) {
               console.log("BEGINNING");
               const path = await window.electronAPI.doCalculation({
-                transforms: calcTransforms(currentImages, scale),
+                transforms: calcTransforms(currentImages),
                 importState,
               });
               if (!path) return;
@@ -501,22 +495,6 @@ export const AlignmentPage = ({
         />
       </Button>
       {imageOrdering}
-      <Grid container item spacing={2} alignItems="center" xs={12}>
-        <Typography>Scale (pixels per micron): </Typography>
-        <Grid item>
-          <Input
-            size="small"
-            inputProps={{
-              step: 0.01,
-              min: 0,
-              max: 360,
-              type: "number",
-            }}
-            onChange={(e) => setScale(parseFloat(e.target.value))}
-            value={scale}
-          />
-        </Grid>
-      </Grid>
       {displayArea}
     </Stack>
   );

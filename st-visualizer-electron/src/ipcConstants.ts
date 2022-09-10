@@ -63,36 +63,40 @@ export const ipcHandlers = {
       )
     );
     console.log("___BEGIN PROCESS___");
-    const runResults = await new Promise<string>((res, rej) => {
-      execFile(
-        exePath,
-        [
-          JSON.stringify({
-            fileName: importState.fileName,
-            shrink: importState.shrink,
-            sliceNames: importState.sliceOrder.map((i) => sliceNames[i]),
-            featureCols: importState[colTypes.feature],
-            sliceIndex: importState[colTypes.slice],
-            tissueIndex: importState[colTypes.tissue],
-            rowIndex: importState[colTypes.row],
-            colIndex: importState[colTypes.column],
-            clusterIndex: importState[colTypes.cluster],
-            zDistance: importState.z_distance,
-          }),
-          alignmentPath,
-          outputPath,
-        ],
-        {},
-        (err, data) => {
-          if (err) rej(err);
-          res(data);
-        }
-      );
-    });
-    console.log(runResults);
-    console.log("___COMPLETE___");
-    console.log("Data output to ", outputPath);
+    try {
+      const runResults = await new Promise<string>((res, rej) => {
+        execFile(
+          exePath,
+          [
+            JSON.stringify({
+              fileName: importState.fileName,
+              shrink: importState.shrink,
+              sliceNames: importState.sliceOrder.map((i) => sliceNames[i]),
+              featureCols: importState[colTypes.feature],
+              sliceIndex: importState[colTypes.slice],
+              tissueIndex: importState[colTypes.tissue],
+              rowIndex: importState[colTypes.row],
+              colIndex: importState[colTypes.column],
+              clusterIndex: importState[colTypes.cluster],
+              zDistance: importState.z_distance,
+            }),
+            alignmentPath,
+            outputPath,
+          ],
+          {},
+          (err, data) => {
+            if (err) rej(err);
+            res(data);
+          }
+        );
+      });
+      console.log(runResults);
+      console.log("___COMPLETE___");
+      console.log("Data output to ", outputPath);
 
-    return outputPath;
+      return outputPath;
+    } catch (e) {
+      console.error("Running error. Please try again: ", e);
+    }
   },
 } as const;
