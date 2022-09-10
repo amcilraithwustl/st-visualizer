@@ -308,9 +308,9 @@ export const AlignmentPage = ({
                   (alignments.x / naturalWidth) * 100 +
                   "%)translateY(" +
                   (alignments.y / naturalHeight) * 100 +
-                  "%)translateY(50%)translateX(-50%)rotate(" +
+                  "%)translateY(-50%)translateX(-50%)rotate(" +
                   alignments.rotZ +
-                  "deg)translateY(-50%)translateX(50%)",
+                  "deg)translateY(50%)translateX(50%)",
               }}
             />
           </div>
@@ -403,8 +403,8 @@ export const AlignmentPage = ({
 
             <Grid item xs>
               <Slider
-                min={0}
-                max={360}
+                min={-180}
+                max={180}
                 step={0.1}
                 value={alignments.rotZ}
                 onChange={handleRotZChange}
@@ -415,8 +415,8 @@ export const AlignmentPage = ({
                 size="small"
                 inputProps={{
                   step: 0.01,
-                  min: 0,
-                  max: 360,
+                  min: -180,
+                  max: 180,
                   type: "number",
                 }}
                 onChange={(e) =>
