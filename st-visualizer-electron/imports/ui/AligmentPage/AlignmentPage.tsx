@@ -56,6 +56,10 @@ export const calcTransforms = (currentImages: transformType[]) => {
     //Rotate then transform
     const transformed = appendedArray.map((prev) =>
       prev
+        .map((rotated) => ({
+          x: rotated.x - alignments.x,
+          y: rotated.y - alignments.y,
+        }))
         .map((p) =>
           rotate({
             x: p.x,
@@ -63,10 +67,6 @@ export const calcTransforms = (currentImages: transformType[]) => {
             angle: alignments.rotZ,
           })
         )
-        .map((rotated) => ({
-          x: rotated.x - alignments.x,
-          y: rotated.y - alignments.y,
-        }))
     );
     return transformed;
   }, [] as { x: number; y: number }[][]);
@@ -290,6 +290,7 @@ export const AlignmentPage = ({
                 height: "100%",
                 objectFit: "contain",
                 position: "relative",
+                transform: "",
               }}
             />
             <img
@@ -310,7 +311,8 @@ export const AlignmentPage = ({
                   (alignments.y / naturalHeight) * 100 +
                   "%)translateY(-50%)translateX(-50%)rotate(" +
                   alignments.rotZ +
-                  "deg)translateY(50%)translateX(50%)",
+                  "deg)translateY(50%)translateX(50%)" +
+                  "",
               }}
             />
           </div>
