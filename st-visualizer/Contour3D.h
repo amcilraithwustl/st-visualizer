@@ -2,10 +2,13 @@
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
 #include "tetgen1.6.0/tetgen.h"
+#include <ranges>
 
 #define LOADING_SIZE 10
 #define DEBUG true
-
+#ifndef __nullptr
+#define __nullptr nullptr
+#endif
 
 //1) Generate vertices, don't append, create flat array w/ fixed size
 //2) Remove 2d/3d vector to hashmaps (DONE)

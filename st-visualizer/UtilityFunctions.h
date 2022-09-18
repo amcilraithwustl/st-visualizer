@@ -8,8 +8,7 @@
 #include "triangle-1.6/triangle.h"
 #include <iostream>
 #include "tetgen1.6.0/tetgen.h"
-
-
+#include <list>
 #include "JSONParser.h"
 
 
