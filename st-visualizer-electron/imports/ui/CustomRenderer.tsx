@@ -1,4 +1,5 @@
 import {
+  Button,
   Checkbox,
   FormControlLabel,
   FormGroup,
@@ -45,7 +46,13 @@ const downloadFile = (myData: Record<string, unknown>) => {
   URL.revokeObjectURL(href);
 };
 
-export const CustomRenderer = ({ data }: { data: datatype }) => {
+export const CustomRenderer = ({
+  data,
+  setData,
+}: {
+  data: datatype | undefined;
+  setData: React.Dispatch<React.SetStateAction<datatype | undefined>>;
+}) => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
   const [visuals, setVisuals] = useState({
@@ -85,6 +92,51 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
     const num = activeGroups.length;
     setColors(defaultColorArray.slice(0, num));
   }, [activeGroups.length]);
+
+  useEffect(() => {
+    const saveHandler = () => {
+      console.log("SAVING FILE");
+      const d = { activeGroups, activeSlices, colors, data, visuals };
+      downloadFile(d);
+    };
+    const stop = window.electronAPI.onSave(saveHandler);
+    return () => {
+      stop();
+    };
+  }, [activeGroups, activeSlices, colors, data, visuals]);
+
+  const openExisting = (
+    <Button variant="contained" component="label">
+      Open Existing
+      <input
+        hidden
+        multiple={false}
+        accept=".json"
+        type="file"
+        onChange={async (e) => {
+          const target = e.currentTarget as HTMLInputElement;
+          const files = target?.files;
+          const file = files?.[0];
+          if (!file) return;
+          const rawText = await file.text();
+          const d = JSON.parse(rawText);
+          setActiveGroups(d.activeGroups);
+          setActiveSlices(d.activeSlices);
+          setData(d.data);
+          setColors(d.colors);
+          setVisuals(d.visuals);
+        }}
+      />
+    </Button>
+  );
+
+  useEffect(() => {
+    const openHandler = () => {};
+    const stop = window.electronAPI.onOpen(openHandler);
+    return () => {
+      stop();
+    };
+  }, []);
 
   //Calculated Data
   const pointsBySlice = useMemo(
@@ -440,20 +492,11 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
     </Grid>
   );
 
-  useEffect(() => {
-    const saveHandler = () => {
-      console.log("SAVING FILE");
-      const d = { activeGroups, activeSlices, colors, data, visuals };
-      downloadFile(d);
-    };
-    const stop = window.electronAPI.onSave(saveHandler);
-    return () => {
-      stop();
-    };
-  }, [activeGroups, activeSlices, colors, data, visuals]);
-
-  return (
+  return !data ? (
+    openExisting
+  ) : (
     <Grid container style={{ width: "100%" }}>
+      {openExisting}
       <Grid item container xs={12} spacing={3}>
         <Grid item md={3} lg={2}>
           <Paper
