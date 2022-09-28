@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from "electron";
-import { ipcConstants, ipcHandlers } from "./ipcConstants";
+import { ipcConstants, ipcHandlers, ipcRenderConstants } from "./ipcConstants";
 
 const genHandler = <T extends keyof typeof ipcConstants>(name: T) => {
   type functionType = typeof ipcHandlers[typeof ipcConstants[T]];
@@ -15,6 +15,14 @@ const genHandler = <T extends keyof typeof ipcConstants>(name: T) => {
 const DeclaredAPI = {
   doCalculation: genHandler("doCalculation"),
   getFile: genHandler("getFile"),
+  onSave: (callback: Parameters<typeof ipcRenderer["on"]>[1]) => {
+    const r = ipcRenderer.on(ipcRenderConstants.saveFile, callback);
+    return () => r.removeListener(ipcRenderConstants.saveFile, callback);
+  },
+  onOpen: (callback: Parameters<typeof ipcRenderer["on"]>[1]) => {
+    const r = ipcRenderer.on(ipcRenderConstants.openFile, callback);
+    return () => r.removeListener(ipcRenderConstants.openFile, callback);
+  },
 };
 
 contextBridge.exposeInMainWorld("electronAPI", DeclaredAPI);

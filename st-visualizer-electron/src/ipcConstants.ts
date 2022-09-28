@@ -4,6 +4,12 @@ export const ipcConstants = {
   doCalculation: "doCalculation",
   getFile: "getFile",
 } as const;
+
+export const ipcRenderConstants = {
+  saveFile: "saveFile",
+  openFile: "openFile",
+};
+
 import path from "path";
 import { execFile } from "child_process";
 import _ from "lodash";

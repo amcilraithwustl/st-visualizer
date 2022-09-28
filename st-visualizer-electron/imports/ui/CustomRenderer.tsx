@@ -25,6 +25,26 @@ import { AreaDisplay } from "./AreaDisplay";
 import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
+//Modified from https://stackoverflow.com/questions/55613438/reactwrite-to-json-file-or-export-download-no-server
+const downloadFile = (myData: Record<string, unknown>) => {
+  // create file in browser
+  const fileName = "savedata";
+  const json = JSON.stringify(myData); //, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const href = URL.createObjectURL(blob);
+
+  // create "a" HTLM element with href to file
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = fileName + ".json";
+  document.body.appendChild(link);
+  link.click();
+
+  // clean up "a" element & remove ObjectURL
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href);
+};
+
 export const CustomRenderer = ({ data }: { data: datatype }) => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
@@ -419,6 +439,18 @@ export const CustomRenderer = ({ data }: { data: datatype }) => {
       </Grid>
     </Grid>
   );
+
+  useEffect(() => {
+    const saveHandler = () => {
+      console.log("SAVING FILE");
+      const d = { activeGroups, activeSlices, colors, data, visuals };
+      downloadFile(d);
+    };
+    const stop = window.electronAPI.onSave(saveHandler);
+    return () => {
+      stop();
+    };
+  }, [activeGroups, activeSlices, colors, data, visuals]);
 
   return (
     <Grid container style={{ width: "100%" }}>
