@@ -46,12 +46,16 @@ const downloadFile = (myData: Record<string, unknown>) => {
   URL.revokeObjectURL(href);
 };
 
+const uid = Math.random().toString();
+
 export const CustomRenderer = ({
   data,
   setData,
+  setPageHere,
 }: {
   data: datatype | undefined;
   setData: React.Dispatch<React.SetStateAction<datatype | undefined>>;
+  setPageHere: () => void;
 }) => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
@@ -88,6 +92,7 @@ export const CustomRenderer = ({
   }, [data?.featureNames]);
 
   const [colors, setColors] = useState(defaultColorArray);
+  const [opacity, setOpacity] = useState(1);
   useEffect(() => {
     const num = activeGroups.length;
     setColors(defaultColorArray.slice(0, num));
@@ -96,17 +101,17 @@ export const CustomRenderer = ({
   useEffect(() => {
     const saveHandler = () => {
       console.log("SAVING FILE");
-      const d = { activeGroups, activeSlices, colors, data, visuals };
+      const d = { activeGroups, activeSlices, colors, data, visuals, opacity };
       downloadFile(d);
     };
     const stop = window.electronAPI.onSave(saveHandler);
     return () => {
       stop();
     };
-  }, [activeGroups, activeSlices, colors, data, visuals]);
+  }, [activeGroups, activeSlices, colors, data, opacity, visuals]);
 
   const openExisting = (
-    <Button variant="contained" component="label">
+    <Button variant="contained" component="label" id={uid}>
       Open Existing
       <input
         hidden
@@ -120,23 +125,31 @@ export const CustomRenderer = ({
           if (!file) return;
           const rawText = await file.text();
           const d = JSON.parse(rawText);
-          setActiveGroups(d.activeGroups);
-          setActiveSlices(d.activeSlices);
-          setData(d.data);
-          setColors(d.colors);
-          setVisuals(d.visuals);
+          setData(d.data || data);
+          console.log(d);
+          setTimeout(() => {
+            //Placeholder to deal with sideffects of data change
+            setActiveGroups(d.activeGroups || activeGroups);
+            setActiveSlices(d.activeSlices || activeSlices);
+            setColors(d.colors || colors);
+            setVisuals(d.visuals || visuals);
+            setOpacity(d.opacity !== undefined ? d.opacity : opacity);
+          }, 1000);
         }}
       />
     </Button>
   );
 
   useEffect(() => {
-    const openHandler = () => {};
+    const openHandler = () => {
+      setPageHere();
+      document.getElementById(uid)?.click();
+    };
     const stop = window.electronAPI.onOpen(openHandler);
     return () => {
       stop();
     };
-  }, []);
+  }, [setPageHere]);
 
   //Calculated Data
   const pointsBySlice = useMemo(
@@ -268,7 +281,6 @@ export const CustomRenderer = ({
       )
       .map((pts, group) => ({ pts, group }));
   }, [data]);
-  const [opacity, setOpacity] = useState(1);
   const data2 = useMemo(
     () => ({
       volumes: volumes,

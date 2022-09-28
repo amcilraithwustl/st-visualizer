@@ -75,7 +75,13 @@ export const App = () => {
         </Hidden>
 
         <Hidden on={value === 2}>
-          <CustomRenderer data={data || undefined} setData={setData} />
+          <CustomRenderer
+            data={data || undefined}
+            setData={setData}
+            setPageHere={() => {
+              setValue(2);
+            }}
+          />
         </Hidden>
       </div>
     </div>
