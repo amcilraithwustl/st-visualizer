@@ -100,29 +100,9 @@ export const CustomRenderer = ({
   }, [activeGroups.length]);
 
   const camRef = useRef(null);
-  useEffect(() => {
-    const camera = (camRef.current as unknown)?.object as
-      | THREE.Camera
-      | undefined;
-    if (!camera) return;
-    const position = camera.position;
-    const scale = camera.scale;
-    const quaternion = camera.quaternion;
-    console.log(camera, position, scale, quaternion);
-    //TODO: Save this data in the file
-  });
 
   useEffect(() => {
     const saveHandler = () => {
-      const camera = ((camRef.current as unknown) as { object: unknown })
-        ?.object as THREE.Camera | undefined;
-
-      if (!camera) return;
-
-      const position = camera.position;
-      const scale = camera.scale;
-      const quaternion = camera.quaternion;
-      console.log(camera, position, scale, quaternion);
       const d = {
         activeGroups,
         activeSlices,
@@ -130,9 +110,6 @@ export const CustomRenderer = ({
         data,
         visuals,
         opacity,
-        position,
-        scale,
-        quaternion,
       };
       saveFile(d);
     };
