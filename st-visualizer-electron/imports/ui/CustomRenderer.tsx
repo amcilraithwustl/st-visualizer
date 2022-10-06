@@ -12,7 +12,7 @@ import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import _ from "lodash";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { CurvesDisplay } from "./CurvesDisplay";
 import "../api/threejsHeadeers";
@@ -343,11 +343,22 @@ export const CustomRenderer = ({
       opacity={opacity}
     />
   );
-
+  const camRef = useRef(null);
+  useEffect(() => {
+    const camera = (camRef.current as unknown)?.object as
+      | THREE.Camera
+      | undefined;
+    if (!camera) return;
+    const position = camera.position;
+    const scale = camera.scale;
+    const quaternion = camera.quaternion;
+    console.log(camera, position, scale, quaternion);
+    //TODO: Save this data in the file
+  });
   const renderSetup = (
     <>
       <ambientLight />
-      <OrbitControls makeDefault enableDamping={false} />
+      <OrbitControls makeDefault enableDamping={false} ref={camRef} />
       <GizmoHelper
         alignment="top-right" // widget alignment within scene
         margin={[80, 80]} // widget margins (X, Y)
