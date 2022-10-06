@@ -9,10 +9,10 @@ import {
   Typography,
 } from "@mui/material";
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import _ from "lodash";
 import * as React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { CurvesDisplay } from "./CurvesDisplay";
 import "../api/threejsHeadeers";
@@ -27,18 +27,11 @@ import { AreaDisplay } from "./AreaDisplay";
 import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
-//Modified from https://stackoverflow.com/questions/55613438/reactwrite-to-json-file-or-export-download-no-server
-const saveFile = (myData: Record<string, unknown>) => {
-  // create file in browser
-  const fileName = "savedata";
-  const json = JSON.stringify(myData); //, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const href = URL.createObjectURL(blob);
-
+const saveFileGeneric = (href: string, filename: string) => {
   // create "a" HTML element with href to file
   const link = document.createElement("a");
   link.href = href;
-  link.download = fileName + customFileExtension;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
 
@@ -47,7 +40,33 @@ const saveFile = (myData: Record<string, unknown>) => {
   URL.revokeObjectURL(href);
 };
 
+//Modified from https://stackoverflow.com/questions/55613438/reactwrite-to-json-file-or-export-download-no-server
+const saveFile = (myData: Record<string, unknown>) => {
+  // create file in browser
+  const fileName = "savedata";
+  const json = JSON.stringify(myData); //, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const href = URL.createObjectURL(blob);
+
+  saveFileGeneric(href, fileName + customFileExtension);
+};
+
 const uid = Math.random().toString();
+
+const Screengrabber = ({
+  passthrough,
+}: {
+  passthrough: (takeScreenshot: () => string) => void;
+}) => {
+  const { gl, scene, camera } = useThree();
+
+  const takeScreenshot = useCallback(() => {
+    gl.render(scene, camera);
+    return gl.domElement.toDataURL();
+  }, [camera, gl, scene]);
+  useEffect(() => passthrough(takeScreenshot), [takeScreenshot, passthrough]);
+  return <mesh />;
+};
 
 export const CustomRenderer = ({
   data,
@@ -353,8 +372,17 @@ export const CustomRenderer = ({
     />
   );
 
+  const canvas = useRef<(() => string) | null>(null);
+
+  const saveCanvas = React.useCallback(() => {
+    if (!canvas.current) return;
+    const url = canvas.current();
+    url && saveFileGeneric(url, "image");
+  }, []);
+
   const renderSetup = (
     <>
+      <Screengrabber passthrough={(v) => (canvas.current = v)} />
       <ambientLight />
       <OrbitControls makeDefault enableDamping={false} ref={camRef} />
       <GizmoHelper
@@ -518,6 +546,7 @@ export const CustomRenderer = ({
   ) : (
     <Grid container style={{ width: "100%" }}>
       {openExisting}
+      <Button onClick={saveCanvas}>Download Picture</Button>
       <Grid item container xs={12} spacing={3}>
         <Grid item md={3} lg={2}>
           <Paper
