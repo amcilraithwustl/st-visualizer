@@ -104,3 +104,5 @@ export const shrink = 0.007;
 export type active = { name: string; on: boolean };
 
 export const ipcCommands = { dialog: { openFile: "dialog:openFile" } } as const;
+
+export const customFileExtension = ".stvis";

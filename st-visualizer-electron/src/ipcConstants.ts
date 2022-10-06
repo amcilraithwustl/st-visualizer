@@ -34,10 +34,11 @@ export const ipcHandlers = {
       importState: importStateType;
     }
   ) => {
-    // const exePath = `C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer/x64/Debug/st-visualizer.exe`;
-    const exePath = app.isPackaged
-      ? path.resolve(process.resourcesPath, "./st-visualizer.exe")
-      : path.resolve(__dirname, "../../imports/static/st-visualizer.exe");
+    const staticsPath = app.isPackaged
+      ? path.resolve(process.resourcesPath)
+      : path.resolve(__dirname, "../../imports/static/");
+
+    const exePath = path.resolve(staticsPath, "./st-visualizer.exe");
 
     const split = transforms.map(
       (slice) =>

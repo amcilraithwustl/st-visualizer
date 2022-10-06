@@ -20,6 +20,7 @@ import {
   datatype,
   pointToVector,
   colors as defaultColorArray,
+  customFileExtension,
 } from "../api/constants";
 import { PointsDisplay } from "./PointsDisplay";
 import { AreaDisplay } from "./AreaDisplay";
@@ -27,17 +28,17 @@ import { VolumeDisplay } from "./VolumeDisplay";
 //Display List WebGL
 
 //Modified from https://stackoverflow.com/questions/55613438/reactwrite-to-json-file-or-export-download-no-server
-const downloadFile = (myData: Record<string, unknown>) => {
+const saveFile = (myData: Record<string, unknown>) => {
   // create file in browser
   const fileName = "savedata";
   const json = JSON.stringify(myData); //, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const href = URL.createObjectURL(blob);
 
-  // create "a" HTLM element with href to file
+  // create "a" HTML element with href to file
   const link = document.createElement("a");
   link.href = href;
-  link.download = fileName + ".json";
+  link.download = fileName + customFileExtension;
   document.body.appendChild(link);
   link.click();
 
@@ -98,11 +99,42 @@ export const CustomRenderer = ({
     setColors(defaultColorArray.slice(0, num));
   }, [activeGroups.length]);
 
+  const camRef = useRef(null);
+  useEffect(() => {
+    const camera = (camRef.current as unknown)?.object as
+      | THREE.Camera
+      | undefined;
+    if (!camera) return;
+    const position = camera.position;
+    const scale = camera.scale;
+    const quaternion = camera.quaternion;
+    console.log(camera, position, scale, quaternion);
+    //TODO: Save this data in the file
+  });
+
   useEffect(() => {
     const saveHandler = () => {
-      console.log("SAVING FILE");
-      const d = { activeGroups, activeSlices, colors, data, visuals, opacity };
-      downloadFile(d);
+      const camera = ((camRef.current as unknown) as { object: unknown })
+        ?.object as THREE.Camera | undefined;
+
+      if (!camera) return;
+
+      const position = camera.position;
+      const scale = camera.scale;
+      const quaternion = camera.quaternion;
+      console.log(camera, position, scale, quaternion);
+      const d = {
+        activeGroups,
+        activeSlices,
+        colors,
+        data,
+        visuals,
+        opacity,
+        position,
+        scale,
+        quaternion,
+      };
+      saveFile(d);
     };
     const stop = window.electronAPI.onSave(saveHandler);
     return () => {
@@ -116,7 +148,7 @@ export const CustomRenderer = ({
       <input
         hidden
         multiple={false}
-        accept=".json"
+        accept={customFileExtension}
         type="file"
         onChange={async (e) => {
           const target = e.currentTarget as HTMLInputElement;
@@ -343,18 +375,7 @@ export const CustomRenderer = ({
       opacity={opacity}
     />
   );
-  const camRef = useRef(null);
-  useEffect(() => {
-    const camera = (camRef.current as unknown)?.object as
-      | THREE.Camera
-      | undefined;
-    if (!camera) return;
-    const position = camera.position;
-    const scale = camera.scale;
-    const quaternion = camera.quaternion;
-    console.log(camera, position, scale, quaternion);
-    //TODO: Save this data in the file
-  });
+
   const renderSetup = (
     <>
       <ambientLight />
