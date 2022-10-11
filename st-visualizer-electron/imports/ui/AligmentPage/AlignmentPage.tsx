@@ -10,12 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
-import {
-  importStateType,
-  colTypes,
-  importPts,
-  datatype,
-} from "../../api/constants";
+import { importStateType, colTypes } from "../../api/constants";
 import _ from "lodash";
 export type transformType = {
   file: File;
@@ -78,12 +73,10 @@ export const AlignmentPage = ({
   setImportState,
   currentImages,
   setCurrentImages,
-  setData,
 }: {
   importState: importStateType;
   setImportState: React.Dispatch<React.SetStateAction<importStateType>>;
   setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
-  setData: React.Dispatch<React.SetStateAction<datatype>>;
   currentImages: transformType[];
 }): JSX.Element => {
   const sliceNames = _.compact(
@@ -427,46 +420,9 @@ export const AlignmentPage = ({
         </Grid>
       </Grid>
     );
-  const lengthsMatch = currentImages.length === numSlices;
 
   return (
     <Stack style={{ padding: 20 }}>
-      <Tooltip
-        title={
-          lengthsMatch
-            ? "Press to calculate volumes"
-            : "Alignment mismatch. " + numSlices + " slices required"
-        }
-      >
-        <Button
-          color={lengthsMatch ? "secondary" : "error"}
-          onClick={async () => {
-            if (lengthsMatch) {
-              console.log("BEGINNING");
-              const path = await window.electronAPI.doCalculation({
-                transforms: calcTransforms(currentImages),
-                importState,
-              });
-              if (!path) return;
-              console.log("PATH", path);
-              const result = await importPts(path);
-              if (!result) return;
-              console.log("RESULT", result);
-              setData(result);
-            } else {
-              console.log("DING DING");
-              const result = await importPts(
-                "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/st-visualizer-electron/.webpack/main/output.json"
-              );
-              if (!result) return;
-              console.log("RESULT", result);
-              setData(result);
-            }
-          }}
-        >
-          Run Final Calculation{lengthsMatch ? "" : " (Not Ready)"}
-        </Button>
-      </Tooltip>
       <Button variant="contained" component="label">
         Alignment Images ({numSlices} needed)
         <input

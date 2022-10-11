@@ -70,23 +70,26 @@ export function CustomStepper({
         >
           <Button
             color={lengthsMatch ? "secondary" : "error"}
-            onClick={async () => {
-              if (!lengthsMatch) return;
-
-              console.log("BEGINNING");
-              setLoading(true);
-              const path = await window.electronAPI.doCalculation({
-                transforms: calcTransforms(currentImages),
-                importState,
-              });
-              if (!path) return;
-              console.log("PATH", path);
-              const result = await importPts(path);
-              if (!result) return;
-              console.log("RESULT", result);
-              setData(result);
-              setLoading(false);
-              closeSelf();
+            onClick={() => {
+              setTimeout(async () => {
+                try {
+                  if (!lengthsMatch) throw "Lengths Don't Match";
+                  console.log("BEGINNING");
+                  setLoading(true);
+                  const path = await window.electronAPI.doCalculation({
+                    transforms: calcTransforms(currentImages),
+                    importState,
+                  });
+                  if (!path) throw "No Path " + path;
+                  const result = await importPts(path);
+                  if (!result) throw "No Result " + result;
+                  setData(result);
+                } catch (e) {
+                  console.error("ERROR", e);
+                }
+                closeSelf();
+                setLoading(false);
+              }, 0);
             }}
           >
             {lengthsMatch
@@ -148,7 +151,6 @@ export function CustomStepper({
       currentImages={currentImages}
       setCurrentImages={setCurrentImages}
       importState={importState}
-      setData={setData}
     />,
   ];
   const stepLabels = steps.map((label) => {
@@ -184,14 +186,19 @@ export function CustomStepper({
     <div
       style={{
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
-        alignContent: "center",
+        alignItems: "center",
         width: "100%",
-        padding: 10,
+        padding: 20,
         boxSizing: "border-box",
       }}
     >
       <CircularProgress color="secondary" />
+      <Typography variant={"h6"}>Computing Geometry....</Typography>
+      <Typography variant={"subtitle1"}>
+        This could take a few minutes. Thank you for your patience.
+      </Typography>
     </div>
   ) : (
     finalStepper
