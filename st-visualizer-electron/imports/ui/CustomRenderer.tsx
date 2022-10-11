@@ -71,11 +71,9 @@ const Screengrabber = ({
 export const CustomRenderer = ({
   data,
   setData,
-  setPageHere,
 }: {
   data: datatype | undefined;
   setData: React.Dispatch<React.SetStateAction<datatype | undefined>>;
-  setPageHere: () => void;
 }) => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
@@ -170,14 +168,13 @@ export const CustomRenderer = ({
 
   useEffect(() => {
     const openHandler = () => {
-      setPageHere();
       document.getElementById(uid)?.click();
     };
     const stop = window.electronAPI.onOpen(openHandler);
     return () => {
       stop();
     };
-  }, [setPageHere]);
+  }, []);
 
   //Calculated Data
   const pointsBySlice = useMemo(
