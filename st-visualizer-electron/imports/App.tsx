@@ -46,9 +46,12 @@ export const App = () => {
       }}
     >
       {dialog}
-      <Button onClick={() => setIsOpen(true)}>Import Data</Button>
       <div style={{ width: "100%" }}>
-        <CustomRenderer data={data || undefined} setData={setData} />
+        <CustomRenderer
+          setIsOpen={() => setIsOpen(true)}
+          data={data || undefined}
+          setData={setData}
+        />
       </div>
     </div>
   );

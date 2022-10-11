@@ -57,10 +57,14 @@ export function CustomStepper({
   const [loading, setLoading] = useState(false);
   const stepButton =
     activeStep === steps.length ? (
-      <>
-        <Typography sx={{ mt: 2, mb: 1 }}>
-          All steps completed - you&apos;re finished
-        </Typography>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+        }}
+      >
         <Tooltip
           title={
             lengthsMatch
@@ -101,41 +105,36 @@ export function CustomStepper({
                 " images uploaded)"}
           </Button>
         </Tooltip>
-      </>
+      </div>
     ) : (
-      <>
-        <Typography sx={{ marginTop: 2, marginBottom: 1 }}>
-          Step {activeStep + 1}
-        </Typography>
-        <div style={{ display: "flex", flexDirection: "row", paddingTop: 2 }}>
-          <Button
-            color="inherit"
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
-          <div style={{ flex: "1 1 auto" }} />
-          {activeStep === steps.length - 1 ? (
-            lengthsMatch ? (
-              <Button onClick={handleNext}>Finish</Button>
-            ) : (
-              <Button onClick={handleNext} disabled>
-                {"Run Final Calculation (" +
-                  currentImages.length +
-                  "/" +
-                  numSlices +
-                  " images uploaded)"}
-              </Button>
-            )
+      <div style={{ display: "flex", flexDirection: "row", paddingTop: 2 }}>
+        <Button
+          color="inherit"
+          disabled={activeStep === 0}
+          onClick={handleBack}
+          sx={{ mr: 1 }}
+        >
+          Back
+        </Button>
+        <div style={{ flex: "1 1 auto" }} />
+        {activeStep === steps.length - 1 ? (
+          lengthsMatch ? (
+            <Button onClick={handleNext}>Finish</Button>
           ) : (
-            <Button onClick={handleNext} disabled={numSlices === 0}>
-              Next
+            <Button onClick={handleNext} disabled>
+              {"Run Final Calculation (" +
+                currentImages.length +
+                "/" +
+                numSlices +
+                " images uploaded)"}
             </Button>
-          )}
-        </div>
-      </>
+          )
+        ) : (
+          <Button onClick={handleNext} disabled={numSlices === 0}>
+            Next
+          </Button>
+        )}
+      </div>
     );
 
   const stepContent = [
@@ -174,7 +173,6 @@ export function CustomStepper({
         overflowY: "auto",
         overflowX: "hidden",
         boxSizing: "border-box",
-        flexDirection: "column",
       }}
     >
       {stepButton}

@@ -71,9 +71,11 @@ const Screengrabber = ({
 export const CustomRenderer = ({
   data,
   setData,
+  setIsOpen,
 }: {
   data: datatype | undefined;
   setData: React.Dispatch<React.SetStateAction<datatype | undefined>>;
+  setIsOpen: () => void;
 }) => {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   //Data to display
@@ -117,28 +119,28 @@ export const CustomRenderer = ({
   }, [activeGroups.length]);
 
   const camRef = useRef(null);
+  const saveHandler = useCallback(() => {
+    const d = {
+      activeGroups,
+      activeSlices,
+      colors,
+      data,
+      visuals,
+      opacity,
+    };
+    saveFile(d);
+  }, [activeGroups, activeSlices, colors, data, opacity, visuals]);
 
   useEffect(() => {
-    const saveHandler = () => {
-      const d = {
-        activeGroups,
-        activeSlices,
-        colors,
-        data,
-        visuals,
-        opacity,
-      };
-      saveFile(d);
-    };
     const stop = window.electronAPI.onSave(saveHandler);
     return () => {
       stop();
     };
-  }, [activeGroups, activeSlices, colors, data, opacity, visuals]);
+  }, [saveHandler]);
 
   const openExisting = (
     <Button variant="contained" component="label" id={uid}>
-      Open Existing
+      Open Geometry
       <input
         hidden
         multiple={false}
@@ -508,30 +510,49 @@ export const CustomRenderer = ({
         <Typography variant={"h5"}>Groups</Typography>
         <FormGroup>
           {activeGroups.map((active, i) => (
-            <>
-              <FormControlLabel
-                key={i}
-                control={<Checkbox checked={active.on} />}
-                onChange={(_, checked) => {
-                  const oldData = activeGroups;
-                  oldData[i].on = checked;
-                  setActiveGroups([...oldData]);
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  width: 80,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                  paddingRight: 10,
                 }}
-                label={active.name}
-              />
-              <input
-                type="color"
-                value={colors[i] as string}
-                onChange={(e) => {
-                  const c = [...colors];
-                  c[i] = e.target.value;
-                  if (debounceRef.current) {
-                    clearTimeout(debounceRef.current);
-                  }
-                  debounceRef.current = setTimeout(() => setColors(c), 100);
-                }}
-              />
-            </>
+              >
+                <Checkbox
+                  checked={active.on}
+                  onChange={(_, checked) => {
+                    const oldData = activeGroups;
+                    oldData[i].on = checked;
+                    setActiveGroups([...oldData]);
+                  }}
+                />
+                <input
+                  style={{ width: 30 }}
+                  type="color"
+                  value={colors[i] as string}
+                  onChange={(e) => {
+                    const c = [...colors];
+                    c[i] = e.target.value;
+                    if (debounceRef.current) {
+                      clearTimeout(debounceRef.current);
+                    }
+                    debounceRef.current = setTimeout(() => setColors(c), 100);
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Typography>{active.name}</Typography>
+              </div>
+            </div>
           ))}
         </FormGroup>
       </Grid>
@@ -539,10 +560,21 @@ export const CustomRenderer = ({
   );
 
   return !data ? (
-    openExisting
+    <Grid container style={{ width: "100%" }}>
+      <Button variant="outlined" onClick={() => setIsOpen()}>
+        Import Data
+      </Button>
+      {openExisting}
+    </Grid>
   ) : (
     <Grid container style={{ width: "100%" }}>
+      <Button variant="outlined" onClick={() => setIsOpen()}>
+        Import Data
+      </Button>
       {openExisting}
+      <Button onClick={saveHandler} variant="outlined">
+        Save Geometry
+      </Button>
       <Button onClick={saveCanvas}>Download Picture</Button>
       <Grid item container xs={12} spacing={3}>
         <Grid item md={3} lg={2}>
