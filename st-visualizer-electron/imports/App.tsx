@@ -6,7 +6,8 @@ import { CustomStepper } from "./ui/Stepper";
 import { datatype, importStateType, blankImportState } from "./api/constants";
 import { CustomRenderer } from "./ui/CustomRenderer";
 import { transformType } from "./ui/AligmentPage/AlignmentPage";
-
+//TODO: Shading
+//TODO: More visualization combinations
 export const App = () => {
   const [data, setData] = useState<datatype | undefined>(undefined);
 
