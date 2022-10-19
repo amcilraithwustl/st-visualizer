@@ -23,19 +23,25 @@ export function GeometryCustom({
   // create a simple square shape. We duplicate the top left and bottom right
   // vertices because each vertex needs to appear once per triangle.
 
-  const ref = useRef<THREE.Mesh | null>(null);
-  useLayoutEffect(() => {
-    const temp = [...points, ...points.map((i) => i).reverse()]; //To ensure everything is double sided
-    ref.current?.geometry
-      .setFromPoints(temp)
+  const newVals = React.useMemo(() => {
+    // const temp = [...points, ...points.map((i) => i).reverse()]; //To ensure everything is double sided
+    return new THREE.BufferGeometry()
+      .setFromPoints(points)
       .translate(...translate)
       .scale(scale, scale, scale);
   }, [points, scale, translate]);
+
   return (
-    <mesh ref={ref}>
-      <bufferGeometry />
+    <mesh>
+      <bufferGeometry
+        attributes-position={newVals.attributes.position}
+        attribes-color={newVals.attributes.color}
+        attributes-normal={newVals.attributes.normal}
+        index={newVals.index}
+      ></bufferGeometry>
       <meshBasicMaterial
         color={color}
+        side={THREE.DoubleSide}
         opacity={opacity}
         transparent={opacity !== undefined}
       />
