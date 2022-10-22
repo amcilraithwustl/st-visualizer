@@ -37,6 +37,7 @@ export function GeometryCustom({
         opacity={opacity}
         transparent={opacity !== undefined}
         side={THREE.DoubleSide}
+        flatShading
       />
     </mesh>
   );
