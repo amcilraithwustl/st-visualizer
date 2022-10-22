@@ -2,6 +2,8 @@
 import * as THREE from "three";
 import * as React from "react";
 import { useLayoutEffect, useRef } from "react";
+import { Face } from "@mui/icons-material";
+import { ThreeElements } from "@react-three/fiber";
 
 export function GeometryCustom({
   color,
@@ -18,26 +20,23 @@ export function GeometryCustom({
   scale: number;
   translate: readonly [number, number, number];
 }) {
-  //create a blue LineBasicMaterial
-
-  // create a simple square shape. We duplicate the top left and bottom right
-  // vertices because each vertex needs to appear once per triangle.
-
-  const ref = useRef<THREE.Mesh | null>(null);
-  useLayoutEffect(() => {
-    const temp = [...points, ...points.map((i) => i).reverse()]; //To ensure everything is double sided
-    ref.current?.geometry
-      .setFromPoints(temp)
+  const g = React.useMemo(() => {
+    const a = new THREE.BufferGeometry();
+    a.setFromPoints(points)
       .translate(...translate)
-      .scale(scale, scale, scale);
+      .scale(scale, scale, scale)
+      .computeVertexNormals();
+    return a;
   }, [points, scale, translate]);
+
   return (
-    <mesh ref={ref}>
-      <bufferGeometry />
-      <meshBasicMaterial
+    <mesh>
+      <bufferGeometry attributes={g.attributes} />
+      <meshStandardMaterial
         color={color}
         opacity={opacity}
         transparent={opacity !== undefined}
+        side={THREE.DoubleSide}
       />
     </mesh>
   );
