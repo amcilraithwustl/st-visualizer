@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform/out/build/x64-debug/CMakeFiles/CrossPlatform.dir/embed.manifest"
