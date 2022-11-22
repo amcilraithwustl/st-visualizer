@@ -2,7 +2,7 @@
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
 #include "tetgen1.6.0/tetgen.h"
-#include <ranges>
+#include <string.h>
 
 #define LOADING_SIZE 10
 #define DEBUG true
@@ -75,7 +75,7 @@ inline std::vector<int> complementByReference(const std::vector<int>& source, co
         }
         if(!wasFound) accumulator.push_back(item);
     }
-    std::ranges::sort(accumulator);
+    std::sort(accumulator.begin(), accumulator.end());
     return accumulator;
 }
 
@@ -83,8 +83,8 @@ inline std::vector<int> complementByReference(const std::vector<int>& source, co
 //O(nlog(n)+mlog(m) operation, but every usage n<=m<=4, so probably not a problem
 inline std::vector<int> complement(std::vector<int> source, std::vector<int> target)
 {
-    std::ranges::sort(source);
-    std::ranges::sort(target);
+    std::sort(source.begin(), source.end());
+    std::sort(target.begin(), target.end());
 
     std::vector<int> accumulator;
     accumulator.reserve(source.size());
@@ -458,7 +458,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                     for(auto j = 0; j < endpoint_vertices.size(); j++)
                     {
                         std::vector tri = {edge.first, edge.second, endpoints[j]};
-                        std::ranges::sort(tri);
+                        std::sort(tri.begin(), tri.end());
 
                         auto& hashValue = bdFaceHash.at(tri[0], tri[1], tri[2]);
                         endpoint_vertices[j] = hashValue;
@@ -508,7 +508,7 @@ inline std::tuple<std::vector<Eigen::Matrix<float, 3, 1, 0>>, std::vector<std::v
                                points_by_index[p1] - points_by_index[edge.first],
                                points_by_index[p2] - points_by_index[p1]) < 0)
                 {
-                    std::ranges::reverse(new_segment_vertices_set_ordered);
+                    std::reverse(new_segment_vertices_set_ordered.begin(), new_segment_vertices_set_ordered.end());
                 }
 
                 segments_by_index.push_back(new_segment_vertices_set_ordered);
@@ -540,7 +540,7 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
             in.pointlist[3 * i + j] = static_cast<double>(pts.col(i)(j));
         }
     }
-    tetrahedralize(_strdup(
+    tetrahedralize(strdup(
                        "z" //Start arrays at zero
                        // "V" //Verbose for debugging
                        "Q" //Quiet for production
@@ -581,7 +581,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     auto reversed_second_matches = subset(segs, second_index_match);
     for(auto& seg : reversed_second_matches)
     {
-        std::ranges::reverse(seg);
+        std::reverse(seg.begin(), seg.end());
     }
     auto matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches);
     //All these segements start with the target material

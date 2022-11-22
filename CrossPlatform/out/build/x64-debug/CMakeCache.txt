@@ -201,6 +201,9 @@ CrossPlatform_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 CrossPlatform_SOURCE_DIR:STATIC=C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform
 
+//The directory containing a CMake configuration file for Eigen3.
+Eigen3_DIR:PATH=Eigen3_DIR-NOTFOUND
+
 //Value Computed by CMake
 ST-Visualizer_BINARY_DIR:STATIC=C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform/out/build/x64-debug
 

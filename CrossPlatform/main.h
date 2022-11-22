@@ -2,7 +2,6 @@
 // or project specific include files.
 
 #pragma once
-
 #include <iostream>
 #include <cmath>
 #include <fstream>
