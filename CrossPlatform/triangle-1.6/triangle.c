@@ -1,11 +1,24 @@
 //Added by Aiden McIlraith from this link: https://blog.fearcat.in/a?ID=00550-7fd7fc36-57e9-4126-924d-0d52de4c64b2
 //Modifications also made from this: https://stackoverflow.com/questions/44558793/triangle-library-with-vs2015-x64
-#define CUSTOM_LONG __int64
+
+
+#if defined(_WIN32) || defined(WIN32) 
+
+#define OS_Windows
+
+#endif
+
+
+#ifdef OS_Windows
+    #define CUSTOM_LONG __int64
+#else
+    #define CUSTOM_LONG long
+#endif
 
 #define NO_TIMER
 // #define CPU86
 #define TRILIBRARY
-#define SELF_CHECK //FOR DEBUGGING ONLY
+//#define SELF_CHECK //FOR DEBUGGING ONLY
 
 
 /*****************************************************************************/

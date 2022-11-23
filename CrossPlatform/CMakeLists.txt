@@ -13,6 +13,8 @@ add_subdirectory(tetgen1.6.0)
 add_executable (stvisualizer "main.cpp" "main.h" 
 	"Contour2D.cpp" "Contour2D.cpp" "GrowAndCover.cpp" "ImportFunctions.cpp" "UtilityFunctions.cpp"
 	"Contour2D.h"   "Contour2D.h"   "GrowAndCover.h"   "ImportFunctions.h"   "UtilityFunctions.h"
+
+	"triangle-1.6/triangle.h" "triangle-1.6/triangle.c"
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

@@ -31,7 +31,7 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 22,
+				"line" : 24,
 				"parent" : 0
 			}
 		]
@@ -64,6 +64,27 @@
 				3,
 				4,
 				5
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g  "
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 2,
+					"isSystem" : true,
+					"path" : "/home/amcilra/.vs/CrossPlatform/eigen-3.4.0"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				11
 			]
 		}
 	],
@@ -100,7 +121,8 @@
 				2,
 				3,
 				4,
-				5
+				5,
+				11
 			]
 		},
 		{
@@ -111,7 +133,8 @@
 				6,
 				7,
 				8,
-				9
+				9,
+				10
 			]
 		}
 	],
@@ -171,6 +194,17 @@
 			"backtrace" : 1,
 			"path" : "UtilityFunctions.h",
 			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "triangle-1.6/triangle.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "triangle-1.6/triangle.c",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "EXECUTABLE"
