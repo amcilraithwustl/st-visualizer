@@ -38,7 +38,7 @@ std::vector<string> splitString(const string& s, const string& delimiter)
 
 std::vector<coord> zip(std::vector<float> top, std::vector<float> bottom)
 {
-    if(top.size() != bottom.size()) throw std::exception("Size Mismatch");
+    if(top.size() != bottom.size()) throw ("Size Mismatch");
     std::vector<coord> a;
     a.reserve(top.size());
     for(size_t i = 0; i < top.size(); i++)

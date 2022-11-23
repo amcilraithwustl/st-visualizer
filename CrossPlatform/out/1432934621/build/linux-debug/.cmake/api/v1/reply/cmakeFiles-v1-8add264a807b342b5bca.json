@@ -142,6 +142,9 @@
 		{
 			"isGenerated" : true,
 			"path" : "out/build/linux-debug/eigen-3.4.0/Eigen3Targets.cmake"
+		},
+		{
+			"path" : "tetgen1.6.0/CMakeLists.txt"
 		}
 	],
 	"kind" : "cmakeFiles",
