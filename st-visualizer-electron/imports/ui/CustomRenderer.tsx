@@ -166,9 +166,10 @@ export const CustomRenderer = ({
       data,
       visuals,
       opacity,
+      doClusters,
     };
     saveFile(d);
-  }, [activeGroups, activeSlices, colors, data, opacity, visuals]);
+  }, [activeGroups, activeSlices, colors, data, opacity, visuals, doClusters]);
 
   useEffect(() => {
     const stop = window.electronAPI.onSave(saveHandler);
@@ -201,6 +202,7 @@ export const CustomRenderer = ({
             setColors(d.colors || colors);
             setVisuals(d.visuals || visuals);
             setOpacity(d.opacity !== undefined ? d.opacity : opacity);
+            setDoClusters(!!d.doClusters);
           }, 1000);
         }}
       />
