@@ -144,7 +144,7 @@ export const CustomRenderer = ({
   useEffect(() => {
     setActiveGroups(
       featureNames?.map((v, i) => ({
-        name: v,
+        name: i + 1 !== featureNames.length ? v : "No Tissue",
         on: i + 1 !== featureNames.length,
       })) || []
     );
