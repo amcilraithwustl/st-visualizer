@@ -69,7 +69,7 @@ const Screengrabber = ({
 };
 
 export const CustomRenderer = ({
-  data,
+  data: data,
   setData,
   setIsOpen,
 }: {
@@ -86,30 +86,69 @@ export const CustomRenderer = ({
     points: true,
   });
 
+  const doClusters = true;
+
+  const sliceNames = useMemo(
+    () => (doClusters ? data?.sliceNames : data?.sliceNames),
+    [data?.sliceNames, doClusters]
+  );
+  const slices = useMemo(() => (doClusters ? data?.slices : data?.slices), [
+    data?.slices,
+    doClusters,
+  ]);
+  const ctrs2Dvals = useMemo(
+    () => (doClusters ? data?.ctrs2Dclusters : data?.ctrs2Dvals),
+    [data?.ctrs2Dclusters, data?.ctrs2Dvals, doClusters]
+  );
+  const numFeatures = useMemo(
+    () => (doClusters ? data?.nClusters : data?.nat),
+    [data?.nClusters, data?.nat, doClusters]
+  );
+  const tris2Dvals = useMemo(
+    () => (doClusters ? data?.tris2Dclusters : data?.tris2Dvals),
+    [data?.tris2Dclusters, data?.tris2Dvals, doClusters]
+  );
+  const ctrs3Dvals = useMemo(
+    () => (doClusters ? data?.ctrs3Dclusters : data?.ctrs3Dvals),
+    [data?.ctrs3Dclusters, data?.ctrs3Dvals, doClusters]
+  );
+  const featureNames = useMemo(
+    () =>
+      doClusters
+        ? [...new Array(data?.nClusters)].map((v, i) => "" + i)
+        : data?.featureNames,
+    [data?.featureNames, data?.nClusters, doClusters]
+  );
+  const values = useMemo(() => (doClusters ? data?.clusters : data?.values), [
+    data?.clusters,
+    data?.values,
+    doClusters,
+  ]);
+
   //Display User Settings
   const [activeSlices, setActiveSlices] = useState<
     { name: string; on: boolean }[]
   >([]);
   useEffect(() => {
     setActiveSlices(
-      data?.sliceNames.map((v) => ({
+      sliceNames?.map((v) => ({
         name: v,
         on: true,
       })) || []
     );
-  }, [data?.sliceNames]);
+  }, [sliceNames]);
 
   const [activeGroups, setActiveGroups] = useState<
     { name: string; on: boolean }[]
   >([]);
   useEffect(() => {
     setActiveGroups(
-      data?.featureNames.map((v, i) => ({
+      featureNames?.map((v, i) => ({
         name: v,
-        on: i + 1 !== data?.featureNames.length,
+        on: i + 1 !== featureNames.length,
       })) || []
     );
-  }, [data?.featureNames]);
+  }, [featureNames]);
 
   const [colors, setColors] = useState(defaultColorArray);
   const [opacity, setOpacity] = useState(1);
@@ -177,21 +216,20 @@ export const CustomRenderer = ({
       stop();
     };
   }, []);
-
   //Calculated Data
   const pointsBySlice = useMemo(
     () =>
-      data?.slices.map((slice) =>
+      slices?.map((slice) =>
         slice.map((pt) => new THREE.Vector3(pt[0], pt[1], pt[2]))
       ),
-    [data?.slices]
+    [slices]
   );
 
   const pointsData = useMemo(() => {
     const ptsByValue =
       pointsBySlice &&
-      data?.values
-        .map(
+      values
+        ?.map(
           (slice) => slice.map((ptVals) => ptVals.indexOf(_.max(ptVals) || -1)) //Get all the max indices
         )
         .map((slice, sliceIndex) =>
@@ -209,15 +247,16 @@ export const CustomRenderer = ({
         pts: entry[1].map((v) => v.pt),
       })
     );
-  }, [activeSlices, data?.values, pointsBySlice]);
+  }, [activeSlices, values, pointsBySlice]);
 
   const center = useMemo(() => {
-    const totalNumberOfPoints = pointsBySlice?.reduce(
+    if (!pointsBySlice) return undefined;
+    const totalNumberOfPoints = pointsBySlice.reduce(
       (p, slice) => p + slice.length,
       0
     );
     return pointsBySlice
-      ?.reduce(
+      .reduce(
         (prev, slice) =>
           prev.add(
             slice.reduce((p, c) => p.add(c), new THREE.Vector3(0, 0, 0))
@@ -228,8 +267,8 @@ export const CustomRenderer = ({
   }, [pointsBySlice]);
 
   const curvesFinalData = useMemo(() => {
-    if (!data) return [];
-    const ctrs = data.ctrs2Dvals
+    if (!ctrs2Dvals) return [];
+    const ctrs = ctrs2Dvals
       .slice(1, -1)
       .filter((_, i) => activeSlices[i]?.on)
       .map((slice) =>
@@ -252,14 +291,13 @@ export const CustomRenderer = ({
           slice.forEach((ctr) => acc[ctr.val].push(...ctr.segments));
           return acc;
         },
-        [...new Array(data.nat)].map(() => [] as THREE.Vector3[])
+        [...new Array(numFeatures)].map(() => [] as THREE.Vector3[])
       )
       .map((pts, group) => ({ pts, group }));
-  }, [activeSlices, data]);
-
+  }, [activeSlices, ctrs2Dvals, numFeatures]);
   const areaDisplayData = React.useMemo(() => {
-    if (!data) return [];
-    const ctrs = data.tris2Dvals
+    if (!tris2Dvals) return [];
+    const ctrs = tris2Dvals
       .slice(1, -1)
       .filter((_, i) => activeSlices[i]?.on)
       .map((slice) => ({
@@ -268,7 +306,9 @@ export const CustomRenderer = ({
         vals: slice[2],
       }));
 
-    const finalData = [...new Array(data.nat)].map(() => [] as THREE.Vector3[]);
+    const finalData = [...new Array(numFeatures)].map(
+      () => [] as THREE.Vector3[]
+    );
 
     ctrs.flatMap((slice) =>
       slice.tris
@@ -281,10 +321,9 @@ export const CustomRenderer = ({
         )
     );
     return finalData.map((pts, group) => ({ pts, group }));
-  }, [activeSlices, data]);
+  }, [activeSlices, numFeatures, tris2Dvals]);
 
   const volumes = useMemo(() => {
-    if (!data) return [];
     function createPolygon(poly: THREE.Vector3[]) {
       //Assuming the polygon is a star
       const centerPoint = poly
@@ -295,8 +334,8 @@ export const CustomRenderer = ({
         return [poly[i], poly[(i + 1) % poly.length], centerPoint];
       });
     }
-
-    return data.ctrs3Dvals
+    if (!ctrs3Dvals) return [];
+    return ctrs3Dvals
       .map((val) => ({
         points: val[0].map((p) => pointToVector(p)),
         rings: val[1],
@@ -307,7 +346,7 @@ export const CustomRenderer = ({
         )
       )
       .map((pts, group) => ({ pts, group }));
-  }, [data]);
+  }, [ctrs3Dvals]);
   const data2 = useMemo(
     () => ({
       volumes: volumes,

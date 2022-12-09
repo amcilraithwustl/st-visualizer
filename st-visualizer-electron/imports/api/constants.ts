@@ -12,14 +12,14 @@ export type datatype = {
   featureCols: number[];
   ptClusIndex: number;
   ctrs3Dvals: [point[], number[][]][]; //Value, [points, point indices per face]
-  tris2Dclusters: unknown[];
-  ctrs3Dclusters: unknown[];
-  nClusters: number;
-  ctrs2Dclusters: unknown[];
   ctrs2Dvals: [point[], [number, number][]][][]; //Slice, ctr, (points, segments)
   tris2Dvals: [point[], number[][], number[]][];
   ptValIndex: number;
-  clusters: unknown[];
+  nClusters: number;
+  clusters: number[][][];
+  ctrs3Dclusters: [point[], number[][]][];
+  ctrs2Dclusters: [point[], [number, number][]][][];
+  tris2Dclusters: [point[], number[][], number[]][];
 };
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
