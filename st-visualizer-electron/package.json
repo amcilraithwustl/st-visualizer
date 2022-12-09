@@ -1,6 +1,6 @@
 {
   "name": "st-visualizer",
-  "productName": "Spatial Transcriptome Visualizer",
+  "productName": "st-visualizer",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".webpack/main",
@@ -20,7 +20,7 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "extraResource":["./imports/static/*"]
+        "extraResource":["./imports/static/st-visualizer.exe"]
       },
       "makers": [
         {
@@ -28,13 +28,6 @@
           "config": {
             "name": "st-visualizer"
           }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin",
-            "win32"
-          ]
         },
         {
           "name": "@electron-forge/maker-deb",
@@ -46,9 +39,9 @@
         }
       ],
       "plugins": [
-        [
-          "@electron-forge/plugin-webpack",
-          {
+        {
+          "name": "@electron-forge/plugin-webpack",
+          "config": {
             "mainConfig": "./webpack.main.config.js",
             "renderer": {
               "config": "./webpack.renderer.config.js",
@@ -64,7 +57,7 @@
               ]
             }
           }
-        ]
+        }
       ]
     }
   },

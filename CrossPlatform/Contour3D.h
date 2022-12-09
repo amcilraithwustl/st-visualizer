@@ -2,7 +2,7 @@
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
 #include "tetgen1.6.0/tetgen.h"
-#include <string.h>
+//#include <string.h>
 
 #define LOADING_SIZE 10
 #define DEBUG true
