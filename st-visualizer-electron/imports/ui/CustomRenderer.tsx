@@ -86,7 +86,7 @@ export const CustomRenderer = ({
     points: true,
   });
 
-  const doClusters = true;
+  const [doClusters, setDoClusters] = useState(false);
 
   const sliceNames = useMemo(
     () => (doClusters ? data?.sliceNames : data?.sliceNames),
@@ -613,6 +613,9 @@ export const CustomRenderer = ({
       {openExisting}
       <Button onClick={saveHandler} variant="outlined">
         Save Geometry
+      </Button>
+      <Button onClick={() => setDoClusters((e) => !e)}>
+        {doClusters ? "View Features" : "View Clusters"}
       </Button>
       <Button onClick={saveCanvas}>Download Picture</Button>
       <Grid item container xs={12} spacing={3}>
