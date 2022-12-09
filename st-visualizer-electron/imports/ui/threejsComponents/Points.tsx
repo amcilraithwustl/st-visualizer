@@ -29,7 +29,7 @@ export function Points({
   return (
     <points ref={ref2}>
       <bufferGeometry />
-      <pointsMaterial color={color} size={0.1} />
+      <pointsMaterial color={color} size={0.1} sizeAttenuation={true} />
     </points>
   );
 }
