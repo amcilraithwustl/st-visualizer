@@ -167,6 +167,7 @@
     <ClInclude Include="Contour3D.h" />
     <ClInclude Include="ImportFunctions.h" />
     <ClInclude Include="JSONParser.h" />
+    <ClInclude Include="Stats.h" />
     <ClInclude Include="tetgen1.6.0\tetgen.h" />
     <ClInclude Include="triangle-1.6\triangle.h" />
     <ClInclude Include="UtilityFunctions.h" />

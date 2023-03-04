@@ -74,6 +74,9 @@
     <ClInclude Include="tetgen1.6.0\tetgen.h">
       <Filter>Header Files\Libraries</Filter>
     </ClInclude>
+    <ClInclude Include="Stats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\CRC_112C1_cell_type_coord_allspots.tsv">
