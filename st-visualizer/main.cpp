@@ -80,15 +80,11 @@ std::vector<T> flatten(const std::vector<std::vector<T>>& input)
 
 int main(int argc, char* argv[])
 {
-	std::cout << triArea({ 0,0,0 }, { 1,0,0 }, { 0,1,0 }) << std::endl;
-	std::cout << triArea({ 1,1,0 }, { 1,0,0 }, { 0,1,0 }) << std::endl;
-	std::cout << triArea({ 0,0,0 }, { 1,0,0 }, { 0,1,1 }) << std::endl;
-	return 0;
 	std::vector<std::string> a(argv, argv + argc);
 	//args should be json of the relevant arguments (for now)
-	auto tempFile = json::parse(a[1]);
-	auto alignmentFile = a[2];
-	auto target = a[3];
+	auto tempFile = json::parse(R"({"fileName":"C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\Pictures\\AlignmentImages\\NMKimage\\NMK_20201201_cell_type_coord_allspots.tsv","shrink":0,"sliceNames":["NMK_F_U1","NMK_F_U2","NMK_F_U3","NMK_F_U4"],"featureCols":[6,7,8,9,10,11,12,13,14,15],"sliceIndex":1,"tissueIndex":2,"rowIndex":3,"colIndex":4,"clusterIndex":5,"zDistance":100})");//json::parse(a[1]);
+	auto alignmentFile = "C:\\Users\\Aiden McIlraith\\Documents\\GitHub\\st-visualizer\\NMK_F_transformation_pt_coord.csv";//a[2];
+	auto target = "./test.txt";//a[3];
 
 	float shrink = tempFile.at("shrink").get<float>();
 	std::cout << "shrink" << shrink << std::endl;
@@ -248,19 +244,21 @@ int main(int argc, char* argv[])
 	ret["shrink"] = shrink; //shrink,
 	ret["clusters"] = results.clusters; //clusters,
 	ret["slices"] = slices; //slices,
-	ret["ptClusIndex"] = ptClusIndex; //ptClusIndex,
-	ret["ctrs2Dvals"] = convertCtrs(ctrs2dVals); //ctrs2Dvals,
-	ret["ctrs3Dvals"] = convert3D(ctrs3dVals); //ctrs3Dvals,
-	ret["featureNames"] = results.names; //featureNames,
-	ret["ptValIndex"] = ptValIndex; //ptValIndex,
-	ret["tris2Dvals"] = convertTris(tris2dVals); //tris2Dvals
-	ret["ctrs2Dclusters"] = convertCtrs(ctrs2dclusters); //ctrs2Dclusters,
-	ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters); //ctrs3Dclusters,
-	ret["nClusters"] = results.clusters[0][0].size(); //nClusters,
-	ret["tris2Dclusters"] = convertTris(tris2dclusters); //tris2Dclusters,
-	ret["featureCols"] = featureCols; //featureCols,
 	ret["sliceNames"] = sliceNames; //sliceNames
 	ret["values"] = results.values;
+	ret["featureNames"] = results.names; //featureNames,
+	ret["featureCols"] = featureCols; //featureCols,
+	ret["ptValIndex"] = ptValIndex; //ptValIndex,
+	ret["ctrs2Dvals"] = convertCtrs(ctrs2dVals); //ctrs2Dvals,
+	ret["tris2Dvals"] = convertTris(tris2dVals); //tris2Dvals
+	ret["ctrs3Dvals"] = convert3D(ctrs3dVals); //ctrs3Dvals,
+	ret["ctrsSurfaceAreaVals"] = getSurfaceAreas(ctrs3dVals);
+	ret["ptClusIndex"] = ptClusIndex; //ptClusIndex,
+	ret["nClusters"] = results.clusters[0][0].size(); //nClusters,
+	ret["ctrs2Dclusters"] = convertCtrs(ctrs2dclusters); //ctrs2Dclusters,
+	ret["tris2Dclusters"] = convertTris(tris2dclusters); //tris2Dclusters,
+	ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters); //ctrs3Dclusters,
+	ret["ctrsSurfaceAreaClusters"] = getSurfaceAreas(ctrs3dClusters);
 
 	std::ofstream f(target);
 	f << ret;
