@@ -62,7 +62,15 @@ std::vector<double> getVolumes(std::vector<std::pair<std::vector<Eigen::Vector3f
 }
 
 
-int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector<int>>faces) {
+struct countComponentsResult {
+	int componentCount;
+	std::vector<std::vector<size_t>> pointsByComponent;
+	std::vector<std::vector<size_t>> facesByComponent;
+	std::vector<int> componentsByPoint;
+	std::vector<int> componentsByFace;
+};
+
+countComponentsResult countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector<int>>faces) {
 
 	std::map<size_t, std::vector<size_t>> facesByPoints;
 	for (size_t i = 0; i < faces.size(); i++) {
@@ -80,8 +88,8 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 
 
 	//-1 means unvisited
-	std::vector<int> visitedPoints(points.size(), -1);
-	std::vector<int> visitedFaces(faces.size(), -1);
+	std::vector<int> componentsByPoint(points.size(), -1);
+	std::vector<int> componentsByFace(faces.size(), -1);
 
 
 	//This tracks which run of the depth first search we are on.
@@ -96,8 +104,8 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 	// past the end of the vector and it is unvisited to start with
 	while (startingPoint < points.size()) {
 		//If it is unvisited, find an unvisited point and rerun from the top. This costs O(n) overall.
-		if (visitedPoints[startingPoint] != -1) {
-			while (startingPoint < points.size() && visitedPoints[startingPoint] != -1) {
+		if (componentsByPoint[startingPoint] != -1) {
+			while (startingPoint < points.size() && componentsByPoint[startingPoint] != -1) {
 				startingPoint++;
 			}
 			continue;
@@ -109,7 +117,7 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 		std::stack<size_t> pendingPoints;
 
 		//Set up the initial state by marking and queueing starting point
-		visitedPoints[startingPoint] = currentCluster;
+		componentsByPoint[startingPoint] = currentCluster;
 		pendingPoints.push(startingPoint);
 
 		// Alternate doing lists until they are both empty
@@ -121,11 +129,11 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 
 				//Mark all connected points and add them to the stack
 				for (const auto& point : faces[top]) {
-					if (visitedPoints[point] == -1) {
-						visitedPoints[point] = currentCluster;
+					if (componentsByPoint[point] == -1) {
+						componentsByPoint[point] = currentCluster;
 						pendingPoints.push(point);
 					}
-					else if (visitedPoints[point] != currentCluster) {
+					else if (componentsByPoint[point] != currentCluster) {
 						std::cout << "Found error in cluster counting. Results will be innaccurate" << std::endl;
 					}
 				}
@@ -139,11 +147,11 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 
 				//Mark all connected faces and add them to the stack
 				for (const auto& face : facesByPoints[top]) {
-					if (visitedFaces[face] == -1) {
-						visitedFaces[face] = currentCluster;
+					if (componentsByFace[face] == -1) {
+						componentsByFace[face] = currentCluster;
 						pendingFaces.push(face);
 					}
-					else if (visitedFaces[face] != currentCluster) {
+					else if (componentsByFace[face] != currentCluster) {
 						std::cout << "Found error in cluster counting. Results will be innaccurate" << std::endl;
 					}
 				}
@@ -152,25 +160,35 @@ int countComponents(std::vector<Eigen::Vector3f> points, std::vector<std::vector
 		}
 		currentCluster++;
 	}
-	for (const auto& point : visitedPoints) {
-		if (point == -1) 
+	for (const auto& point : componentsByPoint) {
+		if (point == -1)
 			throw "Found wrong";
 	}
-	for (const auto& face : visitedFaces) {
-		if (face == -1) 
+	for (const auto& face : componentsByFace) {
+		if (face == -1)
 			throw "Found wrong";
 	}
-	return currentCluster;
+	countComponentsResult res;
+	res.componentCount = currentCluster;
+	res.facesByComponent = std::vector(currentCluster, std::vector<size_t>({}));
+	for (size_t face = 0; face < faces.size(); face++) {
+		res.facesByComponent[componentsByFace[face]].push_back(face);
+	}
+
+	res.pointsByComponent = std::vector(currentCluster, std::vector<size_t>({}));
+	for (size_t point = 0; point < faces.size(); point++) {
+		res.pointsByComponent[componentsByPoint[point]].push_back(point);
+	}
+	res.componentsByPoint = componentsByPoint;
+	res.componentsByFace = componentsByFace;
+	return res;
 }
 
-std::vector<double> countAllComponents(std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> info) {
-	std::vector<double> volumes = {};
-	for (const auto& elem : info) {
-		const auto& pts = elem.first;
-		const auto& faces = elem.second;
-		double volume = 0;
-		countComponents(pts, faces);
-		volumes.push_back(abs(volume));
+std::vector<countComponentsResult> countAllComponents(std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> featureMesh) {
+	std::vector<countComponentsResult> volumes = {};
+	for (const auto& [pts, faces] : featureMesh) {
+		auto components = countComponents(pts, faces);
+		volumes.push_back(components);
 	}
 	return volumes;
 }
