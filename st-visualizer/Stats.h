@@ -176,19 +176,55 @@ countComponentsResult countComponents(std::vector<Eigen::Vector3f> points, std::
 	}
 
 	res.pointsByComponent = std::vector(currentCluster, std::vector<size_t>({}));
-	for (size_t point = 0; point < faces.size(); point++) {
+	for (size_t point = 0; point < points.size(); point++) {
 		res.pointsByComponent[componentsByPoint[point]].push_back(point);
 	}
 	res.componentsByPoint = componentsByPoint;
 	res.componentsByFace = componentsByFace;
 	return res;
 }
+struct numVEF {
+	unsigned int numEdges;
+	unsigned int numFaces;
+	unsigned int numVertices;
+};
+std::vector<numVEF> countEdgesFacesVerticesPerComponent(countComponentsResult components, std::vector<std::vector<int>>faces) {
+	std::vector<numVEF> ret;
+	for (int c = 0; c < components.componentCount; c++) {
 
-std::vector<countComponentsResult> countAllComponents(std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> featureMesh) {
-	std::vector<countComponentsResult> volumes = {};
+		//Vertices in component. Trivial
+		auto numVertices = components.pointsByComponent[c].size();
+
+		//Faces in component. Trivial
+		auto numFaces = components.facesByComponent[c].size();
+
+		//Edges. Count around each face in component, divide by two;
+		auto numEdges = 0;
+		for (const auto& face : components.facesByComponent[c]) {
+			numEdges += faces[face].size();
+		}
+
+		numVEF temp = {};
+		temp.numVertices = numVertices;
+		temp.numFaces = numFaces;
+		temp.numEdges = numEdges / 2;
+		ret.push_back(temp);
+	}
+
+	return ret;
+}
+
+//Returns the euler characteristic for each component for each featuremesh as nested vectors of ints
+std::vector<std::vector<int>> countAllComponents(std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> featureMesh) {
+	std::vector<std::vector<int>> volumes = {};
 	for (const auto& [pts, faces] : featureMesh) {
 		auto components = countComponents(pts, faces);
-		volumes.push_back(components);
+		auto vefList = countEdgesFacesVerticesPerComponent(components, faces);
+		std::vector<int> eulerCharacteristics;
+		for (const auto& vef : vefList) {
+			eulerCharacteristics.push_back(vef.numVertices - vef.numEdges + vef.numFaces);
+		}
+		volumes.push_back(eulerCharacteristics);
 	}
 	return volumes;
 }

@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 	ret["ctrs2Dvals"] = convertCtrs(ctrs2dVals); //ctrs2Dvals,
 	ret["tris2Dvals"] = convertTris(tris2dVals); //tris2Dvals
 	ret["ctrs3Dvals"] = convert3D(ctrs3dVals); //ctrs3Dvals,
-	ret["ctrsComponentsVals"] = countAllComponents(ctrs3dVals);
+	countAllComponents(ctrs3dVals);
 	ret["ctrsSurfaceAreaVals"] = getSurfaceAreas(ctrs3dVals);
 	ret["ctrsVolumeVals"] = getVolumes(ctrs3dVals);
 	ret["ptClusIndex"] = ptClusIndex; //ptClusIndex,
