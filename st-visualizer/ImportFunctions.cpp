@@ -10,6 +10,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <utility>
+#include <exception>
+#include <stdexcept>
 
 #include "GrowAndCover.h"
 using std::vector;
@@ -38,7 +40,7 @@ std::vector<string> splitString(const string& s, const string& delimiter)
 
 std::vector<coord> zip(std::vector<float> top, std::vector<float> bottom)
 {
-    if(top.size() != bottom.size()) throw std::exception("Size Mismatch");
+    if(top.size() != bottom.size()) throw std::range_error("Size mismatch");
     std::vector<coord> a;
     a.reserve(top.size());
     for(size_t i = 0; i < top.size(); i++)

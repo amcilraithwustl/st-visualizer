@@ -540,13 +540,10 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf& pts, tetgenio& out)
             in.pointlist[3 * i + j] = static_cast<double>(pts.col(i)(j));
         }
     }
-    tetrahedralize(_strdup(
-                       "z" //Start arrays at zero
-                       // "V" //Verbose for debugging
-                       "Q" //Quiet for production
-                       // "O0" //Level of mesh optimization (none)
-                       // "S0" //Max number of added points (none)
-                   ), &in, &out);
+    tetgenbehavior *tmp = new tetgenbehavior();
+    tmp->zeroindex = 1;
+    tmp->quiet = 1;
+    tetrahedralize(tmp, &in, &out);
 }
 
 inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f>& pts)

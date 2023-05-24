@@ -11335,7 +11335,7 @@ enum tetgenmesh::locateresult
 enum tetgenmesh::locateresult 
   tetgenmesh::locate(point searchpt, triface* searchtet, int chkencflag)
 {
-  point torg = NULL, tdest = NULL, tapex = NULL, toppo;
+  point torg, tdest, tapex, toppo;
   enum {ORGMOVE, DESTMOVE, APEXMOVE} nextmove;
   REAL ori, oriorg, oridest, oriapex;
   enum locateresult loc = OUTSIDE;
@@ -14097,7 +14097,7 @@ void tetgenmesh::unifysegments()
   badface *facelink = NULL, *newlinkitem, *f1, *f2;
   face *facperverlist, sface;
   face subsegloop, testseg;
-  point torg = NULL, tdest = NULL;
+  point torg, tdest;
   REAL ori1, ori2; //, ori3;
   REAL n1[3], n2[3];
   REAL cosang, ang, ang_tol;
@@ -20769,7 +20769,7 @@ int tetgenmesh::recoversubfaces(arraypool *misshlist, int steinerflag)
   triface searchtet, neightet, spintet;
   face searchsh, neighsh, neineish, *parysh;
   face bdsegs[3];
-  point startpt = NULL, endpt = NULL, apexpt = NULL, *parypt = NULL;
+  point startpt, endpt, apexpt, *parypt;
   point cross_e1 = NULL, cross_e2 = NULL; // endpoints of a crossing edge.
   point steinerpt;
   insertvertexflags ivf;
@@ -26110,7 +26110,7 @@ REAL tetgenmesh::get_min_angle_at_ridge_vertex(face* seg)
 void tetgenmesh::create_segment_info_list()
 {
   face min_dihedral_ang_seg;
-  point min_face_ang_vertex = NULL;
+  point min_face_ang_vertex;
   REAL min_dihedral_ang = 360.;
   REAL min_face_ang = 360.;
   
@@ -28499,7 +28499,7 @@ enum tetgenmesh::locateresult
     startpt[i] = (ppt[0][i] + ppt[1][i] + ppt[2][i] + ppt[3][i]) / 4.;
   }
 
-  point torg = NULL, tdest = NULL, tapex = NULL, toppo;
+  point torg, tdest, tapex, toppo;
   REAL ori, oriorg, oridest, oriapex;
   enum locateresult loc = OUTSIDE;
   enum {ORGMOVE, DESTMOVE, APEXMOVE} nextmove;
