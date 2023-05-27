@@ -1,3 +1,0 @@
-C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform/out/build/x64-debug/CMakeFiles/stvisualizer.dir
-C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform/out/build/x64-debug/CMakeFiles/edit_cache.dir
-C:/Users/Aiden McIlraith/Documents/GitHub/st-visualizer/CrossPlatform/out/build/x64-debug/CMakeFiles/rebuild_cache.dir
