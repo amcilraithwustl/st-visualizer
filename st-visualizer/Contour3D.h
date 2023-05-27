@@ -1,8 +1,6 @@
 #pragma once
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
-#include "tetgen-1.6.0/tetgen.h"
-#include "eigen-3.4.0/Eigen/Eigen"
 #include <ranges>
 
 #define LOADING_SIZE 10

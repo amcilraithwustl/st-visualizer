@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ImportFunctions.h"
 #include "UtilityFunctions.h"
 #include <fstream>
@@ -7,8 +9,6 @@
 #include <algorithm>
 #include <chrono>
 #include <limits>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
 #include <utility>
 #include <exception>
 #include <stdexcept>

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "GrowAndCover.h"
 
 #include <iostream>
