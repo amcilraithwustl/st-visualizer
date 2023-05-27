@@ -2,7 +2,7 @@
 #include <fstream>
 #include "JSONParser.h"
 #include "UtilityFunctions.h"
-#include "tetgen1.6.0/tetgen.h"
+#include "tetgen-1.6.0/tetgen.h"
 #include "Contour3D.h"
 #include "ImportFunctions.h"
 #include "Stats.h"

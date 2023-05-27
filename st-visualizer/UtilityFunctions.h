@@ -4,10 +4,10 @@
 #include "UtilityFunctions.h"
 #include <vector>
 #include <functional>
-#include "eigen-3.4.0/Eigen/Dense"
+#include "eigen-3.4.0/Eigen/Eigen"
 #include "triangle-1.6/triangle.h"
 #include <iostream>
-#include "tetgen1.6.0/tetgen.h"
+#include "tetgen-1.6.0/tetgen.h"
 #include <list>
 #include "JSONParser.h"
 
