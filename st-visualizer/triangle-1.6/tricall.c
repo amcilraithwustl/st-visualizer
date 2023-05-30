@@ -37,8 +37,7 @@
 /*                                                                           */
 /*****************************************************************************/
 
-void report(io, markers, reporttriangles, reportneighbors, reportsegments,
-            reportedges, reportnorms)
+void report(io, markers, reporttriangles, reportneighbors, reportsegments, reportedges, reportnorms)
 struct triangulateio *io;
 int markers;
 int reporttriangles;
