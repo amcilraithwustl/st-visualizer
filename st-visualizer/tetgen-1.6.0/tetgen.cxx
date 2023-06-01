@@ -47,7 +47,7 @@
 
 #include "tetgen.h"
 
-// #define TETLIBRARY
+#define TETLIBRARY
 
 //== io_cxx ==================================================================//
 //                                                                            //

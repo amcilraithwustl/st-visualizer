@@ -37,7 +37,7 @@ export const ipcHandlers = {
       ? path.resolve(process.resourcesPath)
       : path.resolve(__dirname, "../../imports/static/");
 
-    const exePath = path.resolve(staticsPath, "./st-visualizer.exe");
+    const exePath = path.resolve(staticsPath, "./st-visualizer");
 
     const split = transforms.map(
       (slice) =>
