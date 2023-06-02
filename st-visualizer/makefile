@@ -1,14 +1,14 @@
-CC = clang
-CXX = clang++
+CC = gcc-13
+CXX = g++-13
 BIN = ./bin/
 CCFLAGS = -Og -g -std=c99 -Wfatal-errors -w
 CXXFLAGS = -Og -g -std=c++2a -Wfatal-errors -w
 INCLUDES = -Ieigen-3.4.0 -Itetgen-1.6.0 -Itriangle-1.6
 
-release: $(wildcard ./*.cpp)
+release: $(wildcard ./*.cpp) $(BIN)tetgen.o $(BIN)tricall.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -lm -o $(BIN)st-visualizer $(wildcard ./*.cpp) $(wildcard $(BIN)*.o)
 
-lib: $(BIN)tetgen.o $(BIN)predicates.o $(BIN)tricall.o
+dependencies: $(BIN)tetgen.o $(BIN)tricall.o
 
 tetgen: $(BIN)tetgen.o
 
