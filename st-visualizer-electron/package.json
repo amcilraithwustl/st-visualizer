@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "make-mac": "electron-forge make --platform darwin"
   },
   "keywords": [],
   "author": {
@@ -30,6 +31,12 @@
           "config": {
             "name": "st-visualizer"
           }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
         },
         {
           "name": "@electron-forge/maker-deb",
