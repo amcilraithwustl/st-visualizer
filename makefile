@@ -1,14 +1,12 @@
 
-
+rootdir = $(realpath .)/
 
 frontend: backend
-	cd st-visualizer-electron
-	npm install
-	npm run make
+	$(MAKE) -C st-visualizer-electron
 
 backend: 
 	$(MAKE) -C st-visualizer
-	cp st-visualizer/bin/st-visualizer st-visualizer-electron/imports/static/st-visualizer
+	cp $(rootdir)st-visualizer/bin/st-visualizer $(rootdir)st-visualizer-electron/imports/static/st-visualizer
 
 clean:
 	$(MAKE) -C st-visualizer clean
