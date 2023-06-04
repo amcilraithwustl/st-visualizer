@@ -1,8 +1,8 @@
 CC = clang
 CXX = clang++
 BIN = ./bin/
-CCFLAGS = -Og -g -std=c99 -Wfatal-errors -w -lm
-CXXFLAGS = -Og -g -std=c++2a -Wfatal-errors -w -lm
+CCFLAGS = -Og -g -std=c99 -Wfatal-errors -w -lm -arch x86_64 -arch arm64
+CXXFLAGS = -Og -g -std=c++2a -Wfatal-errors -w -lm -arch x86_64 -arch arm64
 INCLUDES = -Ieigen-3.4.0 -Itetgen-1.6.0 -Itriangle-1.6
 
 release: $(wildcard ./*.cpp) $(BIN)tetgen.o $(BIN)tricall.o
