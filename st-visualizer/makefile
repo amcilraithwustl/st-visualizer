@@ -28,3 +28,6 @@ $(BIN)triangle.o: triangle-1.6/triangle.c triangle-1.6/triangle.h
 
 clean:
 	rm -rf $(BIN)*
+
+clean-main:
+	rm -rf $(BIN)st-visualizer
