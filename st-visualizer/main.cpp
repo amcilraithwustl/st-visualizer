@@ -82,11 +82,6 @@ int main(int argc, char *argv[])
 	auto alignmentFile = a[2];
 	auto target = a[3];
 
-	// auto tempFile = json::parse(R"({"fileName":"/Users/yin/Code/masters-project/st-visualizer/picture/AlignmentImages/NMKimage/NMK_20201201_cell_type_coord_allspots.tsv","shrink":0,"sliceNames":["NMK_F_U1","NMK_F_U2","NMK_F_U3","NMK_F_U4"],"featureCols":[6,7,8,9,10,11,12,13,14,15],"sliceIndex":1,"tissueIndex":2,"rowIndex":3,"colIndex":4,"clusterIndex":5,"zDistance":100})"); // json::parse(a[1]);
-	// auto alignmentFile = "/Users/yin/Code/masters-project/st-visualizer/data/NMK_F_transformation_pt_coord.csv"; // a[2];
-	// auto target = "/Users/yin/Code/masters-project/st-visualizer/data/out.json"; // a[3];
-
-
 	float shrink = tempFile.at("shrink").get<float>();
 	std::cout << "shrink" << shrink << std::endl;
 	std::vector<std::string> sliceNames;
