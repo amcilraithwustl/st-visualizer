@@ -1,9 +1,14 @@
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
 
 int main()
 {
-    double res = sin(1.2345);
-    std::cout << res << std::endl;
+    vector<string> test = {"a", "b", "c"};
+    string *s = &test[0];
+    cout << *s << endl;
     return 0;
 }
