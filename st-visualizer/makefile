@@ -5,8 +5,16 @@ CCFLAGS = -Og -g -std=c99 -Wfatal-errors -w -lm -arch x86_64 -arch arm64
 CXXFLAGS = -Og -g -std=c++2a -Wfatal-errors -w -lm -arch x86_64 -arch arm64
 INCLUDES = -Ieigen-3.4.0 -Itetgen-1.6.0 -Itriangle-1.6
 
+ifeq ($(OS), Windows_NT)
+	EXECUTABLE=st-visualizer.exe
+	CCFLAGS = -Og -g -std=c99 -Wfatal-errors -w 
+	CXXFLAGS = -Og -g -std=c++2a -Wfatal-errors -w 
+else
+	EXECUTABLE=st-visualizer
+endif
+
 release: $(wildcard ./*.cpp) $(BIN)tetgen.o $(BIN)tricall.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -lm -o $(BIN)st-visualizer $(wildcard ./*.cpp) $(wildcard $(BIN)*.o)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(BIN)$(EXECUTABLE) $(wildcard ./*.cpp) $(wildcard $(BIN)*.o)
 
 dependencies: $(BIN)tetgen.o $(BIN)tricall.o
 
