@@ -1,22 +1,21 @@
 #pragma once
-#include <vector>
-#include <functional>
-#include "UtilityFunctions.h"
-#include <vector>
-#include <functional>
-#include <Eigen/Eigen>
-#include <triangle.h>
-#include <iostream>
-#include <tetgen.h>
-#include <list>
+
 #include "JSONParser.h"
+#include "UtilityFunctions.h"
+
+#include <Eigen/Eigen>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <list>
+#include <tetgen.h>
+#include <triangle.h>
+#include <vector>
 
 constexpr float pi = static_cast<float>(3.1415926535);
 
 // Convenient typedefs
-
 using colCoordMat = Eigen::Matrix2Xf;
-
 using coord = std::pair<float, float>;
 
 // TODO: make this hold the data directly

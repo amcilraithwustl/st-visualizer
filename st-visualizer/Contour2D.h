@@ -1,7 +1,9 @@
 #pragma once
+
+#include "UtilityFunctions.h"
+
 #include <map>
 #include <vector>
-#include "UtilityFunctions.h"
 
 // orientation (not sure if this should be i or f)
 // Returns 1 if left, 0 if none, -1 if right (right hand rule)

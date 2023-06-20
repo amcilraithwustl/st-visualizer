@@ -1,18 +1,17 @@
 #pragma once
-#include <vector>
-#include <functional>
-#include "UtilityFunctions.h"
-#include <vector>
-#include <functional>
-#include <Eigen/Dense>
 
+#include "UtilityFunctions.h"
+
+#include <Eigen/Dense>
+#include <functional>
+#include <vector>
 
 colCoordMat listToMatrix(std::list<coord> source)
 {
-	//Row 0 is x, row 1 is y
+	// Row 0 is x, row 1 is y
 	colCoordMat sourceMatrix(2, source.size());
 	size_t i = 0;
-	for (const auto& [x, y] : source)
+	for (const auto &[x, y] : source)
 	{
 		sourceMatrix(0, i) = x;
 		sourceMatrix(1, i) = y;
@@ -23,7 +22,7 @@ colCoordMat listToMatrix(std::list<coord> source)
 
 colCoordMat vectorToMatrix(std::vector<coord> source)
 {
-	//Row 0 is x, row 1 is y
+	// Row 0 is x, row 1 is y
 	colCoordMat sourceMatrix(2, source.size());
 	for (int i = 0; i < source.size(); i++)
 	{
@@ -35,7 +34,7 @@ colCoordMat vectorToMatrix(std::vector<coord> source)
 
 std::vector<coord> matrixToVector(colCoordMat sourceMatrix)
 {
-	//Row 0 is x, row 1 is y
+	// Row 0 is x, row 1 is y
 	std::vector<coord> source(sourceMatrix.cols(), coord());
 	for (int i = 0; i < sourceMatrix.cols(); i++)
 	{
@@ -45,12 +44,8 @@ std::vector<coord> matrixToVector(colCoordMat sourceMatrix)
 	return source;
 }
 
-
-
-
-//To Cartesian Space
-Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                                const Eigen::Vector2f& v2)
+// To Cartesian Space
+Eigen::Vector2f getPoint(const Eigen::Vector2f &coord, const Eigen::Vector2f &origin, const Eigen::Vector2f &v1, const Eigen::Vector2f &v2)
 {
 	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
 	mat.col(0) = v1;
@@ -60,9 +55,8 @@ Eigen::Vector2f getPoint(const Eigen::Vector2f& coord, const Eigen::Vector2f& or
 	return result;
 }
 
-//To Hex Space
-Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-                          const Eigen::Vector2f& v2)
+// To Hex Space
+Eigen::Vector2f getCoords(const Eigen::Vector2f &pt, const Eigen::Vector2f &origin, const Eigen::Vector2f &v1, const Eigen::Vector2f &v2)
 {
 	Eigen::Matrix2f mat = Eigen::Matrix2f::Zero();
 	mat.col(0) = v1;
@@ -71,8 +65,7 @@ Eigen::Vector2f getCoords(const Eigen::Vector2f& pt, const Eigen::Vector2f& orig
 	return result;
 }
 
-Eigen::Vector2i roundPtToCoord(const Eigen::Vector2f& pt, const Eigen::Vector2f& origin, const Eigen::Vector2f& v1,
-	const Eigen::Vector2f& v2)
+Eigen::Vector2i roundPtToCoord(const Eigen::Vector2f &pt, const Eigen::Vector2f &origin, const Eigen::Vector2f &v1, const Eigen::Vector2f &v2)
 {
-	return getCoords(pt, origin, v1, v2).unaryExpr(static_cast<float(*)(float)>(std::round)).cast<int>();
+	return getCoords(pt, origin, v1, v2).unaryExpr(static_cast<float (*)(float)>(std::round)).cast<int>();
 }

@@ -1,0 +1,24 @@
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.74s user 0.45s system 98% cpu 5.281 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.77s user 0.17s system 97% cpu 1.987 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.93s user 0.44s system 97% cpu 5.517 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.83s user 0.17s system 96% cpu 2.074 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.53s user 0.43s system 99% cpu 4.997 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.73s user 0.16s system 98% cpu 1.921 total
+libc++abi: terminating due to uncaught exception of type std::range_error: Size mismatch
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   0.00s user 0.00s system 11% cpu 0.032 total
+libc++abi: terminating due to uncaught exception of type std::range_error: Size mismatch
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   0.00s user 0.00s system 11% cpu 0.033 total
+libc++abi: terminating due to uncaught exception of type std::range_error: Size mismatch
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   0.00s user 0.00s system 11% cpu 0.032 total
+libc++abi: terminating due to uncaught exception of type std::range_error: Size mismatch
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   0.00s user 0.00s system 10% cpu 0.033 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.51s user 0.40s system 98% cpu 4.967 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.74s user 0.15s system 97% cpu 1.931 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.64s user 0.40s system 96% cpu 5.236 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.87s user 0.15s system 97% cpu 2.070 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.49s user 0.49s system 98% cpu 5.073 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.70s user 0.18s system 98% cpu 1.913 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.40s user 0.47s system 99% cpu 4.909 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.72s user 0.20s system 96% cpu 1.992 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.47s user 0.41s system 99% cpu 4.921 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.69s user 0.16s system 96% cpu 1.931 total

@@ -1,10 +1,12 @@
-#include <cmath>
-#include <fstream>
-#include "JSONParser.h"
-#include "UtilityFunctions.h"
 #include "Contour3D.h"
 #include "ImportFunctions.h"
+#include "JSONParser.h"
 #include "Stats.h"
+#include "UtilityFunctions.h"
+
+#include <cmath>
+#include <fstream>
+
 using namespace nlohmann;
 
 // https://wias-berlin.de/software/tetgen/

@@ -1,29 +1,47 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <functional>
+
+#include "GrowAndCover.h"
 #include "UtilityFunctions.h"
 
-std::vector<std::pair<std::vector<coord>, std::vector<coord>>> importAlignments(const std::string &alignment_file);
+#include <algorithm>
+#include <chrono>
+#include <exception>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <utility>
+
+using std::pair;
+using std::string;
+using std::vector;
+using std::function;
 
 struct tsv_return_type
 {
-	std::vector<std::string> names;
-	std::vector<Eigen::Matrix3Xf> slices;
-	std::vector<std::vector<std::vector<float>>> clusters;
-	std::vector<std::vector<std::vector<float>>> values;
+	vector<string> names;
+	vector<Eigen::Matrix3Xf> slices;
+	vector<vector<vector<float>>> clusters;
+	vector<vector<vector<float>>> values;
 };
 
-tsv_return_type loadTsv(const std::string &file_name, const std::vector<std::string> &slice_names,
-						unsigned int slice_index, unsigned int tissue_index, std::pair<unsigned, unsigned> row_col_indices, unsigned int cluster_ind, const std ::vector<unsigned> &feature_indices, unsigned int z_distance,
-						std::vector<std::pair<std::vector<coord>, std::vector<coord>>> source_targets);
+vector<pair<vector<coord>, vector<coord>>> importAlignments(const string &alignment_file);
 
-std::function<std::vector<coord>(std::vector<coord>)> getTransSVD(const std::vector<coord> &source,
-																  const std::vector<coord> &target);
-// First is the source, second is the target
+tsv_return_type loadTsv(const string &file_name,
+                        const vector<string> &slice_names,
+                        unsigned int slice_index,
+                        unsigned int tissue_index,
+                        pair<unsigned, unsigned> row_col_indices,
+                        unsigned int cluster_ind,
+                        const vector<unsigned> &feature_indices,
+                        unsigned int z_distance,
+                        vector<pair<vector<coord>, vector<coord>>> source_targets);
+
+function<vector<coord>(vector<coord>)> getTransSVD(const vector<coord> &source, const vector<coord> &target);
 
 // this helper function produces an array of length n, which is all zero except a 1 in the i-th spot.
-std::vector<float> getClusterArray(size_t length, size_t i);
+vector<float> getClusterArray(size_t length, size_t i);
 
 Eigen::Matrix2f getSVDRotation(colCoordMat source_matrix, colCoordMat target_matrix);
 

@@ -74,16 +74,23 @@ vector<float> convertRowToFloat(const vector<string> &input)
 }
 
 // Import data from alignment json file
+// TODO: handle invalid alignment file input
+// Split into cells excluding the first row, assuming the alignment file has more than 1 lines
 vector<pair<vector<coord>, vector<coord>>> importAlignments(const string &alignment_file)
 {
     std::ifstream aFile(alignment_file);
-    vector<string> lines;
+    vector<vector<string>> csvCells;
+    vector<string> csvFeatures;
     if (aFile.is_open())
     {
         string line;
+        std::getline(aFile, line);
+        csvFeatures = splitString(line, ",");
         while (std::getline(aFile, line))
         {
-            lines.push_back(line);
+            vector<string> row = splitString(line, ",");
+            row.erase(row.begin(), row.begin() + 3);
+            csvCells.push_back(row);
         }
         aFile.close();
     }
@@ -92,18 +99,7 @@ vector<pair<vector<coord>, vector<coord>>> importAlignments(const string &alignm
         throw "ALIGNMENT FILE NOT FOUND";
     }
 
-    // Split into cells excluding the first row, assuming the alignment file has more than 1 lines
-    vector<string> csvFeatures = splitString(lines[0], ",");
-    vector<vector<string>> csvCells;
-    for (int i = 1; i < lines.size(); i++)
-    {
-        string *row = &lines[i];
-        vector<string> rowCells = splitString(*row, ",");
-        // Drop the first three columns
-        csvCells.emplace_back(rowCells.begin() + 3, rowCells.end());
-    }
-
-    // Transform cells into ints
+    // Transform cells into float
     const auto transformCells = mapVector(csvCells, std::function(convertRowToFloat));
 
     // Now we have n columns and m*4 rows of ints
@@ -138,23 +134,24 @@ tsv_return_type loadTsv(const string &file_name,
 {
     // Import raw file data
     std::ifstream aFile(file_name);
-
     log("Loading TSV.");
-
     vector<vector<string>> rawData;
     if (aFile.is_open())
     {
         string line;
-
         while (std::getline(aFile, line))
         {
             rawData.push_back(splitString(line, "\t"));
         }
         aFile.close();
     }
-    log("Loading names.");
+    else
+    {
+        throw "TSV FILE NOT FOUND";
+    }
 
-    vector<string> names = mapVector(feature_indices, std::function([rawData](const unsigned &index, size_t)
+    log("Loading names.");
+    vector<string> names = mapVector(feature_indices, std::function([&rawData](const unsigned &index, size_t)
                                                                     { return rawData.front()[index]; }));
     names.emplace_back("No Tissue");
 
@@ -258,7 +255,6 @@ tsv_return_type loadTsv(const string &file_name,
             return a; })); }));
 
     log("Growing Slices.");
-
     // Add buffer to each slice and grow and cover neighboring slices
     vector<Eigen::Matrix2Xf> new_slice_data = mapVector(slices, std::function([&](const Eigen::Matrix2Xf &, size_t i)
                                                                               {
