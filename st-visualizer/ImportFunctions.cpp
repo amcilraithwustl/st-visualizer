@@ -155,9 +155,11 @@ tsv_return_type loadTsv(const string &file_name,
                                                                     { return rawData.front()[index]; }));
     names.emplace_back("No Tissue");
 
-    vector tab(rawData.begin() + 1, rawData.end()); // TODO: Slow Process
-    int max = 0;
+    rawData.erase(rawData.begin());
+    vector<vector<string>> &tab = rawData;
 
+    // Get the max cluster number
+    unsigned int max = 0;
     for (const auto &row : tab)
     {
         {
@@ -173,29 +175,29 @@ tsv_return_type loadTsv(const string &file_name,
         }
     }
 
-    unsigned int newClusters = static_cast<unsigned int>(max) + 1;
-    auto newFeatures = feature_indices.size();
+    // Add 1 for no tissue
+    unsigned int newClusters = max + 1;
+    size_t newFeatures = feature_indices.size();
 
     // Extract the relevant records
     // Records should hold slices of data rows that match the right name of the slice and is a tissue sample
-    auto sliced_records = mapVector(slice_names, std::function(
-                                                     [&tab, &slice_index, &tissue_index](const string &name, size_t)
-                                                     {
-                                                         return filter(tab, std::function(
-                                                                                [&tab, &slice_index, &tissue_index, &name](
-                                                                                    const vector<string> &row)
-                                                                                {
-                                                                                    return row[slice_index] == name && row[tissue_index] == "1";
-                                                                                }));
-                                                     }));
+    vector<vector<vector<string>>> sliced_records = mapVector(slice_names, std::function(
+                                                                               [&tab, &slice_index, &tissue_index](const string &name, size_t)
+                                                                               {
+                                                                                   // Filter out the rows that are not tissues
+                                                                                   return filter(tab, std::function(
+                                                                                                          [&tab, &slice_index, &tissue_index, &name](const vector<string> &row)
+                                                                                                          {
+                                                                                                              return row[slice_index] == name && row[tissue_index] == "1";
+                                                                                                          }));
+                                                                               }));
 
     // This is the point where parallel vectors are created
 
     // Pull out the corresponding xy data from the records, adjusted to be a unified coordinate system
-    pair xy_indices(row_col_indices.second, row_col_indices.first);
+    pair<unsigned int, unsigned int> xy_indices(row_col_indices.second, row_col_indices.first);
     vector<Eigen::Matrix2Xf> slices = mapVector(sliced_records, std::function(
-                                                                    [&xy_indices, &source_targets](
-                                                                        const vector<vector<string>> &record, size_t i)
+                                                                    [&xy_indices, &source_targets](const vector<vector<string>> &record, size_t i)
                                                                     {
                                                                         const auto raw_slice_coordinates_vector = mapVector(
                                                                             record, std::function(
@@ -205,8 +207,8 @@ tsv_return_type loadTsv(const string &file_name,
                                                                                                 std::stof(row[xy_indices.first]),
                                                                                                 std::stof(row[xy_indices.second]));
                                                                                         }));
-
-                                                                        if (i == 0) // If it's the first slice, no adjustment necessary
+                                                                        // If it's the first slice, no adjustment necessary
+                                                                        if (i == 0)
                                                                         {
                                                                             return vectorToMatrix(raw_slice_coordinates_vector);
                                                                         }
@@ -219,27 +221,23 @@ tsv_return_type loadTsv(const string &file_name,
                                                                         return vectorToMatrix(transform(raw_slice_coordinates_vector));
                                                                     }));
 
-    // Convert the clusters into an array of 1/0 based on the cluster index.
+    // Convert the clusters into an array of 1/0 based on the cluster index (one hot indexing)
     // Clusters are represented as vectors with all values zero, except a single 1 in the ith place where i is the cluster it belongs to
-    auto original_clusters = mapVector(sliced_records, std::function(
-                                                           [&](const vector<vector<string>> &record, size_t)
-                                                           {
-                                                               return mapVector(record, std::function(
-                                                                                            [&](const vector<string> &row, size_t)
-                                                                                            {
-                                                                                                return getClusterArray(
-                                                                                                    newClusters + 1,
-                                                                                                    row[tissue_index] == "0"
-                                                                                                        ? newClusters
-                                                                                                        : std::stoi(row[cluster_ind]
-                                                                                                                    // If the data point doesn't contain tissue, give it a "none" value, otherwise use the cluster value it is a part of
-                                                                                                                    ));
-                                                                                            }));
-                                                           }));
+    vector<vector<vector<float>>> original_clusters = mapVector(sliced_records, std::function(
+                                                                                    [&](const vector<vector<string>> &record, size_t)
+                                                                                    {
+                                                                                        return mapVector(record, std::function(
+                                                                                                                     [&](const vector<string> &row, size_t)
+                                                                                                                     {
+                                                                                                                         // If the data point doesn't contain tissue, give it a "none" value, otherwise use the cluster value it is a part of
+                                                                                                                         // FIXME: why do we need +1 here? 
+                                                                                                                         return getClusterArray(newClusters + 1, row[tissue_index] == "0" ? newClusters : std::stoi(row[cluster_ind]));
+                                                                                                                     }));
+                                                                                    }));
 
     log("Parsing Values.");
     // Values are represented as arrays too, but the values are not just 1 or 0, but are all floats (except for the last index)
-    auto values = mapVector(sliced_records, std::function([&](const vector<vector<string>> &record, size_t)
+    vector<vector<vector<float>>> values = mapVector(sliced_records, std::function([&](const vector<vector<string>> &record, size_t)
                                                           { return mapVector(record, std::function([&](const vector<string> &row, size_t)
                                                                                                    {
             if(row[tissue_index] == "0")

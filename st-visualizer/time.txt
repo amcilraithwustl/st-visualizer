@@ -22,3 +22,15 @@ libc++abi: terminating due to uncaught exception of type std::range_error: Size 
 ./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.72s user 0.20s system 96% cpu 1.992 total
 ./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.47s user 0.41s system 99% cpu 4.921 total
 ./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.69s user 0.16s system 96% cpu 1.931 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.44s user 0.37s system 98% cpu 4.868 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.89s user 0.15s system 89% cpu 2.284 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.47s user 0.43s system 99% cpu 4.931 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.70s user 0.16s system 97% cpu 1.899 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.41s user 0.42s system 98% cpu 4.892 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.71s user 0.16s system 97% cpu 1.910 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   3.78s user 0.51s system 97% cpu 4.402 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.42s user 0.16s system 97% cpu 1.610 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.67s user 0.47s system 98% cpu 5.203 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   2.15s user 0.25s system 90% cpu 2.660 total
+./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   4.45s user 0.41s system 99% cpu 4.892 total
+./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   1.70s user 0.16s system 98% cpu 1.888 total
