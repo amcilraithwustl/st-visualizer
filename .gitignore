@@ -350,7 +350,6 @@ MigrationBackup/
 .ionide/
 
 build/
-.vscode/
-.idea/
 bin/
+cmake-build-debug/
 .DS_Store

@@ -1,0 +1,18 @@
+// write a launch.json file to debug a c++ program
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "CodeLLDB",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${fileDirname}/bin/st-visualizer",
+            "args": [],
+            // "stopAtEntry": false,
+            "cwd": "${fileDirname}"
+            // "environment": [],
+            // "externalConsole": false,
+            // "preLaunchTask": "clang++ arm64"
+        }
+    ]
+}
