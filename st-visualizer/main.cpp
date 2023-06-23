@@ -6,8 +6,13 @@
 
 #include <cmath>
 #include <fstream>
+#include <iostream>
+#include <string>
 
 using namespace nlohmann;
+
+using std::string;
+using std::vector;
 
 // https://wias-berlin.de/software/tetgen/
 // https://www.youtube.com/watch?v=A1LqGsyl3C4
@@ -75,14 +80,44 @@ std::vector<T> flatten(const std::vector<std::vector<T>> &input)
 	return result;
 }
 
+// argv[1] = 0 use hard coded path, 1 use args[2]
+// argv[2] = json
+// TODO: Add error handling for json parsing
 int main(int argc, char *argv[])
 {
-	std::vector<std::string> a(argv, argv + argc);
-	// args should be json of the relevant arguments (for now)
 
-	auto tempFile = json::parse(a[1]);
-	auto alignmentFile = a[2];
-	auto target = a[3];
+	json tempFile;
+	if (strcmp(argv[1], "0") == 0)
+	{
+		tempFile = json::parse(R"(
+				{
+					"fileName": "../picture/AlignmentImages/NMKimage/NMK_20201201_cell_type_coord_allspots.tsv",
+					"alignmentFile": "../data/NMK_F_transformation_pt_coord.csv",
+					"target": "bin/nmk-test-output.json",
+					"shrink": 0,
+					"sliceNames": ["NMK_F_U1","NMK_F_U2","NMK_F_U3","NMK_F_U4"],
+					"featureCols": [6,7,8,9,10,11,12,13,14,15],
+					"sliceIndex": 1,
+					"tissueIndex": 2,
+					"rowIndex": 3,
+					"colIndex": 4,
+					"clusterIndex": 5,
+					"zDistance": 100
+				}
+			)");
+	}
+	else if (strcmp(argv[1], "1") == 0)
+	{
+		tempFile = json::parse(argv[2]);
+	}
+	else
+	{
+		std::cout << "Usage: " << argv[0] << " <mode> <json>" << std::endl;
+		return 1;
+	}
+
+	string alignmentFile = tempFile.at("alignmentFile").get<string>();
+	string target = tempFile.at("target").get<string>();
 
 	float shrink = tempFile.at("shrink").get<float>();
 	std::cout << "shrink" << shrink << std::endl;

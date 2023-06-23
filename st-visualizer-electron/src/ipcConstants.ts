@@ -72,6 +72,8 @@ export const ipcHandlers = {
     try {
       const configOptions = {
         fileName: importState.fileName,
+        alignmentFile: alignmentPath,
+        target: outputPath,
         shrink: importState.shrink,
         sliceNames: importState.sliceOrder.map((i) => sliceNames[i]),
         featureCols: importState[colTypes.feature],
@@ -86,7 +88,7 @@ export const ipcHandlers = {
       const runResults = await new Promise<string>((res, rej) => {
         execFile(
           exePath,
-          [JSON.stringify(configOptions), alignmentPath, outputPath],
+          ["1", JSON.stringify(configOptions)],
           {},
           (err, data) => {
             if (err) rej(err);
