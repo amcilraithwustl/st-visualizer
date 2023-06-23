@@ -3,6 +3,7 @@
 #include "Contour2D.h"
 #include "UtilityFunctions.h"
 
+#include <Eigen/Eigen>
 #include <ranges>
 
 #define LOADING_SIZE 10

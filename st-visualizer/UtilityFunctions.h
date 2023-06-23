@@ -1,7 +1,6 @@
 #pragma once
 
 #include "JSONParser.h"
-#include "UtilityFunctions.h"
 
 #include <Eigen/Eigen>
 #include <cmath>
@@ -359,4 +358,25 @@ std::vector<T> subset(const std::vector<T> &set, const std::vector<int> &indices
         new_vector.push_back(set[index]);
     }
     return new_vector;
+}
+
+template <typename T>
+std::vector<T> flatten(const std::vector<std::vector<T>> &input)
+{
+    unsigned int sum = 0;
+    for (auto &layer : input)
+    {
+        sum += layer.size();
+    }
+    std::vector<T> result;
+    result.reserve(sum);
+    unsigned int i = 0;
+    for (const auto &layer : input)
+    {
+        for (const auto &pt : layer)
+        {
+            result.push_back(pt);
+        }
+    }
+    return result;
 }

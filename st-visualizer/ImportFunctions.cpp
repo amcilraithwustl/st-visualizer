@@ -1,12 +1,8 @@
-#pragma once
 
 #include "ImportFunctions.h"
 #include "GrowAndCover.h"
 #include "UtilityFunctions.h"
 
-#include <algorithm>
-#include <chrono>
-#include <exception>
 #include <fstream>
 #include <functional>
 #include <iostream>

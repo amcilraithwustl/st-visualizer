@@ -1,4 +1,3 @@
-#pragma once
 
 #include "Contour2D.h"
 

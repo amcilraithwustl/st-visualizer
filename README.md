@@ -2,7 +2,7 @@
 
 ## To-do
 
-- Support universal binary (x64 and arm64)
+- ~~Support universal binary for Mac (x64 and arm64)~~
 - Port to Windows and Linux
 - Sign the app
 
@@ -28,3 +28,9 @@ git clone -b yin https://github.com/amcilraithwustl/st-visualizer.git
 cd st-visualizer
 make
 ```
+
+Alternatively, you can try to compile with cmake. 
+
+## How to use
+
+~~Why don't you ask the Magic Conch, Squidward?~~

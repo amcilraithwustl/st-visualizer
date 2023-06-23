@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <libraryRoots>
+      <file path="$PROJECT_DIR$/eigen-3.4.0" />
+      <file path="$PROJECT_DIR$/tetgen-1.6.0" />
+      <file path="$PROJECT_DIR$/triangle-1.6" />
+    </libraryRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/bin" />
+    </excludeRoots>
+  </component>
 </project>

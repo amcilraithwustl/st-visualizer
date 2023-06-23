@@ -1,10 +1,10 @@
+
 #include "Contour3D.h"
 #include "ImportFunctions.h"
 #include "JSONParser.h"
 #include "Stats.h"
 #include "UtilityFunctions.h"
 
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -15,81 +15,16 @@ using std::string;
 using std::vector;
 
 // https://wias-berlin.de/software/tetgen/
-// https://www.youtube.com/watch?v=A1LqGsyl3C4
-// Useful opengl examples: https://cs.lmu.edu/~ray/notes/openglexamples/
-
-// Explore electron as front-end option vs C++ w/ QT
-
-std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
-getVolumeContours(const Eigen::Matrix3Xf &pts, std::vector<std::vector<float>> vals, float shrink)
-{
-	const auto nmat = vals[0].size();
-	tetgenio reg;
-	tetralizeMatrix(pts, reg);
-	const auto tets = tetgenToTetVector(reg);
-	std::vector<Eigen::Vector3f> pts_vector;
-	pts_vector.reserve(pts.cols());
-	// TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
-	for (auto &pt : pts.colwise())
-	{
-		pts_vector.push_back(pt);
-	}
-	auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
-	return getContourAllMats3D(
-		verts, segs, segmats, nmat, shrink);
-}
-
-Eigen::Matrix3Xf concatMatrixes(const std::vector<Eigen::Matrix3Xf> &input)
-{
-	unsigned int sum = 0;
-	for (auto &layer : input)
-	{
-		sum += layer.cols();
-	}
-	Eigen::Matrix3Xf result(3, sum);
-	unsigned int i = 0;
-	for (const auto &layer : input)
-	{
-		for (const auto &pt : layer.colwise())
-		{
-			result.col(i) = pt;
-			i++;
-		}
-	}
-	return result;
-}
-
-template <typename T>
-std::vector<T> flatten(const std::vector<std::vector<T>> &input)
-{
-	unsigned int sum = 0;
-	for (auto &layer : input)
-	{
-		sum += layer.size();
-	}
-	std::vector<T> result;
-	result.reserve(sum);
-	unsigned int i = 0;
-	for (const auto &layer : input)
-	{
-		for (const auto &pt : layer)
-		{
-			result.push_back(pt);
-		}
-	}
-	return result;
-}
 
 // argv[1] = 0 use hard coded path, 1 use args[2]
 // argv[2] = json
 // TODO: Add error handling for json parsing
 int main(int argc, char *argv[])
 {
-
-	json tempFile;
+	json config;
 	if (strcmp(argv[1], "0") == 0)
 	{
-		tempFile = json::parse(R"(
+		config = json::parse(R"(
 				{
 					"fileName": "../picture/AlignmentImages/NMKimage/NMK_20201201_cell_type_coord_allspots.tsv",
 					"alignmentFile": "../data/NMK_F_transformation_pt_coord.csv",
@@ -108,7 +43,7 @@ int main(int argc, char *argv[])
 	}
 	else if (strcmp(argv[1], "1") == 0)
 	{
-		tempFile = json::parse(argv[2]);
+		config = json::parse(argv[2]);
 	}
 	else
 	{
@@ -116,21 +51,21 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	string alignmentFile = tempFile.at("alignmentFile").get<string>();
-	string target = tempFile.at("target").get<string>();
+	string alignmentFile = config.at("alignmentFile").get<string>();
+	string target = config.at("target").get<string>();
 
-	float shrink = tempFile.at("shrink").get<float>();
+	float shrink = config.at("shrink").get<float>();
 	std::cout << "shrink" << shrink << std::endl;
 	std::vector<std::string> sliceNames;
-	for (const auto &name : tempFile.at("sliceNames"))
+	for (const auto &name : config.at("sliceNames"))
 	{
 		if (name.is_string())
 		{
 			sliceNames.push_back(name.get<std::string>());
 		}
-	} //({"NMK_F_U1", "NMK_F_U2", "NMK_F_U3", "NMK_F_U4"});
+	}
 	std::vector<unsigned> featureCols;
-	for (const auto &name : tempFile.at("featureCols"))
+	for (const auto &name : config.at("featureCols"))
 	{
 		featureCols.push_back(name.get<unsigned>());
 	}
@@ -140,14 +75,14 @@ int main(int argc, char *argv[])
 		alignmentFile);
 
 	const auto results = loadTsv(
-		tempFile.at("fileName").get<std::string>(),
+		config.at("fileName").get<std::string>(),
 		sliceNames,
-		tempFile.at("sliceIndex").get<int>(),
-		tempFile.at("tissueIndex").get<int>(),
-		std::pair<unsigned, unsigned>(tempFile.at("rowIndex").get<int>(), tempFile.at("colIndex").get<int>()),
-		tempFile.at("clusterIndex").get<int>(),
+		config.at("sliceIndex").get<int>(),
+		config.at("tissueIndex").get<int>(),
+		std::pair<unsigned, unsigned>(config.at("rowIndex").get<int>(), config.at("colIndex").get<int>()),
+		config.at("clusterIndex").get<int>(),
 		featureCols,
-		tempFile.at("zDistance").get<int>(),
+		config.at("zDistance").get<int>(),
 		alignmentValues);
 
 	auto [ctrs2dVals, tris2dVals] = getSectionContoursAll(results.slices, results.values, shrink);

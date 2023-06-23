@@ -1,12 +1,4 @@
 Darwin yins-mbp.dhcp.wustl.edu 22.5.0 Darwin Kernel Version 22.5.0: Thu Jun 8 22:22:19 PDT 2023; root:xnu-8796.121.3~7/RELEASE_ARM64_T8103 arm64
-./bin/st-visualizer  ../data/NMK_F_transformation_pt_coord.csv   1.91s user 0.15s system 99% cpu 2.081 total
-./bin/st-visualizer  ../data/CRC112_transformation_pt_coord.csv   0.71s user 0.05s system 99% cpu 0.760 total
-
-Darwin yins-imac.dhcp.wustl.edu 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:51:50 PDT 2023; root:xnu-8796.121.2~5/RELEASE_X86_64 x86_64
-./bin/st-visualizer 0  0.00s user 0.00s system 69% cpu 0.004 total
-./bin/st-visualizer 0  0.00s user 0.00s system 70% cpu 0.004 total
-
-Darwin yins-imac.dhcp.wustl.edu 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:51:50 PDT 2023; root:xnu-8796.121.2~5/RELEASE_X86_64 x86_64
-./bin/st-visualizer 0 0  4.27s user 0.45s system 98% cpu 4.805 total
-./bin/st-visualizer 0 0  4.20s user 0.40s system 99% cpu 4.640 total
+./bin/st-visualizer 1   1.92s user 0.16s system 98% cpu 2.110 total
+./bin/st-visualizer 1   0.85s user 0.07s system 99% cpu 0.923 total
 

@@ -1,9 +1,7 @@
-#pragma once
 
 #include "UtilityFunctions.h"
 
 #include <Eigen/Dense>
-#include <functional>
 #include <vector>
 
 colCoordMat listToMatrix(std::list<coord> source)
