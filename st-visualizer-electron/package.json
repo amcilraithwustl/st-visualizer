@@ -21,7 +21,8 @@
     "forge": {
       "packagerConfig": {
         "extraResource": [
-          "./imports/static/st-visualizer"
+          "./imports/static/st-visualizer",
+          "./imports/static/st-visualizer.exe"
         ]
       },
       "makers": [

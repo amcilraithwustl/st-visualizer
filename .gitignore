@@ -352,5 +352,7 @@ MigrationBackup/
 build/
 bin/
 cmake-build-debug/
-cmake-build-release
+cmake-build-debug-visual-studio/
+cmake-build-release/
+cmake-build-release-visual-studio/
 .DS_Store
