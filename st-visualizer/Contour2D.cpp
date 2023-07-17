@@ -48,9 +48,8 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
 
     const size_t number_of_points = pointIndexToPoint.cols();
     vector<vector<int>> endpointIndicesToEdgeIndex(number_of_points, vector<int>(number_of_points, -1));
-
-    // Might be good to eventually make this a pair
-    vector<vector<int>> edgeIndexToEndpointIndices;
+    
+    vector<pair<int, int>> edgeIndexToEndpointIndices;
     edgeIndexToEndpointIndices.reserve(triangle_edges.size());
     // Stores which face index an edge belongs to
     vector<vector<int>> edgeIndexToFaceIndices;
@@ -89,13 +88,13 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
     vector<pair<Eigen::Vector2f, bool>> edgeIndexToMidPoints(edgeIndexToFaceIndices.size(), {{0, 0}, false}); // Second value is whether it has been set
     for (int edgeIndex = 0; edgeIndex < edgeIndexToEndpointIndices.size(); edgeIndex++)
     {
-        const vector<int> &endpointIndices = edgeIndexToEndpointIndices[edgeIndex];
+        const pair<int, int> &endpointIndices = edgeIndexToEndpointIndices[edgeIndex];
 
         // If the two materials at the adjacent points are different
-        if (primaryMaterialIndexByPointIndex[endpointIndices[0]] != primaryMaterialIndexByPointIndex[endpointIndices[1]])
+        if (primaryMaterialIndexByPointIndex[endpointIndices.first] != primaryMaterialIndexByPointIndex[endpointIndices.second])
         {
-            const int &endpt0Index = endpointIndices[0];
-            const int &endpt1Index = endpointIndices[1];
+            const int &endpt0Index = endpointIndices.first;
+            const int &endpt1Index = endpointIndices.second;
 
             const int &endpt0PrimaryValueIndex = primaryMaterialIndexByPointIndex[endpt0Index];
             const int &endpt1PrimaryValueIndex = primaryMaterialIndexByPointIndex[endpt1Index];
@@ -104,8 +103,8 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
             const vector<float> &primaryValues1 = pointIndexToMaterialValues[endpt1Index];
 
             edgeIndexToMidPoints[edgeIndex] = {interpEdge2Mat<2>(
-                                                   pointIndexToPoint.col(endpointIndices[0]),
-                                                   pointIndexToPoint.col(endpointIndices[1]),
+                                                   pointIndexToPoint.col(endpointIndices.first),
+                                                   pointIndexToPoint.col(endpointIndices.second),
                                                    {primaryValues0[endpt0PrimaryValueIndex], primaryValues0[endpt1PrimaryValueIndex]},
                                                    {primaryValues1[endpt0PrimaryValueIndex], primaryValues1[endpt1PrimaryValueIndex]}),
                                                true};
@@ -154,14 +153,14 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
     for (int edge_index = 0; edge_index < edgeIndexToEndpointIndices.size(); edge_index++)
     {
         // If there is a change in material between the edges of the segments
-        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index][1]])
+        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index].first] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[edge_index].second])
         {
             // The index is going to be the size of the list of segments before the push
 
-            const vector<int> &endpointIndices = edgeIndexToEndpointIndices[edge_index];
+            const pair<int, int> &endpointIndices = edgeIndexToEndpointIndices[edge_index];
             centerSegmentToEndpointPrimaryMaterialIndices.emplace_back(
-                primaryMaterialIndexByPointIndex[endpointIndices[0]],
-                primaryMaterialIndexByPointIndex[endpointIndices[1]]);
+                primaryMaterialIndexByPointIndex[endpointIndices.first],
+                primaryMaterialIndexByPointIndex[endpointIndices.second]);
 
             pair<int, int> newSegmentEndpointIndices;
             if (edgeIndexToFaceIndices[edge_index].size() == 1)
@@ -178,7 +177,7 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
             }
 
             // Ensure consistent orientation among endpoints
-            if (orientation(pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][0]) - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1]), facePointByIndex[newSegmentEndpointIndices.first] - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index][1])) < 0)
+            if (orientation(pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index].first) - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index].second), facePointByIndex[newSegmentEndpointIndices.first] - pointIndexToPoint.col(edgeIndexToEndpointIndices[edge_index].second)) < 0)
             {
                 newSegmentEndpointIndices = {newSegmentEndpointIndices.second, newSegmentEndpointIndices.first};
             }
@@ -208,10 +207,10 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
     for (int currentEdgeIndex = 0; currentEdgeIndex < edgeIndexToEndpointIndices.size(); currentEdgeIndex++)
     {
         // If the materials on either end of an edge don't match, there will be a triangle
-        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]])
+        if (primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex].first] != primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex].second])
         {
             pair<int, int> segment_endpoints;
-            if (edgeIndexToFaceIndices[currentEdgeIndex].size() == 1) // if boundary edge edge
+            if (edgeIndexToFaceIndices[currentEdgeIndex].size() == 1) // if boundary edge
             {
                 if (edgeIndexToFacePointIndex[currentEdgeIndex] == -1)
                     throw "Logic error, midpoint index not found in face points";
@@ -233,15 +232,15 @@ contourTriMultiDCStruct contourTriMultiDC(const Eigen::Matrix2Xf &pointIndexToPo
             resultingTriangleIndexToResultingCornerIndices.push_back(vector({
                 segment_endpoints.first,
                 segment_endpoints.second,
-                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][0] // B/c the edge indices start after the face point indices
+                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex].first // B/c the edge indices start after the face point indices
             }));
-            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][0]]);
+            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex].first]);
 
             // Insert the "bottom" triangle
             resultingTriangleIndexToResultingCornerIndices.push_back(vector({segment_endpoints.first,
                                                                                 segment_endpoints.second,
-                                                                                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex][1]}));
-            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex][1]]);
+                                                                                static_cast<int>(facePointByIndex.size()) + edgeIndexToEndpointIndices[currentEdgeIndex].second}));
+            fillMats.push_back(primaryMaterialIndexByPointIndex[edgeIndexToEndpointIndices[currentEdgeIndex].second]);
         }
     }
 
