@@ -1,8 +1,10 @@
 
 #include "GrowAndCover.h"
 
-#include <iostream>
 #include <map>
+
+using std::pair;
+using std::vector;
 
 Eigen::Rotation2Df rotM(float a)
 {
@@ -104,10 +106,8 @@ std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int
 	return std::pair(std::pair(best_origin, best_v1), best_inliers);
 }
 
-std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts, const std::vector<int>& indices,
-                                                    const Eigen::Matrix2Xi& intCoords)
+std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts, const std::vector<int>& indices, const Eigen::Matrix2Xi& intCoords)
 {
-
 	Eigen::Matrix4f ata = Eigen::Matrix4f::Zero();
 	Eigen::Vector4f atb = Eigen::Vector4f::Zero();
 	const Eigen::Matrix2f identity2 = Eigen::Matrix2f::Identity();
@@ -115,8 +115,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts,
 	for (int i = 0; i < intCoords.cols(); i++)
 	{
 		//For each coordinate
-		const auto coord = intCoords.col(i);
-
+		const Eigen::Block<const Eigen::Matrix<int, 2, -1, 0, 2, -1>, 2, 1, 1> coord = intCoords.col(i);
 
 		Eigen::Matrix<float, 2, 4> a;
 		a << coord(0) * identity2 + coord(1) * hexM.toRotationMatrix(), identity2;
@@ -135,15 +134,14 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> getGrid(const Eigen::Matrix2Xf& pts,
 //Refine Grid
 std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& pts,
                                                        const std::pair<Eigen::Vector2f, Eigen::Vector2f>& grid,
-                                                       const std::pair<std::vector<int>, Eigen::Matrix2Xi>& inliers)
+                                                       const std::pair<vector<int>, Eigen::Matrix2Xi>& inliers)
 {
-	auto new_grid = grid;
-	auto new_inliers = inliers;
-	auto num = inliers.first.size();
+	pair<Eigen::Vector2f, Eigen::Vector2f> new_grid = grid;
+	pair<vector<int>, Eigen::Matrix2Xi> new_inliers = inliers;
+	size_t num = inliers.first.size();
 
 	const std::function std_dev([](const Eigen::Matrix2Xf& _pts, const std::pair<Eigen::Vector2f, Eigen::Vector2f>& _grid)
 	{
-		
 		Eigen::Matrix2Xf delta = _pts;
 		const auto& origin = _grid.first;
 		const auto& v1 = _grid.second;
@@ -155,7 +153,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 		return delta.colwise().squaredNorm().rowwise().sum().col(0)(0);
 	});
 
-	auto s = std_dev(pts, new_grid);
+	float s = std_dev(pts, new_grid);
 	while (static_cast<long long>(num) < pts.cols())
 	{
 
@@ -165,7 +163,7 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 		//Then get the inliers and grid that results from the origin and v1
 		new_inliers = getInliers(pts, new_grid.first, new_grid.second);
 		//If there is an improvement, go again
-		const auto new_s = std_dev(pts, new_grid);
+		const float new_s = std_dev(pts, new_grid);
 
 		if (new_inliers.first.size() > num)
 		{
@@ -183,23 +181,21 @@ std::pair<Eigen::Vector2f, Eigen::Vector2f> refineGrid(const Eigen::Matrix2Xf& p
 }
 
 
-std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGridAndCoords(const Eigen::Matrix2Xf& pts, const int& num)
+pair<pair<Eigen::Vector2f, Eigen::Vector2f>, Eigen::Matrix2Xi> getGridAndCoords(const Eigen::Matrix2Xf& pts, const int& num)
 {
-	const auto grid = initGridInliers(pts, num);
-	auto refinedGrid = refineGrid(pts, grid.first, grid.second);
+	const pair<pair<Eigen::Vector2f, Eigen::Vector2f>, pair<vector<int>, Eigen::Matrix2Xi>> grid = initGridInliers(pts, num);
+    const pair<Eigen::Vector2f, Eigen::Vector2f> refinedGrid = refineGrid(pts, grid.first, grid.second);
 	const Eigen::Vector2f origin = refinedGrid.first;
 	const Eigen::Vector2f v1 = refinedGrid.second;
 	const Eigen::Vector2f v2 = Eigen::Rotation2Df(pi / 3) * v1;
-	Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
+	const Eigen::Matrix2Xi int_coords = roundPtsToCoords(pts, origin, v1, v2);
 
 	return { refinedGrid, int_coords };
 }
 
 #define GROW_AND_COVER_NEIGHBORS {1, 0}, {0, 1}, {-1, 1}, {-1, 0}, {0, -1}, {1, -1}
-Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid,
-                              const unsigned& num)
+Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2Xf& samples, const unsigned& wid, const unsigned& num)
 {
-	
 	Eigen::Matrix<int, 2, 6> neighbors = Eigen::Matrix<int, 6, 2>({ GROW_AND_COVER_NEIGHBORS }).transpose();
 	Eigen::Matrix<int, 2, 7> neighbors_and_self = Eigen::Matrix<int, 7, 2>({ GROW_AND_COVER_NEIGHBORS, { 0, 0 } }).transpose();
 	 
@@ -229,7 +225,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 		for (Eigen::Vector2i neighbor_delta : neighbors_and_self.colwise())
 		{
 			Eigen::Vector2i neighbor = sample_cast + neighbor_delta;
-			auto neighbor_pair = getPair(neighbor);
+			pair<int, int> neighbor_pair = getPair(neighbor);
 
 			//If the neighbor is not found
 			if (!hash.contains(neighbor_pair))
@@ -245,7 +241,7 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 	}
 
 	//Queue of the base points that exist
-	std::vector<Eigen::Vector2i> coordinate_queue;
+	vector<Eigen::Vector2i> coordinate_queue;
 	coordinate_queue.reserve(coords.cols() + new_coords.cols());
 	for (int i = 0; i < coords.cols(); i++)
 	{
@@ -260,14 +256,14 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 
 	for (unsigned int i = 0; i < wid; i++)
 	{
-		std::vector<Eigen::Vector2i> new_queue;
+		vector<Eigen::Vector2i> new_queue;
 		for (const Eigen::Vector2i& loc : coordinate_queue)
 		{
 			//Check the surrounding points (and itself)
 			for (int j = 0; j < neighbors.cols(); j++)
 			{
 				Eigen::Vector2i neighbor = loc + neighbors.col(j);
-				auto neighbor_pair = getPair(neighbor);
+				pair<int, int> neighbor_pair = getPair(neighbor);
 				//If the neighbor is not found
 				if (!hash.contains(neighbor_pair))
 				{
@@ -283,7 +279,6 @@ Eigen::Matrix2Xf growAndCover(const Eigen::Matrix2Xf& pts, const Eigen::Matrix2X
 				}
 			}
 		}
-
 		coordinate_queue = new_queue;
 	}
 	Eigen::Matrix2Xf final_result(2, new_coords.cols());

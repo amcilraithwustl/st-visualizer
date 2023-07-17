@@ -6,6 +6,7 @@
 #include <stack>
 
 using std::vector;
+using std::pair;
 
 Eigen::Vector3f cross(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C)
 {
@@ -229,13 +230,13 @@ std::vector<numVEF> countEdgesFacesVerticesPerComponent(countComponentsResult co
 	{
 
 		// Vertices in component. Trivial
-		auto numVertices = components.pointsByComponent[c].size();
+		size_t numVertices = components.pointsByComponent[c].size();
 
 		// Faces in component. Trivial
-		auto numFaces = components.facesByComponent[c].size();
+		size_t numFaces = components.facesByComponent[c].size();
 
 		// Edges. Count around each face in component, divide by two;
-		auto numEdges = 0;
+		int numEdges = 0;
 		for (const auto &face : components.facesByComponent[c])
 		{
 			numEdges += faces[face].size();
@@ -252,14 +253,14 @@ std::vector<numVEF> countEdgesFacesVerticesPerComponent(countComponentsResult co
 }
 
 // Returns the euler characteristic for each component for each featuremesh as nested vectors of ints
-std::vector<std::vector<int>> countAllComponents(std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> featureMesh)
+vector<vector<int>> countAllComponents(vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> featureMesh)
 {
-	std::vector<std::vector<int>> volumes = {};
+	vector<std::vector<int>> volumes = {};
 	for (const auto &[pts, faces] : featureMesh)
 	{
-		auto components = countComponents(pts, faces);
-		auto vefList = countEdgesFacesVerticesPerComponent(components, faces);
-		std::vector<int> eulerCharacteristics;
+        countComponentsResult components = countComponents(pts, faces);
+		vector<numVEF> vefList = countEdgesFacesVerticesPerComponent(components, faces);
+		vector<int> eulerCharacteristics;
 		for (const auto &vef : vefList)
 		{
 			eulerCharacteristics.push_back(vef.numVertices - vef.numEdges + vef.numFaces);
@@ -272,11 +273,11 @@ std::vector<std::vector<int>> countAllComponents(std::vector<std::pair<std::vect
 std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
 getVolumeContours(const Eigen::Matrix3Xf &pts, std::vector<std::vector<float>> vals, float shrink)
 {
-    const auto nmat = vals[0].size();
+    const size_t nmat = vals[0].size();
     tetgenio reg;
     tetralizeMatrix(pts, reg);
-    const auto tets = tetgenToTetVector(reg);
-    std::vector<Eigen::Vector3f> pts_vector;
+    const vector<vector<int>> tets = tetgenToTetVector(reg);
+    vector<Eigen::Vector3f> pts_vector;
     pts_vector.reserve(pts.cols());
     // TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
     for (auto &pt : pts.colwise())
@@ -288,7 +289,7 @@ getVolumeContours(const Eigen::Matrix3Xf &pts, std::vector<std::vector<float>> v
             verts, segs, segmats, nmat, shrink);
 }
 
-Eigen::Matrix3Xf concatMatrixes(const std::vector<Eigen::Matrix3Xf> &input)
+Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)
 {
     unsigned int sum = 0;
     for (auto &layer : input)
