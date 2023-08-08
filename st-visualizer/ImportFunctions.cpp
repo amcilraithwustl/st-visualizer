@@ -175,6 +175,11 @@ tsv_return_type loadTsv(const string &file_name,
     unsigned int newClusters = max + 1;
     size_t newFeatures = feature_indices.size();
 
+    // Generate cluster name array
+    vector<int> clusterIndices(max + 2, 0);
+    std::iota(clusterIndices.begin() + 1, clusterIndices.end(), 1);
+    vector<string> clusterNames = mapVector(clusterIndices, std::function([](const int &index){return std::to_string(index);}));
+
     // Extract the relevant records
     // Records should hold slices of data rows that match the right name of the slice and is a tissue sample
     vector<vector<vector<string>>> sliced_records = mapVector(slice_names, std::function(
@@ -347,10 +352,11 @@ tsv_return_type loadTsv(const string &file_name,
 
     // TODO: std::move for speed reasons
     tsv_return_type ret;
-    ret.names = std::move(names);
-    ret.slices = std::move(slices3d);
-    ret.values = std::move(grown_values);
-    ret.clusters = std::move(grown_clusters);
+    ret.names = names;
+    ret.clusterNames = clusterNames;
+    ret.slices = slices3d;
+    ret.values = grown_values;
+    ret.clusters = grown_clusters;
     log("TSV Import Complete.");
     return ret;
 }

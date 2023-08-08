@@ -6,10 +6,16 @@
 #include <cmath>
 #include <functional>
 #include <iostream>
+#include <fstream>
 #include <list>
 #include <tetgen.h>
 #include <triangle.h>
 #include <vector>
+#include <utility>
+
+using std::vector;
+using std::string;
+using std::pair;
 
 constexpr float pi = static_cast<float>(3.1415926535);
 
@@ -379,4 +385,46 @@ std::vector<T> flatten(const std::vector<std::vector<T>> &input)
         }
     }
     return result;
+}
+
+inline int exportObj(string path, vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> data, vector<string> names)
+{
+    const int nums = data.size();
+
+    for (int i = 0; i < nums; i++)
+    {
+        std::ofstream target(path + names.at(i) + ".obj", std::ofstream::trunc);
+
+        // export the points
+        vector<Eigen::Vector3f> &vertices = data.at(i).first;
+        for (Eigen::Vector3f vertex : vertices)
+        {
+            std::stringstream ss;
+            ss.setf(std::ios::fixed);
+            ss.precision(16);
+            ss << "v ";
+            ss << vertex(0) << " ";
+            ss << vertex(1) << " ";
+            ss << vertex(2) << "\n";
+            target << ss.rdbuf();
+        }
+
+        // export the faces
+        vector<vector<int>> &faces = data.at(i).second;
+        for (vector<int> face : faces)
+        {
+            std::stringstream ss;
+            ss << "f ";
+            for (int val : face)
+            {
+                ss << val + 1 << " ";
+            }
+            ss << "\n";
+            target << ss.rdbuf();
+        }
+
+        target.close();
+    }
+
+    return 0;
 }

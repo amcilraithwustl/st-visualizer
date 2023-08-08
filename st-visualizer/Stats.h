@@ -270,8 +270,8 @@ vector<vector<int>> countAllComponents(vector<std::pair<std::vector<Eigen::Vecto
 	return volumes;
 }
 
-std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>>
-getVolumeContours(const Eigen::Matrix3Xf &pts, std::vector<std::vector<float>> vals, float shrink)
+vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>>
+getVolumeContours(const Eigen::Matrix3Xf &pts, vector<vector<float>> vals, float shrink)
 {
     const size_t nmat = vals[0].size();
     tetgenio reg;
@@ -282,11 +282,10 @@ getVolumeContours(const Eigen::Matrix3Xf &pts, std::vector<std::vector<float>> v
     // TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
     for (auto &pt : pts.colwise())
     {
-        pts_vector.push_back(pt);
+        pts_vector.emplace_back(pt);
     }
     auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
-    return getContourAllMats3D(
-            verts, segs, segmats, nmat, shrink);
+    return getContourAllMats3D(verts, segs, segmats, nmat, shrink);
 }
 
 Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)

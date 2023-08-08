@@ -21,6 +21,7 @@ using std::function;
 struct tsv_return_type
 {
 	vector<string> names;
+    vector<string> clusterNames;
 	vector<Eigen::Matrix3Xf> slices;
 	vector<vector<vector<float>>> clusters;
 	vector<vector<vector<float>>> values;

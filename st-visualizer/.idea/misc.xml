@@ -3,7 +3,6 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <libraryRoots>
-      <file path="$PROJECT_DIR$/eigen-3.4.0" />
       <file path="$PROJECT_DIR$/tetgen-1.6.0" />
       <file path="$PROJECT_DIR$/triangle-1.6" />
     </libraryRoots>

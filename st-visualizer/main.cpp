@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     const auto alignmentValues = importAlignments(
         alignmentFile);
 
-    const auto results = loadTsv(
+    const tsv_return_type results = loadTsv(
         config.at("fileName").get<std::string>(),
         sliceNames,
         config.at("sliceIndex").get<int>(),
@@ -222,6 +222,9 @@ int main(int argc, char *argv[])
     ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters);   // ctrs3Dclusters,
     ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
     // ret["volumeContours"] = getVolumeContours()
+
+    exportObj("./bin/features/", ctrs3dVals, results.names);
+    exportObj("./bin/clusters/", ctrs3dClusters, results.clusterNames);
 
     std::ofstream f(target);
     f << ret;
