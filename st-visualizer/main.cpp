@@ -37,7 +37,10 @@ int main(int argc, char *argv[])
 					"rowIndex": 3,
 					"colIndex": 4,
 					"clusterIndex": 5,
-					"zDistance": 100
+					"zDistance": 100,
+                    "objExport": true,
+                    "featureObj": "bin/features/",
+                    "clusterObj": "bin/clusters/"
 				}
 			)");
     }
@@ -221,10 +224,13 @@ int main(int argc, char *argv[])
     ret["tris2Dclusters"] = convertTris(tris2dclusters); // tris2Dclusters,
     ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters);   // ctrs3Dclusters,
     ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
-    // ret["volumeContours"] = getVolumeContours()
 
-    exportObj("./bin/features/", ctrs3dVals, results.names);
-    exportObj("./bin/clusters/", ctrs3dClusters, results.clusterNames);
+    if (config.at("objExport").get<bool>())
+    {
+        log("Exporting obj files.");
+        exportObj("./bin/features/", ctrs3dVals, results.names);
+        exportObj("./bin/clusters/", ctrs3dClusters, results.clusterNames);
+    }
 
     std::ofstream f(target);
     f << ret;

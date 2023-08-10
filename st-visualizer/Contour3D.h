@@ -75,9 +75,9 @@ inline int orientation(const Eigen::Vector3f &u, const Eigen::Vector3f &v, const
 }
 
 // Slower, but doesn't copy construct. Use when vectors are small.
-inline std::vector<int> complementByReference(const std::vector<int> &source, const std::vector<int> &target)
+inline vector<int> complementByReference(const vector<int> &source, const vector<int> &target)
 {
-    std::vector<int> accumulator;
+    vector<int> accumulator;
     accumulator.reserve(source.size());
     for (const auto &item : source)
     {
@@ -95,12 +95,12 @@ inline std::vector<int> complementByReference(const std::vector<int> &source, co
 }
 
 // O(nlog(n)+mlog(m) operation, but every usage n<=m<=4, so probably not a problem
-inline std::vector<int> complement(std::vector<int> source, std::vector<int> target)
+inline vector<int> complement(vector<int> source, vector<int> target)
 {
     std::ranges::sort(source);
     std::ranges::sort(target);
 
-    std::vector<int> accumulator;
+    vector<int> accumulator;
     accumulator.reserve(source.size());
     int i = 0, j = 0;
     while (i < source.size() && j < target.size())
@@ -132,18 +132,18 @@ inline std::vector<int> complement(std::vector<int> source, std::vector<int> tar
     return accumulator;
 }
 
-inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<int, int> &edge,
-                                                               const std::vector<std::vector<int>> &tets)
+inline pair<vector<int>, vector<int>> orderTets(const pair<int, int> &edge,
+                                                const vector<vector<int>> &tets)
 {
-    std::pair<std::vector<int>, std::vector<int>> ret;
-    auto &orderedTets = ret.first;
+    pair<vector<int>, vector<int>> ret;
+    vector<int> &orderedTets = ret.first;
     orderedTets.reserve(tets.size());
 
     // Which 2 other corners does each tet have?
-    std::vector<std::vector<int>> cornersByTet; // This should have two non-edge vertices per tet
+    vector<vector<int>> cornersByTet; // This should have two non-edge vertices per tet
     {
         cornersByTet.reserve(tets.size());
-        std::vector edgeEndpoints = {edge.first, edge.second};
+        vector edgeEndpoints = {edge.first, edge.second};
         for (const auto &tet : tets)
         {
             cornersByTet.push_back(complementByReference(tet, edgeEndpoints));
@@ -152,7 +152,7 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
 
     // Stores which tet(s) each corner belongs to
     // Which tet, which index in tet
-    std::unordered_map<int, std::vector<std::pair<int, int>>> tets_by_corner;
+    unordered_map<int, vector<pair<int, int>>> tets_by_corner;
     {
         // For Each tet
         // O(2n) b/c each tet has exactly two stored corners
@@ -229,14 +229,14 @@ inline std::pair<std::vector<int>, std::vector<int>> orderTets(const std::pair<i
 class Hash3d
 {
 public:
-    // std::vector<std::vector<std::vector<int>>> table;
-    std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, int>>> table;
-    // std::map<std::pair<size_t, size_t>, std::vector<int>> table;
+    // vector<vector<vector<int>>> table;
+    unordered_map<int, unordered_map<int, unordered_map<int, int>>> table;
+    // std::map<pair<size_t, size_t>, vector<int>> table;
     size_t size;
 
     Hash3d(size_t size) : size(size)
     {
-        // table = std::vector(size, std::vector(size, std::vector(size,-1)));
+        // table = vector(size, vector(size, vector(size,-1)));
         table.reserve(size);
     }
 
@@ -266,7 +266,7 @@ public:
 
 struct Hash2d
 {
-    std::unordered_map<int, std::unordered_map<int, int>> table;
+    unordered_map<int, unordered_map<int, int>> table;
     // TODO: This is slow
     int &at(const int &a, const int &b)
     {
@@ -295,7 +295,6 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
     size_t number_of_points = points_by_index.size();
     size_t number_of_tets = tets_by_index.size();
 
-    // TODO: ask aiden what is this
     vector<pair<int, int>> corner_combinations = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}};
 
     // get material index at each point
@@ -387,10 +386,10 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
     }
 
     // create vertices, one per tet with material change
-    std::vector<Eigen::Vector3f> vertex_by_index;
-    std::vector<int> vertex_index_by_tet_index;
+    vector<Eigen::Vector3f> vertex_by_index;
+    vector<int> vertex_index_by_tet_index;
     {
-        std::vector<Eigen::Vector3f> temp;
+        vector<Eigen::Vector3f> temp;
         vertex_by_index.reserve(number_of_tets * 6);
         vertex_index_by_tet_index.reserve(number_of_tets);
         for (const auto &tet : tets_by_index)
@@ -421,14 +420,14 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
     // Create Segments
 
     Hash3d bdFaceHash(edges_by_index.size());
-    std::vector<std::vector<int>> segments_by_index;
-    std::vector<std::pair<int, int>> segmentMaterials_by_index;
+    vector<vector<int>> segments_by_index;
+    vector<pair<int, int>> segment_materials_by_edge_index;
     {
         log("Creating Contour Segements.");
         segments_by_index.reserve(edges_by_index.size());
-        segmentMaterials_by_index.reserve(edges_by_index.size());
+        segment_materials_by_edge_index.reserve(edges_by_index.size());
 
-        const std::vector<std::pair<int, int>> triangleEdges = {{0, 1}, {1, 2}, {2, 0}};
+        const vector<pair<int, int>> triangleEdges = {{0, 1}, {1, 2}, {2, 0}};
 
         const int print_constant = edges_by_index.size() % LOADING_SIZE == 0
                                        ? edges_by_index.size() / LOADING_SIZE
@@ -438,37 +437,36 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
         // This function has the largest slowdown
         for (int edgeIndex = 0; edgeIndex < edges_by_index.size(); edgeIndex++)
         {
-            const auto &edge = edges_by_index[edgeIndex];
+            const pair<int, int> &edge = edges_by_index[edgeIndex];
 
             if (primary_material_by_point_index[edge.first] != primary_material_by_point_index[edge.second])
             {
-                segmentMaterials_by_index.emplace_back(primary_material_by_point_index[edge.first],
-                                                       primary_material_by_point_index[edge.second]);
+                segment_materials_by_edge_index.emplace_back(primary_material_by_point_index[edge.first],
+                                                             primary_material_by_point_index[edge.second]);
 
                 const vector<int> &tets_around_edge_by_index = tets_by_edge_index[edgeIndex];
-                const vector<vector<int>> &tets_surrounding_edge_set = subset(tets_by_index, tets_around_edge_by_index);
+                const vector<vector<int>> tets_surrounding_edge_set = subset(tets_by_index, tets_around_edge_by_index);
 
                 // O(n)
                 const auto [ordered_tets_in_set, endpoints] = orderTets(edge, tets_surrounding_edge_set);
 
                 // Each tet surrounding the edge
-                const vector<int> &tets_touching_edge_set = subset(tets_around_edge_by_index, ordered_tets_in_set);
+                const vector<int> tets_touching_edge_set = subset(tets_around_edge_by_index, ordered_tets_in_set);
 
                 // Stores the vertices in order that make up the new segment
-                vector<int> new_segment_vertices_set_ordered = subset(
-                    vertex_index_by_tet_index, tets_touching_edge_set);
+                vector<int> new_segment_vertices_set_ordered = subset(vertex_index_by_tet_index, tets_touching_edge_set);
 
                 if (!endpoints.empty())
                 {
                     // if there are boundary faces
-                    vector endpoint_vertices = {-1, -1};
+                    vector<int> endpoint_vertices = {-1, -1};
                     // O(2)
                     for (int j = 0; j < endpoint_vertices.size(); j++)
                     {
-                        std::vector tri = {edge.first, edge.second, endpoints[j]};
+                        vector<int> tri = {edge.first, edge.second, endpoints[j]};
                         std::ranges::sort(tri);
 
-                        auto &hashValue = bdFaceHash.at(tri[0], tri[1], tri[2]);
+                        int &hashValue = bdFaceHash.at(tri[0], tri[1], tri[2]);
                         endpoint_vertices[j] = hashValue;
 
                         // If it doesn't exist
@@ -480,7 +478,7 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                             // O(3)
                             for (const auto &triangleEdgeEndpoints : triangleEdges)
                             {
-                                auto edge_index = edge_index_by_endpoint_indices.at(
+                                int edge_index = edge_index_by_endpoint_indices.at(
                                     tri[triangleEdgeEndpoints.first], tri[triangleEdgeEndpoints.second]);
                                 if (edgePoint_by_edge_index.contains(edge_index))
                                     massedPoints.push_back(edgePoint_by_edge_index[edge_index]);
@@ -525,7 +523,7 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                 log("  ", static_cast<float>(100 * edgeIndex / print_constant) / LOADING_SIZE, "%");
         }
     }
-    return {vertex_by_index, segments_by_index, segmentMaterials_by_index};
+    return {vertex_by_index, segments_by_index, segment_materials_by_edge_index};
 }
 
 inline void tetralizeMatrix(const Eigen::Matrix3Xf &pts, tetgenio &out)
@@ -550,7 +548,7 @@ inline void tetralizeMatrix(const Eigen::Matrix3Xf &pts, tetgenio &out)
     tetrahedralize(tmp, &in, &out);
 }
 
-inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f> &pts)
+inline Eigen::Vector3f getFaceNorm(const vector<Eigen::Vector3f> &pts)
 {
     Eigen::Vector3f sum = {0, 0, 0};
     for (int i = 0; i < pts.size(); i++)
@@ -561,16 +559,16 @@ inline Eigen::Vector3f getFaceNorm(const std::vector<Eigen::Vector3f> &pts)
     return sum;
 }
 
-inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> getContourByMat3D(
-    const std::vector<Eigen::Vector3f> &verts,
-    const std::vector<std::vector<int>> &segs,
-    const std::vector<std::pair<int, int>> &segmats,
+inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
+    const vector<Eigen::Vector3f> &verts,
+    const vector<vector<int>> &segs,
+    const vector<pair<int, int>> &segmats,
     int mat,
     float shrink)
 {
     // Select segments by target material
-    std::vector<int> first_index_match;
-    std::vector<int> second_index_match;
+    vector<int> first_index_match;
+    vector<int> second_index_match;
     {
         for (int i = 0; i < segs.size(); i++)
         {
@@ -589,9 +587,9 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     auto matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches);
     // All these segements start with the target material
 
-    std::vector<int> oldIndices_by_newIndex; // Indices of the vertices we care about
+    vector<int> oldIndices_by_newIndex; // Indices of the vertices we care about
     {
-        std::vector vertices_used_by_index(verts.size(), false);
+        vector vertices_used_by_index(verts.size(), false);
         {
             // O(n)
             for (const auto &seg : matching_material_segments)
@@ -611,7 +609,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
         }
     }
 
-    std::vector newIndices_by_oldIndex(verts.size(), -1); // Map the old indices to the new indices
+    vector newIndices_by_oldIndex(verts.size(), -1); // Map the old indices to the new indices
     for (int i = 0; i < oldIndices_by_newIndex.size(); i++)
     {
         newIndices_by_oldIndex[oldIndices_by_newIndex[i]] = i;
@@ -619,7 +617,7 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     auto new_vertices = subset(verts, oldIndices_by_newIndex);
 
     // New vertices (can be mapped)
-    std::vector<std::vector<int>> revised_new_segments;
+    vector<vector<int>> revised_new_segments;
     {
         for (const auto &seg : matching_material_segments)
         {
@@ -635,10 +633,10 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     }
 
     // shrink
-    std::vector<Eigen::Vector3f> vertex_normals(new_vertices.size(), {0, 0, 0});
+    vector<Eigen::Vector3f> vertex_normals(new_vertices.size(), {0, 0, 0});
     for (const auto &seg : revised_new_segments)
     {
-        std::vector<Eigen::Vector3f> points = subset(new_vertices, seg);
+        vector<Eigen::Vector3f> points = subset(new_vertices, seg);
         auto nm = getFaceNorm(points);
         for (auto index : seg)
         {
@@ -656,14 +654,14 @@ inline std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>> ge
     return {new_vertices, revised_new_segments};
 }
 
-inline std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> getContourAllMats3D(
-    const std::vector<Eigen::Vector3f> &verts,
-    const std::vector<std::vector<int>> &segs,
-    const std::vector<std::pair<int, int>> &segmats,
+inline vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> getContourAllMats3D(
+    const vector<Eigen::Vector3f> &verts,
+    const vector<vector<int>> &segs,
+    const vector<pair<int, int>> &segmats,
     const int &number_of_materials,
     const float &shrink)
 {
-    std::vector<std::pair<std::vector<Eigen::Vector3f>, std::vector<std::vector<int>>>> a;
+    vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> a;
     for (int i = 0; i < number_of_materials; i++)
     {
         a.push_back(getContourByMat3D(verts, segs, segmats, i, shrink));

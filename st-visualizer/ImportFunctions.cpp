@@ -176,9 +176,10 @@ tsv_return_type loadTsv(const string &file_name,
     size_t newFeatures = feature_indices.size();
 
     // Generate cluster name array
-    vector<int> clusterIndices(max + 2, 0);
+    vector<int> clusterIndices(newClusters, 0);
     std::iota(clusterIndices.begin() + 1, clusterIndices.end(), 1);
     vector<string> clusterNames = mapVector(clusterIndices, std::function([](const int &index){return std::to_string(index);}));
+    clusterNames.emplace_back("No Tissue");
 
     // Extract the relevant records
     // Records should hold slices of data rows that match the right name of the slice and is a tissue sample

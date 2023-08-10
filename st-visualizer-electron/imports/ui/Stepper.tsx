@@ -11,6 +11,7 @@ import {
   transformType,
 } from "./AligmentPage/AlignmentPage";
 import { ImportPage } from "./ImportPage/ImportPage";
+import { SettingsPage } from "./SettingsPage/SettingsPage";
 import {
   importStateType,
   datatype,
@@ -20,6 +21,7 @@ import {
 import { Tooltip } from "@mui/material";
 import _ from "lodash";
 import { useState } from "react";
+import { Settings } from "@mui/icons-material";
 
 export function CustomStepper({
   importState,
@@ -36,7 +38,7 @@ export function CustomStepper({
   currentImages: transformType[];
   closeSelf: () => void;
 }) {
-  const steps = ["Upload", "Align"];
+  const steps = ["Upload", "Align", "Settings"];
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -149,6 +151,11 @@ export function CustomStepper({
       setImportState={setImportState}
       currentImages={currentImages}
       setCurrentImages={setCurrentImages}
+      importState={importState}
+    />,
+    <SettingsPage
+      key={3}
+      setImportState={setImportState}
       importState={importState}
     />,
   ];
