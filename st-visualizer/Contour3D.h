@@ -66,13 +66,30 @@ public:
 
 inline int orientation(const Eigen::Vector3f &u, const Eigen::Vector3f &v, const Eigen::Vector3f &w)
 {
-    auto val = u.cross(v).dot(w);
+    float val = u.cross(v).dot(w);
     if (val < 0)
         return -1;
     if (val > 0)
         return 1;
     return 0;
 }
+
+inline int polyhedronOrientation(const Eigen::Vector3f &a, const Eigen::Vector3f &b, const Eigen::Vector3f &c, const Eigen::Vector3f &d)
+{
+    const Eigen::Vector3f u = b - a;
+    const Eigen::Vector3f v = c - a;
+    const Eigen::Vector3f w = d - a;
+
+    Eigen::Matrix3f m;
+    m << u, v, w;
+
+    float val = m.determinant();
+    if (val < 0)
+        return -1;
+    if (val > 0)
+        return 1;
+    return 0;
+};
 
 // Slower, but doesn't copy construct. Use when vectors are small.
 inline vector<int> complementByReference(const vector<int> &source, const vector<int> &target)
@@ -90,7 +107,7 @@ inline vector<int> complementByReference(const vector<int> &source, const vector
         if (!wasFound)
             accumulator.push_back(item);
     }
-    std::ranges::sort(accumulator);
+//    std::ranges::sort(accumulator);
     return accumulator;
 }
 
@@ -143,7 +160,7 @@ inline pair<vector<int>, vector<int>> orderTets(const pair<int, int> &edge,
     vector<vector<int>> cornersByTet; // This should have two non-edge vertices per tet
     {
         cornersByTet.reserve(tets.size());
-        vector edgeEndpoints = {edge.first, edge.second};
+        vector<int> edgeEndpoints = {edge.first, edge.second};
         for (const auto &tet : tets)
         {
             cornersByTet.push_back(complementByReference(tet, edgeEndpoints));
@@ -439,10 +456,10 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
         {
             const pair<int, int> &edge = edges_by_index[edgeIndex];
 
+            // Material change
             if (primary_material_by_point_index[edge.first] != primary_material_by_point_index[edge.second])
             {
-                segment_materials_by_edge_index.emplace_back(primary_material_by_point_index[edge.first],
-                                                             primary_material_by_point_index[edge.second]);
+                segment_materials_by_edge_index.emplace_back(primary_material_by_point_index[edge.first], primary_material_by_point_index[edge.second]);
 
                 const vector<int> &tets_around_edge_by_index = tets_by_edge_index[edgeIndex];
                 const vector<vector<int>> tets_surrounding_edge_set = subset(tets_by_index, tets_around_edge_by_index);
@@ -456,6 +473,7 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                 // Stores the vertices in order that make up the new segment
                 vector<int> new_segment_vertices_set_ordered = subset(vertex_index_by_tet_index, tets_touching_edge_set);
 
+                // FIXME: it never reach this part
                 if (!endpoints.empty())
                 {
                     // if there are boundary faces
@@ -494,24 +512,44 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                 }
 
                 // orient the polygon
-                int p1, p2;
-                if (ordered_tets_in_set.size() == 1)
-                {
-                    p1 = endpoints[0];
-                    p2 = endpoints[1];
-                }
-                else
-                {
-                    const vector<int> &random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
-                    p1 = complementByReference(random_tet,
-                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
-                    p2 = complementByReference(random_tet,
-                                               {edge.first, edge.second, p1})[0];
-                }
+//                int p1, p2;
+//                if (ordered_tets_in_set.size() == 1)
+//                {
+//                    p1 = endpoints[0];
+//                    p2 = endpoints[1];
+//                }
+//                else
+//                {
+//                    const vector<int> &random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
+//                    p1 = complementByReference(random_tet,
+//                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
+//                    p2 = complementByReference(random_tet,
+//                                               {edge.first, edge.second, p1})[0];
+//                }
+//
+//                if (orientation(points_by_index[edge.first] - points_by_index[edge.second],
+//                                points_by_index[p1] - points_by_index[edge.first],
+//                                points_by_index[p2] - points_by_index[p1]) < 0)
+//                {
+//                    std::ranges::reverse(new_segment_vertices_set_ordered);
+//                }
 
-                if (orientation(points_by_index[edge.first] - points_by_index[edge.second],
-                                points_by_index[p1] - points_by_index[edge.first],
-                                points_by_index[p2] - points_by_index[p1]) < 0)
+                const vector<int> &random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
+                int p1 = complementByReference(random_tet,
+                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
+                int p2 = complementByReference(random_tet,
+                                               {edge.first, edge.second, p1})[0];
+//                int p1 = new_segment_vertices_set_ordered.at(0);
+//                int p2 = new_segment_vertices_set_ordered.at(1);
+                int p3 = edge.first;
+                int p4 = edge.second;
+
+                Eigen::Vector3f v1 = points_by_index.at(p1);
+                Eigen::Vector3f v2 = points_by_index.at(p2);
+                Eigen::Vector3f v3 = points_by_index.at(p3);
+                Eigen::Vector3f v4 = points_by_index.at(p4);
+
+                if (polyhedronOrientation(v1, v2, v3, v4) < 0)
                 {
                     std::ranges::reverse(new_segment_vertices_set_ordered);
                 }

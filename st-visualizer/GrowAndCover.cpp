@@ -61,7 +61,7 @@ Eigen::Matrix2Xi roundPtsToCoords(const Eigen::Matrix2Xf& pts, const Eigen::Vect
 std::pair<std::pair<Eigen::Vector2f, Eigen::Vector2f>, std::pair<std::vector<int>, Eigen::Matrix2Xi>> initGridInliers(
 	const Eigen::Matrix2Xf& pts, const int& num)
 {
-	if (pts.cols() < 2) throw"Need more points to test";
+	if (pts.cols() < 2) throw "Need more points to test";
 
 	std::pair<std::vector<int>, Eigen::Matrix2Xi> best_inliers;
 	Eigen::Vector2f best_origin({0, 0});

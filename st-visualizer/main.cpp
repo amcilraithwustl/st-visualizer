@@ -43,6 +43,25 @@ int main(int argc, char *argv[])
                     "clusterObj": "bin/clusters/"
 				}
 			)");
+//        config = json::parse(R"(
+//				{
+//					"fileName": "../picture/ToyData/toy_data.tsv",
+//					"alignmentFile": "../picture/ToyData/alignment.csv",
+//					"target": "../picture/ToyData/output.json",
+//					"shrink": 0,
+//					"sliceNames": ["slice_1", "slice_2", "slice_3"],
+//					"featureCols": [6,7],
+//					"sliceIndex": 1,
+//					"tissueIndex": 2,
+//					"rowIndex": 3,
+//					"colIndex": 4,
+//					"clusterIndex": 5,
+//					"zDistance": 100,
+//                    "objExport": false,
+//                    "featureObj": "../picture/ToyData/features/",
+//                    "clusterObj": "../picture/ToyData/clusters/"
+//				}
+//			)");
     }
     else if (strcmp(argv[1], "1") == 0)
     {
