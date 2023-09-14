@@ -511,39 +511,13 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                         concat({endpoint_vertices[0]}, new_segment_vertices_set_ordered), {endpoint_vertices[1]});
                 }
 
-                // orient the polygon
-//                int p1, p2;
-//                if (ordered_tets_in_set.size() == 1)
-//                {
-//                    p1 = endpoints[0];
-//                    p2 = endpoints[1];
-//                }
-//                else
-//                {
-//                    const vector<int> &random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
-//                    p1 = complementByReference(random_tet,
-//                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
-//                    p2 = complementByReference(random_tet,
-//                                               {edge.first, edge.second, p1})[0];
-//                }
-//
-//                if (orientation(points_by_index[edge.first] - points_by_index[edge.second],
-//                                points_by_index[p1] - points_by_index[edge.first],
-//                                points_by_index[p2] - points_by_index[p1]) < 0)
-//                {
-//                    std::ranges::reverse(new_segment_vertices_set_ordered);
-//                }
-
-                const vector<int> &random_tet = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
-                int p1 = complementByReference(random_tet,
-                                               tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]])[0];
-                int p2 = complementByReference(random_tet,
-                                               {edge.first, edge.second, p1})[0];
-//                int p1 = new_segment_vertices_set_ordered.at(0);
-//                int p2 = new_segment_vertices_set_ordered.at(1);
+                // Orient the polygon
+                const vector<int> &tet1 = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[0]]];
+                const vector<int> &tet2 = tets_by_index[tets_around_edge_by_index[ordered_tets_in_set[1]]];
+                int p1 = complementByReference(tet1, tet2)[0];
+                int p2 = complementByReference(tet1, {edge.first, edge.second, p1})[0];
                 int p3 = edge.first;
                 int p4 = edge.second;
-
                 Eigen::Vector3f v1 = points_by_index.at(p1);
                 Eigen::Vector3f v2 = points_by_index.at(p2);
                 Eigen::Vector3f v3 = points_by_index.at(p3);
@@ -555,6 +529,7 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                 }
 
                 segments_by_index.push_back(new_segment_vertices_set_ordered);
+
             }
 
             if (edgeIndex % print_constant == 0)
@@ -617,17 +592,17 @@ inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
         }
     }
 
-    auto reversed_second_matches = subset(segs, second_index_match);
-    for (auto &seg : reversed_second_matches)
+    vector<vector<int>> reversed_second_matches = subset(segs, second_index_match);
+    for (vector<int> &seg : reversed_second_matches)
     {
         std::ranges::reverse(seg);
     }
-    auto matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches);
-    // All these segements start with the target material
+    vector<vector<int>> matching_material_segments = concat(subset(segs, first_index_match), reversed_second_matches);
+    // All these segments start with the target material
 
     vector<int> oldIndices_by_newIndex; // Indices of the vertices we care about
     {
-        vector vertices_used_by_index(verts.size(), false);
+        vector<bool> vertices_used_by_index(verts.size(), false);
         {
             // O(n)
             for (const auto &seg : matching_material_segments)
@@ -642,17 +617,19 @@ inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
         // O(n)
         for (int i = 0; i < vertices_used_by_index.size(); i++)
         {
-            if (vertices_used_by_index[i] == true)
+            if (vertices_used_by_index[i])
+            {
                 oldIndices_by_newIndex.push_back(i);
+            }
         }
     }
 
-    vector newIndices_by_oldIndex(verts.size(), -1); // Map the old indices to the new indices
+    vector<int> newIndices_by_oldIndex(verts.size(), -1); // Map the old indices to the new indices
     for (int i = 0; i < oldIndices_by_newIndex.size(); i++)
     {
         newIndices_by_oldIndex[oldIndices_by_newIndex[i]] = i;
     }
-    auto new_vertices = subset(verts, oldIndices_by_newIndex);
+    vector<Eigen::Vector3f> new_vertices = subset(verts, oldIndices_by_newIndex);
 
     // New vertices (can be mapped)
     vector<vector<int>> revised_new_segments;

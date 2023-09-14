@@ -12,10 +12,12 @@
 #include <triangle.h>
 #include <vector>
 #include <utility>
+#include <unordered_map>
 
 using std::vector;
 using std::string;
 using std::pair;
+using std::unordered_map;
 
 constexpr float pi = static_cast<float>(3.1415926535);
 
@@ -39,6 +41,43 @@ struct coord3D
         return coord3D(x + other.x, y + other.y, z + other.z);
     }
 };
+
+struct Hash_Edge_to_Face
+{
+    unordered_map<int, unordered_map<int, pair<int, int>>> table;
+
+    Hash_Edge_to_Face(int size);
+
+    pair<int, int> &at(const int &a, const int &b)
+    {
+        if (a > b)
+        {
+            if (!table[b].contains(a))
+            {
+                table[b][a] = {-1, -1};
+            }
+            return table[b][a];
+        }
+        else if (a < b)
+        {
+            if (!table[a].contains(b))
+            {
+                table[a][b] = {-1, -1};
+            }
+        }
+        else
+        {
+            throw "invalid query";
+        }
+
+        return table[a][b];
+    }
+};
+
+inline Hash_Edge_to_Face::Hash_Edge_to_Face(int size)
+{
+    this->table.reserve(size);
+}
 
 colCoordMat listToMatrix(std::list<coord> source);
 
@@ -399,6 +438,7 @@ inline int exportObj(string path, vector<pair<vector<Eigen::Vector3f>, vector<ve
 
         // export the points
         vector<Eigen::Vector3f> &vertices = data.at(i).first;
+        Hash_Edge_to_Face hash(vertices.size());
         for (Eigen::Vector3f vertex : vertices)
         {
             std::stringstream ss;
@@ -413,13 +453,34 @@ inline int exportObj(string path, vector<pair<vector<Eigen::Vector3f>, vector<ve
 
         // export the faces
         vector<vector<int>> &faces = data.at(i).second;
-        for (vector<int> face : faces)
+        for (int j = 0; j < faces.size(); j++)
         {
+            vector<int> &face = faces.at(j);
             std::stringstream ss;
             ss << "f ";
-            for (int val : face)
+            for (int k = 0;k < face.size(); k++)
             {
-                ss << val + 1 << " ";
+                pair<int, int> edge;
+                if (k == face.size() - 1)
+                {
+                    edge = {face.at(k), face.at(0)};
+                }
+                else
+                {
+                    edge = {face.at(k), face.at(k+1)};
+                }
+
+                int &target = edge.first < edge.second ? hash.at(edge.first, edge.second).first : hash.at(edge.first, edge.second).second;
+
+                if (target != -1)
+                {
+                    log("Orientation error detected!");
+                }
+                else
+                {
+                    target = j;
+                }
+                ss << face.at(k) + 1 << " ";
             }
             ss << "\n";
             target << ss.rdbuf();
