@@ -285,7 +285,22 @@ getVolumeContours(const Eigen::Matrix3Xf &pts, vector<vector<float>> vals, float
         pts_vector.emplace_back(pt);
     }
     auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
-    return getContourAllMats3D(verts, segs, segmats, nmat, shrink);
+
+    vector<vector<int>> new_segs;
+    vector<pair<int, int>> new_segmats;
+    for (int i = 0; i < segs.size(); i++)
+    {
+        vector<int> &seg = segs[i];
+        pair<int, int> &segmat = segmats[i];
+
+        for (int j = 1; j < seg.size() - 1; j++)
+        {
+            new_segs.push_back({seg[0], seg[j], seg[j + 1]});
+            new_segmats.push_back(segmat);
+        }
+    }
+
+    return getContourAllMats3D(verts, new_segs, new_segmats, nmat, shrink);
 }
 
 Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)

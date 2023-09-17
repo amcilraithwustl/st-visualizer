@@ -528,6 +528,12 @@ inline tuple<vector<Eigen::Vector3f>, vector<vector<int>>, vector<pair<int, int>
                     std::ranges::reverse(new_segment_vertices_set_ordered);
                 }
 
+                // This doesn't work
+//                for (int i = 1; i < new_segment_vertices_set_ordered.size() - 1; i++)
+//                {
+//                    segments_by_index.push_back({new_segment_vertices_set_ordered[0], new_segment_vertices_set_ordered[i], new_segment_vertices_set_ordered[i + 1]});
+//                }
+
                 segments_by_index.push_back(new_segment_vertices_set_ordered);
 
             }
@@ -640,7 +646,7 @@ inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
             auto &newItem = revised_new_segments[revised_new_segments.size() - 1];
             newItem.reserve(seg.size());
 
-            for (const auto &pt : seg)
+            for (const int &pt : seg)
             {
                 newItem.push_back(newIndices_by_oldIndex[pt]);
             }
@@ -652,7 +658,7 @@ inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
     for (const auto &seg : revised_new_segments)
     {
         vector<Eigen::Vector3f> points = subset(new_vertices, seg);
-        auto nm = getFaceNorm(points);
+        Eigen::Vector3f nm = getFaceNorm(points);
         for (auto index : seg)
         {
             vertex_normals[index] += nm;
@@ -661,8 +667,8 @@ inline pair<vector<Eigen::Vector3f>, vector<vector<int>>> getContourByMat3D(
 
     for (size_t i = 0; i < vertex_normals.size(); i++)
     {
-        const auto faceVector = vertex_normals[i];
-        const auto normalized = faceVector.normalized();
+        const Eigen::Vector3f faceVector = vertex_normals[i];
+        const Eigen::Vector3f normalized = faceVector.normalized();
         new_vertices[i] += shrink * normalized;
     }
 
