@@ -234,15 +234,15 @@ int main(int argc, char *argv[])
     ret["ctrs2Dvals"] = convertCtrs(ctrs2dVals); // ctrs2Dvals,
     ret["tris2Dvals"] = convertTris(tris2dVals); // tris2Dvals
     ret["ctrs3Dvals"] = convert3D(ctrs3dVals);   // ctrs3Dvals,
-    countAllComponents(ctrs3dVals);
-    ret["ctrsSurfaceAreaVals"] = getSurfaceAreas(ctrs3dVals);
-    ret["ctrsVolumeVals"] = getVolumes(ctrs3dVals);
+//    countAllComponents(ctrs3dVals);
+//    ret["ctrsSurfaceAreaVals"] = getSurfaceAreas(ctrs3dVals);
+//    ret["ctrsVolumeVals"] = getVolumes(ctrs3dVals);
     ret["ptClusIndex"] = ptClusIndex;                    // ptClusIndex,
     ret["nClusters"] = results.clusters[0][0].size();    // nClusters,
     ret["ctrs2Dclusters"] = convertCtrs(ctrs2dclusters); // ctrs2Dclusters,
     ret["tris2Dclusters"] = convertTris(tris2dclusters); // tris2Dclusters,
     ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters);   // ctrs3Dclusters,
-    ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
+//    ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
 
     if (config.at("objExport").get<bool>())
     {
@@ -250,6 +250,12 @@ int main(int argc, char *argv[])
         exportObj("./bin/features/", ctrs3dVals, results.names);
         exportObj("./bin/clusters/", ctrs3dClusters, results.clusterNames);
     }
+
+    ret["ctrsSurfaceAreaVals"] = computeSurfaceArea(ctrs3dVals);
+    ret["ctrsSurfaceAreaClusters"] = computeSurfaceArea(ctrs3dClusters);
+
+    std::cout << ret["ctrsSurfaceAreaVals"] << std::endl;
+    std::cout << ret["ctrsSurfaceAreaClusters"] << std::endl;
 
     std::ofstream f(target);
     f << ret;

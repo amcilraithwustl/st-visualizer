@@ -322,3 +322,25 @@ Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)
     }
     return result;
 }
+
+vector<float> computeSurfaceArea(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> contour)
+{
+    vector<float> res;
+    Eigen::Vector3f origin = {0.0, 0.0, 0.0};
+
+    for (const auto &[points, faces] : contour)
+    {
+        float surfaceArea = 0.0;
+
+        for (vector<int> face : faces)
+        {
+            Eigen::Vector3f v1 = points.at(face.at(1)) - points.at(face.at(0));
+            Eigen::Vector3f v2 = points.at(face.at(2)) - points.at(face.at(0));
+            surfaceArea += v1.cross(v2).norm();
+        }
+
+        res.push_back(0.5 * surfaceArea);
+    }
+
+    return res;
+}
