@@ -253,9 +253,13 @@ int main(int argc, char *argv[])
 
     ret["ctrsSurfaceAreaVals"] = computeSurfaceArea(ctrs3dVals);
     ret["ctrsSurfaceAreaClusters"] = computeSurfaceArea(ctrs3dClusters);
+    ret["ctrsVolumeVals"] = computeVolume(ctrs3dVals);
+    ret["ctrsVolumeClusters"] = computeVolume(ctrs3dClusters);
 
     std::cout << ret["ctrsSurfaceAreaVals"] << std::endl;
     std::cout << ret["ctrsSurfaceAreaClusters"] << std::endl;
+    std::cout << ret["ctrsVolumeVals"] << std::endl;
+    std::cout << ret["ctrsVolumeClusters"] << std::endl;
 
     std::ofstream f(target);
     f << ret;
