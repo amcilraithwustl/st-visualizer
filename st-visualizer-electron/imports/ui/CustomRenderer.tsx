@@ -634,7 +634,7 @@ export const CustomRenderer = ({
       </Stack>
     </Grid>
   ) : (
-    <Grid container style={{ width: "100%" }}>
+    <Grid container style={{ width: "100%" , height: "100%"}}>
       <Stack direction="row" spacing={2}>
         <Button variant="outlined" onClick={() => setIsOpen()}>
           Import Data
@@ -649,7 +649,7 @@ export const CustomRenderer = ({
         <Button onClick={saveCanvas}>Download Picture</Button>
       </Stack>
 
-      <Grid item container xs={12} spacing={3}>
+      <Grid item container xs={12} spacing={3} style={{paddingTop: 15}}>
         <Grid item md={3} lg={2}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
@@ -687,7 +687,7 @@ export const CustomRenderer = ({
 
         <Grid item container md={6} lg={8}>
           <Paper
-            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
+            style={{ width: "100%" , height: "100%" , boxSizing: "border-box", padding: 15 }}
             elevation={9}
           >
             {renderArea}
