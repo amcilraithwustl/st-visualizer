@@ -4,8 +4,12 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
+  Tab,
+  Tabs,
+  Stack,
   Paper,
   Slider,
+  Switch,
   Typography,
 } from "@mui/material";
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
@@ -526,11 +530,26 @@ export const CustomRenderer = ({
     <Grid item container xs={12}>
       <Grid item>
         <Typography variant={"h5"}>Slices</Typography>
-        <FormGroup>
+        {/* <FormGroup>
           {activeSlices.map((active, i) => (
             <FormControlLabel
               key={i}
               control={<Checkbox checked={active.on} />}
+              onChange={(_, checked) => {
+                const oldData = activeSlices;
+                oldData[i].on = checked;
+
+                setActiveSlices([...oldData]);
+              }}
+              label={active.name}
+            />
+          ))}
+        </FormGroup> */}
+        <FormGroup>
+          {activeSlices.map((active, i) => (
+            <FormControlLabel
+              key={i}
+              control={<Switch checked={active.on} />}
               onChange={(_, checked) => {
                 const oldData = activeSlices;
                 oldData[i].on = checked;
@@ -600,26 +619,36 @@ export const CustomRenderer = ({
     </Grid>
   );
 
+  const [tabValue, setTabValue] = React.useState(0);
+  const handleTabChange = (tabEvent: React.SyntheticEvent, newTabValue: number) => {
+    setTabValue(newTabValue);
+  };
+
   return !data ? (
     <Grid container style={{ width: "100%" }}>
-      <Button variant="outlined" onClick={() => setIsOpen()}>
-        Import Data
-      </Button>
-      {openExisting}
+      <Stack direction="row" spacing={2}>
+        <Button variant="outlined" onClick={() => setIsOpen()}>
+          Import Data
+        </Button>
+        {openExisting}
+      </Stack>
     </Grid>
   ) : (
     <Grid container style={{ width: "100%" }}>
-      <Button variant="outlined" onClick={() => setIsOpen()}>
-        Import Data
-      </Button>
-      {openExisting}
-      <Button onClick={saveHandler} variant="outlined">
-        Save Geometry
-      </Button>
-      <Button onClick={() => setDoClusters((e) => !e)}>
-        {doClusters ? "View Features" : "View Clusters"}
-      </Button>
-      <Button onClick={saveCanvas}>Download Picture</Button>
+      <Stack direction="row" spacing={2}>
+        <Button variant="outlined" onClick={() => setIsOpen()}>
+          Import Data
+        </Button>
+        {openExisting}
+        <Button onClick={saveHandler} variant="outlined">
+          Save Geometry
+        </Button>
+        <Button onClick={() => setDoClusters((e) => !e)}>
+          {doClusters ? "View Features" : "View Clusters"}
+        </Button>
+        <Button onClick={saveCanvas}>Download Picture</Button>
+      </Stack>
+
       <Grid item container xs={12} spacing={3}>
         <Grid item md={3} lg={2}>
           <Paper
@@ -638,6 +667,24 @@ export const CustomRenderer = ({
             {rightControlArea}
           </Paper>
         </Grid>
+
+        {/* <Grid item md={6} lg={2}>
+          <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example">
+            <Tab label="Item One" />
+            <Tab label="Item Two" />
+            <Tab label="Item Three" />
+          </Tabs>
+          <CustomTabPanel value={tabValue} index={0}>
+            Item One
+          </CustomTabPanel>
+          <CustomTabPanel value={tabValue} index={1}>
+            Item Two
+          </CustomTabPanel>
+          <CustomTabPanel value={tabValue} index={2}>
+            Item Three
+          </CustomTabPanel>
+        </Grid> */}
+
         <Grid item container md={6} lg={8}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}

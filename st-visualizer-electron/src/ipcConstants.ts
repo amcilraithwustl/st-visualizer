@@ -83,6 +83,9 @@ export const ipcHandlers = {
         colIndex: importState[colTypes.column],
         clusterIndex: importState[colTypes.cluster],
         zDistance: importState.z_distance,
+        objExport: false,
+        featureObj: null,
+        clusterObj: null,
       };
       console.log(JSON.stringify(configOptions));
       const runResults = await new Promise<string>((res, rej) => {
