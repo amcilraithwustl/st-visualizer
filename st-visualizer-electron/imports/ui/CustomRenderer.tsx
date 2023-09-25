@@ -6,12 +6,14 @@ import {
   Grid,
   Tab,
   Tabs,
+  Box,
   Stack,
   Paper,
   Slider,
   Switch,
   Typography,
 } from "@mui/material";
+import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import _ from "lodash";
@@ -619,9 +621,10 @@ export const CustomRenderer = ({
     </Grid>
   );
 
-  const [tabValue, setTabValue] = React.useState(0);
-  const handleTabChange = (tabEvent: React.SyntheticEvent, newTabValue: number) => {
-    setTabValue(newTabValue);
+  const [value, setValue] = React.useState('1');
+
+  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    setValue(newValue);
   };
 
   return !data ? (
@@ -634,8 +637,8 @@ export const CustomRenderer = ({
       </Stack>
     </Grid>
   ) : (
-    <Grid container style={{ width: "100%" , height: "100%"}}>
-      <Stack direction="row" spacing={2}>
+    <Grid container style={{ width: "100%" }}>
+      <Stack direction="row" spacing={2} style={{ width: "100%", paddingBottom: 15 }}>
         <Button variant="outlined" onClick={() => setIsOpen()}>
           Import Data
         </Button>
@@ -649,7 +652,7 @@ export const CustomRenderer = ({
         <Button onClick={saveCanvas}>Download Picture</Button>
       </Stack>
 
-      <Grid item container xs={12} spacing={3} style={{paddingTop: 15}}>
+      {/* <Grid item container xs={12} spacing={3} style={{ paddingTop: 15 }}>
         <Grid item md={3} lg={2}>
           <Paper
             style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
@@ -666,28 +669,30 @@ export const CustomRenderer = ({
           >
             {rightControlArea}
           </Paper>
-        </Grid>
-
-        {/* <Grid item md={6} lg={2}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="basic tabs example">
-            <Tab label="Item One" />
-            <Tab label="Item Two" />
-            <Tab label="Item Three" />
-          </Tabs>
-          <CustomTabPanel value={tabValue} index={0}>
-            Item One
-          </CustomTabPanel>
-          <CustomTabPanel value={tabValue} index={1}>
-            Item Two
-          </CustomTabPanel>
-          <CustomTabPanel value={tabValue} index={2}>
-            Item Three
-          </CustomTabPanel>
         </Grid> */}
+
+      <Grid item container xs={12} spacing={3} style={{ paddingTop: 15 }}>
+        <Grid item md={6} lg={2}>
+          <Paper
+            style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
+            elevation={9}
+          >
+            <TabContext value={value}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <TabList onChange={handleChange} aria-label="lab API tabs example">
+                  <Tab label="Slices" value="1" />
+                  <Tab label="Groups" value="2" />
+                </TabList>
+              </Box>
+              <TabPanel value="1">{leftControlArea}</TabPanel>
+              <TabPanel value="2">{rightControlArea}</TabPanel>
+            </TabContext>
+          </Paper>
+        </Grid>
 
         <Grid item container md={6} lg={8}>
           <Paper
-            style={{ width: "100%" , height: "100%" , boxSizing: "border-box", padding: 15 }}
+            style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
           >
             {renderArea}
