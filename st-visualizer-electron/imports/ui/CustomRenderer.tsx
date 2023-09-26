@@ -446,7 +446,6 @@ export const CustomRenderer = ({
   );
 
   const renderArea = (
-    <Grid item xs={12}>
       <Canvas
         style={{
           height: 500,
@@ -463,7 +462,6 @@ export const CustomRenderer = ({
         {visuals.area && areaDisplay}
         {visuals.volume && volumeDisplay}
       </Canvas>
-    </Grid>
   );
 
   const primaryControlArea = (
@@ -622,7 +620,7 @@ export const CustomRenderer = ({
       </Stack>
     </Grid>
   ) : (
-    <Grid item container style={{ width: "100%", height: "100%" }}>
+    <Stack direction="column" style={{ width: "100%", height: "100%" }}>
       <Stack direction="row" spacing={2} style={{ width: "100%", paddingBottom: 15 }}>
         <Button variant="outlined" onClick={() => setIsOpen()}>
           Import Data
@@ -666,6 +664,6 @@ export const CustomRenderer = ({
           </Paper>
         </Grid>
       </Grid>
-    </Grid>
+    </Stack>
   );
 };

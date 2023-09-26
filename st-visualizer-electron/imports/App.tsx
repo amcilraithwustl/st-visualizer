@@ -47,13 +47,11 @@ export const App = () => {
       }}
     >
       {dialog}
-      <div style={{ width: "100%" }}>
-        <CustomRenderer
-          setIsOpen={() => setIsOpen(true)}
-          data={data || undefined}
-          setData={setData}
-        />
-      </div>
+      <CustomRenderer
+        setIsOpen={() => setIsOpen(true)}
+        data={data || undefined}
+        setData={setData}
+      />
     </div>
   );
 };
