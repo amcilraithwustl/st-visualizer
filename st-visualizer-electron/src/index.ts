@@ -19,7 +19,7 @@ const createWindow = (): void => {
     width: 1280,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      devTools: false,
+      devTools: true,
       // contextIsolation: true,
       nodeIntegration: true
     },

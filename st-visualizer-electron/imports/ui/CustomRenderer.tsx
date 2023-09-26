@@ -532,21 +532,6 @@ export const CustomRenderer = ({
     <Grid item container xs={12}>
       <Grid item>
         <Typography variant={"h5"}>Slices</Typography>
-        {/* <FormGroup>
-          {activeSlices.map((active, i) => (
-            <FormControlLabel
-              key={i}
-              control={<Checkbox checked={active.on} />}
-              onChange={(_, checked) => {
-                const oldData = activeSlices;
-                oldData[i].on = checked;
-
-                setActiveSlices([...oldData]);
-              }}
-              label={active.name}
-            />
-          ))}
-        </FormGroup> */}
         <FormGroup>
           {activeSlices.map((active, i) => (
             <FormControlLabel
@@ -637,7 +622,7 @@ export const CustomRenderer = ({
       </Stack>
     </Grid>
   ) : (
-    <Grid container style={{ width: "100%" }}>
+    <Grid item container style={{ width: "100%", height: "100%" }}>
       <Stack direction="row" spacing={2} style={{ width: "100%", paddingBottom: 15 }}>
         <Button variant="outlined" onClick={() => setIsOpen()}>
           Import Data
@@ -652,27 +637,8 @@ export const CustomRenderer = ({
         <Button onClick={saveCanvas}>Download Picture</Button>
       </Stack>
 
-      {/* <Grid item container xs={12} spacing={3} style={{ paddingTop: 15 }}>
-        <Grid item md={3} lg={2}>
-          <Paper
-            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
-            elevation={4}
-          >
-            {leftControlArea}
-          </Paper>
-        </Grid>
-
-        <Grid item md={3} lg={2}>
-          <Paper
-            style={{ width: "100%", boxSizing: "border-box", padding: 15 }}
-            elevation={4}
-          >
-            {rightControlArea}
-          </Paper>
-        </Grid> */}
-
-      <Grid item container xs={12} spacing={3} style={{ paddingTop: 15 }}>
-        <Grid item md={6} lg={2}>
+      <Grid item container md={12} lg={12} spacing={3}>
+        <Grid item container md={6} lg={3}>
           <Paper
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
@@ -690,7 +656,7 @@ export const CustomRenderer = ({
           </Paper>
         </Grid>
 
-        <Grid item container md={6} lg={8}>
+        <Grid item container md={6} lg={9}>
           <Paper
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
