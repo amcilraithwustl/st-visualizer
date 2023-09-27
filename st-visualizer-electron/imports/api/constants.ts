@@ -20,6 +20,10 @@ export type datatype = {
   ctrs3Dclusters: [point[], number[][]][];
   ctrs2Dclusters: [point[], [number, number][]][][];
   tris2Dclusters: [point[], number[][], number[]][];
+  ctrsSurfaceAreaVals: number[];
+  ctrsSurfaceAreaClusters: number[];
+  ctrsVolumeVals: number[]; 
+  ctrsVolumeClusters: number[];
 };
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);

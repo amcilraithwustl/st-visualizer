@@ -130,6 +130,8 @@ export const CustomRenderer = ({
     data?.values,
     doClusters,
   ]);
+  const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
+  const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
 
   //Display User Settings
   const [activeSlices, setActiveSlices] = useState<
@@ -145,16 +147,18 @@ export const CustomRenderer = ({
   }, [sliceNames]);
 
   const [activeGroups, setActiveGroups] = useState<
-    { name: string; on: boolean }[]
+    { name: string; on: boolean; area: number; volume: number }[]
   >([]);
   useEffect(() => {
     setActiveGroups(
       featureNames?.map((v, i) => ({
         name: i + 1 !== featureNames.length ? v : "No Tissue",
         on: i + 1 !== featureNames.length,
+        area: surfaceArea ? surfaceArea[i] : 0,
+        volume: volume ? volume[i] : 0,
       })) || []
     );
-  }, [featureNames]);
+  }, [featureNames, surfaceArea, volume]);
 
   const [colors, setColors] = useState(defaultColorArray);
   const [opacity, setOpacity] = useState(1);
@@ -446,22 +450,22 @@ export const CustomRenderer = ({
   );
 
   const renderArea = (
-      <Canvas
-        style={{
-          height: 500,
-          width: "100%",
-          borderStyle: "solid",
-          borderColor: "black",
-          borderWidth: 3,
-        }}
-      >
-        {renderSetup}
+    <Canvas
+      style={{
+        height: 500,
+        width: "100%",
+        borderStyle: "solid",
+        borderColor: "black",
+        borderWidth: 3,
+      }}
+    >
+      {renderSetup}
 
-        {visuals.points && pointsDisplay}
-        {visuals.contour && curvesDisplay}
-        {visuals.area && areaDisplay}
-        {visuals.volume && volumeDisplay}
-      </Canvas>
+      {visuals.points && pointsDisplay}
+      {visuals.contour && curvesDisplay}
+      {visuals.area && areaDisplay}
+      {visuals.volume && volumeDisplay}
+    </Canvas>
   );
 
   const primaryControlArea = (
@@ -596,6 +600,12 @@ export const CustomRenderer = ({
               </div>
               <div style={{ flex: 1 }}>
                 <Typography>{active.name}</Typography>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Typography>{active.area}</Typography>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Typography>{active.volume}</Typography>
               </div>
             </div>
           ))}
