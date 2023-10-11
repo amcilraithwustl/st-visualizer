@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { DataGrid, GridColDef, GridValueGetterParams, GridRenderCellParams } from '@mui/x-data-grid';
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import _ from "lodash";
@@ -452,7 +453,8 @@ export const CustomRenderer = ({
   const renderArea = (
     <Canvas
       style={{
-        height: 500,
+        // FIXME: why can't i set height to 100%? 
+        height: "80vh",
         width: "100%",
         borderStyle: "solid",
         borderColor: "black",
@@ -460,7 +462,6 @@ export const CustomRenderer = ({
       }}
     >
       {renderSetup}
-
       {visuals.points && pointsDisplay}
       {visuals.contour && curvesDisplay}
       {visuals.area && areaDisplay}
@@ -468,48 +469,33 @@ export const CustomRenderer = ({
     </Canvas>
   );
 
-  const primaryControlArea = (
+  const viewControl = (
     <Grid item container>
-      <Grid item xs={3}>
+      <Grid item xs={12}>
         <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={visuals.points} />}
+            control={<Switch checked={visuals.points} />}
             onChange={(_, checked) => {
               setVisuals((v) => ({ ...v, points: !!checked }));
             }}
             label={"Points"}
           />
-        </FormGroup>
-      </Grid>
-
-      <Grid item xs={3}>
-        <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={visuals.contour} />}
+            control={<Switch checked={visuals.contour} />}
             onChange={(_, checked) => {
               setVisuals((v) => ({ ...v, contour: !!checked }));
             }}
             label={"Contours"}
           />
-        </FormGroup>
-      </Grid>
-
-      <Grid item xs={3}>
-        <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={visuals.area} />}
+            control={<Switch checked={visuals.area} />}
             onChange={(_, checked) => {
               setVisuals((v) => ({ ...v, area: !!checked }));
             }}
             label={"Areas"}
           />
-        </FormGroup>
-      </Grid>
-
-      <Grid item xs={3}>
-        <FormGroup>
           <FormControlLabel
-            control={<Checkbox checked={visuals.volume} />}
+            control={<Switch checked={visuals.volume} />}
             onChange={(_, checked) => {
               setVisuals((v) => ({ ...v, volume: !!checked }));
             }}
@@ -517,7 +503,8 @@ export const CustomRenderer = ({
           />
         </FormGroup>
       </Grid>
-      <Grid item>
+
+      <Grid item style={{ paddingTop: 15 }}>
         <Typography>Volume Opacity</Typography>
         <Slider
           value={opacity}
@@ -530,33 +517,29 @@ export const CustomRenderer = ({
     </Grid>
   );
 
-  const leftControlArea = (
+  const sliceControl = (
     <Grid item container xs={12}>
-      <Grid item>
-        <Typography variant={"h5"}>Slices</Typography>
-        <FormGroup>
-          {activeSlices.map((active, i) => (
-            <FormControlLabel
-              key={i}
-              control={<Switch checked={active.on} />}
-              onChange={(_, checked) => {
-                const oldData = activeSlices;
-                oldData[i].on = checked;
+      <FormGroup>
+        {activeSlices.map((active, i) => (
+          <FormControlLabel
+            key={i}
+            control={<Switch checked={active.on} />}
+            onChange={(_, checked) => {
+              const oldData = activeSlices;
+              oldData[i].on = checked;
 
-                setActiveSlices([...oldData]);
-              }}
-              label={active.name}
-            />
-          ))}
-        </FormGroup>
-      </Grid>
+              setActiveSlices([...oldData]);
+            }}
+            label={active.name}
+          />
+        ))}
+      </FormGroup>
     </Grid>
   );
 
-  const rightControlArea = (
+  const groupControl = (
     <Grid item container xs={12}>
       <Grid item>
-        <Typography variant={"h5"}>Groups</Typography>
         <FormGroup>
           {activeGroups.map((active, i) => (
             <div
@@ -598,7 +581,7 @@ export const CustomRenderer = ({
                   }}
                 />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, width: "100px" }}>
                 <Typography>{active.name}</Typography>
               </div>
               <div style={{ flex: 1 }}>
@@ -612,6 +595,72 @@ export const CustomRenderer = ({
         </FormGroup>
       </Grid>
     </Grid>
+  );
+
+  const columns: GridColDef[] = [
+    { field: 'id', headerName: '#', width: 30 },
+    {
+      field: 'color',
+      headerName: 'Color',
+      width: 30,
+      description: 'Pick your color here',
+      renderCell: (props: GridRenderCellParams) => (
+        <strong>
+          <input
+            style={{ width: 30 }}
+            type="color"
+            value={colors[props.row.id - 1] as string}
+            onChange={(e) => {
+              const c = [...colors];
+              c[props.row.id - 1] = e.target.value;
+              if (debounceRef.current) {
+                clearTimeout(debounceRef.current);
+              }
+              debounceRef.current = setTimeout(() => setColors(c), 100);
+            }}
+          />
+        </strong>
+      )
+    },
+    { field: 'name', headerName: 'Name', width: 130 },
+    {
+      field: 'surfaceArea',
+      headerName: 'Surface Area',
+      type: 'number',
+      width: 120,
+    },
+    {
+      field: 'volume',
+      headerName: 'Volume',
+      type: 'number',
+      width: 120,
+    },
+  ];
+
+  const rows = activeGroups.map((active, i) =>
+  ({
+    id: i + 1,
+    color: colors[i],
+    name: active.name,
+    surfaceArea: active.area,
+    volume: active.volume,
+  })
+  );
+
+  const tableTest = (
+    <div style={{ height: '100%', width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 10 },
+          },
+        }}
+        pageSizeOptions={[10, 20]}
+        checkboxSelection
+      />
+    </div>
   );
 
   const [value, setValue] = React.useState('1');
@@ -630,7 +679,7 @@ export const CustomRenderer = ({
       </Stack>
     </Grid>
   ) : (
-    <Stack direction="column" style={{ width: "100%", height: "100%" }}>
+    <Stack direction="column" style={{ width: "100%" }}>
       <Stack direction="row" spacing={2} style={{ width: "100%", paddingBottom: 15 }}>
         <Button variant="outlined" onClick={() => setIsOpen()}>
           Import Data
@@ -646,7 +695,7 @@ export const CustomRenderer = ({
       </Stack>
 
       <Grid item container md={12} lg={12} spacing={3}>
-        <Grid item container md={6} lg={3}>
+        <Grid item container md={6} lg={4}>
           <Paper
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
@@ -656,21 +705,24 @@ export const CustomRenderer = ({
                 <TabList onChange={handleChange} aria-label="lab API tabs example">
                   <Tab label="Slices" value="1" />
                   <Tab label="Groups" value="2" />
+                  <Tab label="Settings" value="3" />
+                  {/* <Tab label="Old Groups" value="4" /> */}
                 </TabList>
               </Box>
-              <TabPanel value="1">{leftControlArea}</TabPanel>
-              <TabPanel value="2">{rightControlArea}</TabPanel>
+              <TabPanel value="1">{sliceControl}</TabPanel>
+              <TabPanel value="4">{groupControl}</TabPanel>
+              <TabPanel value="3">{viewControl}</TabPanel>
+              <TabPanel value="2">{tableTest}</TabPanel>
             </TabContext>
           </Paper>
         </Grid>
 
-        <Grid item container md={6} lg={9}>
+        <Grid item container md={6} lg={8}>
           <Paper
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
           >
             {renderArea}
-            {primaryControlArea}
           </Paper>
         </Grid>
       </Grid>

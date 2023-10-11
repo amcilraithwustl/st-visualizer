@@ -108,6 +108,7 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/lab": "^5.0.0-alpha.145",
     "@mui/material": "^5.13.2",
+    "@mui/x-data-grid": "^6.15.0",
     "@react-three/drei": "^9.68.6",
     "@react-three/fiber": "^8.13.0",
     "electron-squirrel-startup": "^1.0.0",

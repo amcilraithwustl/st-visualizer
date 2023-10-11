@@ -4,9 +4,12 @@
 #include "UtilityFunctions.h"
 
 #include <stack>
+#include <set>
+#include <algorithm>
 
 using std::vector;
 using std::pair;
+using std::set;
 
 Eigen::Vector3f cross(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C)
 {
@@ -323,7 +326,7 @@ Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)
     return result;
 }
 
-vector<float> computeSurfaceArea(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> contour)
+vector<float> computeSurfaceArea(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
     vector<float> res;
 
@@ -342,7 +345,7 @@ vector<float> computeSurfaceArea(vector<pair<vector<Eigen::Vector3f>, vector<vec
     return res;
 }
 
-vector<float> computeVolume(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> contour)
+vector<float> computeVolume(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
     vector<float> res;
 
@@ -357,6 +360,40 @@ vector<float> computeVolume(vector<pair<vector<Eigen::Vector3f>, vector<vector<i
             volume += v1.cross(v2).dot(v3);
         }
         res.push_back(volume / 6);
+    }
+
+    return res;
+}
+
+vector<int> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
+{
+    vector<int> res(contour.size(), 0);
+
+    for (const auto &[points, faces] : contour)
+    {
+        int component_count = 0;
+        vector<bool> visited(points.size(), false);
+        int unvisited_count = points.size();
+
+        vector<set<int>> adjacency(points.size());
+        for (const vector<int> &face : faces)
+        {
+            for (const int p : face)
+            {
+                set<int> &s = adjacency.at(p);
+                copy(face.begin(), face.end(), inserter(s, s.end()));
+            }
+        }
+
+        while (unvisited_count)
+        {
+            auto it = std::find(visited.begin(), visited.end(), false);
+            int index = std::distance(visited.begin(), it);
+
+            
+        }
+
+        res.emplace_back(component_count);
     }
 
     return res;
