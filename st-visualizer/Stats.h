@@ -5,16 +5,16 @@
 #include "UtilityFunctions.h"
 
 #include <algorithm>
+#include <queue>
 #include <set>
 #include <stack>
-#include <queue>
 #include <unordered_set>
 
 using std::pair;
-using std::set;
-using std::vector;
 using std::queue;
+using std::set;
 using std::unordered_set;
+using std::vector;
 
 Eigen::Vector3f cross(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C)
 {
@@ -370,10 +370,10 @@ vector<float> computeVolume(vector<pair<vector<Eigen::Vector3f>, vector<vector<i
 	return res;
 }
 
-vector<int> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
+pair<vector<int>, vector<int>> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
 	vector<int> components;
-	vector<int> holes;
+	vector<int> handles;
 
 	for (const auto &[points, faces] : contour)
 	{
@@ -401,7 +401,7 @@ vector<int> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vecto
 		}
 
 		// register the adjacent faces for each face
-        vector<vector<int>> adjacent_faces(faces.size(), vector<int>(3));
+		vector<vector<int>> adjacent_faces(faces.size(), vector<int>(3));
 		for (int i = 0; i < faces.size(); i++)
 		{
 			const vector<int> &face = faces.at(i);
@@ -423,40 +423,50 @@ vector<int> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vecto
 			}
 		}
 
-        // flood
-        vector<bool> visited(faces.size(), false);
-        unordered_set<int> unvisited;
-        for (int a = 0; a < faces.size(); a++)
-        {
-            unvisited.insert(a);
-        }
-        int component = 0;
-        while (!unvisited.empty())
-        {
-            queue<int> q;
-            q.push(*unvisited.begin());
-            visited.at(*unvisited.begin()) = true;
-            unvisited.erase(unvisited.begin());
+		// flood
+		vector<bool> visited(faces.size(), false);
+		unordered_set<int> unvisited;
+		for (int a = 0; a < faces.size(); a++)
+		{
+			unvisited.insert(a);
+		}
+		int component = 0;
+		while (!unvisited.empty())
+		{
+			queue<int> q;
+			q.push(*unvisited.begin());
+			visited.at(*unvisited.begin()) = true;
+			unvisited.erase(unvisited.begin());
 
-            while (!q.empty())
-            {
-                int current = q.front();
-                q.pop();
+			while (!q.empty())
+			{
+				int current = q.front();
+				q.pop();
 
-                for (int adjacent_face : adjacent_faces.at(current))
-                {
-                    if (!visited.at(adjacent_face))
-                    {
-                        q.push(adjacent_face);
-                        visited.at(adjacent_face) = true;
-                        unvisited.erase(adjacent_face);
-                    }
-                }
-            }
-            component++;
-        }
-        components.push_back(component);
+				for (int adjacent_face : adjacent_faces.at(current))
+				{
+					if (!visited.at(adjacent_face))
+					{
+						q.push(adjacent_face);
+						visited.at(adjacent_face) = true;
+						unvisited.erase(adjacent_face);
+					}
+				}
+			}
+			component++;
+		}
+		components.push_back(component);
+
+		// euler characteristic
+		// https://en.wikipedia.org/wiki/Euler_characteristic#Relations_to_other_invariants
+		int v = points.size();
+		int e = 3 * faces.size() / 2;
+		int f = faces.size();
+		int x = v - e + f;
+		int g = (2 - x) / 2;
+
+		handles.push_back(g);
 	}
 
-	return components;
+	return {components, handles};
 }

@@ -247,8 +247,6 @@ int main(int argc, char *argv[])
     ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters);   // ctrs3Dclusters,
 //    ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
 
-    log("Calculations complete.");
-
     if (config.at("objExport").get<bool>())
     {
         log("Exporting obj files.");
@@ -262,11 +260,19 @@ int main(int argc, char *argv[])
     ret["ctrsVolumeClusters"] = computeVolume(ctrs3dClusters);
 
     cout << "Computing connected components" << endl;
-    ret["strComponentsVals"] = connectedComponent(ctrs3dVals);
-    ret["strComponentsClusters"] = connectedComponent(ctrs3dClusters);
+    auto [componentsVals, handlesVals] = connectedComponent(ctrs3dVals);
+    auto [componentsClusters, handlesClusters] = connectedComponent(ctrs3dClusters);
+    ret["componentsVals"] = componentsVals;
+    ret["componentsClusters"] = componentsClusters;
+    ret["handlesVals"] = handlesVals;
+    ret["handlesClusters"] = handlesClusters;
 
-    cout << ret["strComponentsVals"] << endl;
-    cout << ret["strComponentsClusters"] << endl;
+    cout << ret["componentsVals"] << endl;
+    cout << ret["handlesVals"] << endl;
+    cout << ret["componentsClusters"] << endl;
+    cout << ret["handlesClusters"] << endl;
+
+    log("Calculations complete.");
 
     if (config.at("resultExport").get<bool>())
     {
@@ -275,6 +281,6 @@ int main(int argc, char *argv[])
         f << ret;
     }
 
-    log("Complete. Exiting.");
+    log("Exiting.");
     return 0;
 }
