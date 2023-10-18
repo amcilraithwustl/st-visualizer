@@ -5,7 +5,6 @@ import {
   FormGroup,
   Grid,
   Tab,
-  Tabs,
   Box,
   Stack,
   Paper,
@@ -14,10 +13,10 @@ import {
   Typography,
 } from "@mui/material";
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { DataGrid, GridColDef, GridValueGetterParams, GridRenderCellParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridValueGetterParams, GridRenderCellParams, GridRowSelectionModel } from '@mui/x-data-grid';
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
-import _ from "lodash";
+import _, { toInteger } from "lodash";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -584,12 +583,12 @@ export const CustomRenderer = ({
               <div style={{ flex: 1, width: "100px" }}>
                 <Typography>{active.name}</Typography>
               </div>
-              <div style={{ flex: 1 }}>
+              {/* <div style={{ flex: 1 }}>
                 <Typography>{active.area}</Typography>
               </div>
               <div style={{ flex: 1 }}>
                 <Typography>{active.volume}</Typography>
-              </div>
+              </div> */}
             </div>
           ))}
         </FormGroup>
@@ -647,6 +646,8 @@ export const CustomRenderer = ({
   })
   );
 
+  const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>([]);
+
   const tableTest = (
     <div style={{ height: '100%', width: '100%' }}>
       <DataGrid
@@ -659,12 +660,20 @@ export const CustomRenderer = ({
         }}
         pageSizeOptions={[10, 20]}
         checkboxSelection
+        onRowSelectionModelChange={(newRowSelectionModel) => {
+          setRowSelectionModel(newRowSelectionModel);
+          newRowSelectionModel.forEach((e) => {
+            const oldData = activeGroups;
+            oldData[toInteger(e.toString) - 1].on = true;
+            setActiveGroups([...oldData]);
+          });
+        }}
+        rowSelectionModel={rowSelectionModel}
       />
     </div>
   );
 
   const [value, setValue] = React.useState('1');
-
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };

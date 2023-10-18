@@ -45,7 +45,6 @@ struct coord3D
 struct Hash_Edge_to_Face
 {
     unordered_map<int, unordered_map<int, pair<int, int>>> table;
-
     Hash_Edge_to_Face(int size);
 
     pair<int, int> &at(const int &a, const int &b)

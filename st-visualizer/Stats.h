@@ -1,15 +1,20 @@
 #pragma once
 
+#include "Contour3D.h"
 #include "ImportFunctions.h"
 #include "UtilityFunctions.h"
 
-#include <stack>
-#include <set>
 #include <algorithm>
+#include <set>
+#include <stack>
+#include <queue>
+#include <unordered_set>
 
-using std::vector;
 using std::pair;
 using std::set;
+using std::vector;
+using std::queue;
+using std::unordered_set;
 
 Eigen::Vector3f cross(const Eigen::Vector3f &A, const Eigen::Vector3f &B, const Eigen::Vector3f &C)
 {
@@ -261,7 +266,7 @@ vector<vector<int>> countAllComponents(vector<std::pair<std::vector<Eigen::Vecto
 	vector<std::vector<int>> volumes = {};
 	for (const auto &[pts, faces] : featureMesh)
 	{
-        countComponentsResult components = countComponents(pts, faces);
+		countComponentsResult components = countComponents(pts, faces);
 		vector<numVEF> vefList = countEdgesFacesVerticesPerComponent(components, faces);
 		vector<int> eulerCharacteristics;
 		for (const auto &vef : vefList)
@@ -276,125 +281,182 @@ vector<vector<int>> countAllComponents(vector<std::pair<std::vector<Eigen::Vecto
 vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>>
 getVolumeContours(const Eigen::Matrix3Xf &pts, vector<vector<float>> vals, float shrink)
 {
-    const size_t nmat = vals[0].size();
-    tetgenio reg;
-    tetralizeMatrix(pts, reg);
-    const vector<vector<int>> tets = tetgenToTetVector(reg);
-    vector<Eigen::Vector3f> pts_vector;
-    pts_vector.reserve(pts.cols());
-    // TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
-    for (auto &pt : pts.colwise())
-    {
-        pts_vector.emplace_back(pt);
-    }
-    auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
+	const size_t nmat = vals[0].size();
+	tetgenio reg;
+	tetralizeMatrix(pts, reg);
+	const vector<vector<int>> tets = tetgenToTetVector(reg);
+	vector<Eigen::Vector3f> pts_vector;
+	pts_vector.reserve(pts.cols());
+	// TODO: Remove the need for the data transform again by using Eigen::Matrix rather than a std::vector of Eigen::Vector
+	for (auto &pt : pts.colwise())
+	{
+		pts_vector.emplace_back(pt);
+	}
+	auto [verts, segs, segmats] = contourTetMultiDC(pts_vector, tets, vals);
 
-    vector<vector<int>> new_segs;
-    vector<pair<int, int>> new_segmats;
-    for (int i = 0; i < segs.size(); i++)
-    {
-        vector<int> &seg = segs[i];
-        pair<int, int> &segmat = segmats[i];
+	vector<vector<int>> new_segs;
+	vector<pair<int, int>> new_segmats;
+	for (int i = 0; i < segs.size(); i++)
+	{
+		vector<int> &seg = segs[i];
+		pair<int, int> &segmat = segmats[i];
 
-        for (int j = 1; j < seg.size() - 1; j++)
-        {
-            new_segs.push_back({seg[0], seg[j], seg[j + 1]});
-            new_segmats.push_back(segmat);
-        }
-    }
+		for (int j = 1; j < seg.size() - 1; j++)
+		{
+			new_segs.push_back({seg[0], seg[j], seg[j + 1]});
+			new_segmats.push_back(segmat);
+		}
+	}
 
-    return getContourAllMats3D(verts, new_segs, new_segmats, nmat, shrink);
+	return getContourAllMats3D(verts, new_segs, new_segmats, nmat, shrink);
 }
 
 Eigen::Matrix3Xf concatMatrixes(const vector<Eigen::Matrix3Xf> &input)
 {
-    unsigned int sum = 0;
-    for (auto &layer : input)
-    {
-        sum += layer.cols();
-    }
-    Eigen::Matrix3Xf result(3, sum);
-    unsigned int i = 0;
-    for (const auto &layer : input)
-    {
-        for (const auto &pt : layer.colwise())
-        {
-            result.col(i) = pt;
-            i++;
-        }
-    }
-    return result;
+	unsigned int sum = 0;
+	for (auto &layer : input)
+	{
+		sum += layer.cols();
+	}
+	Eigen::Matrix3Xf result(3, sum);
+	unsigned int i = 0;
+	for (const auto &layer : input)
+	{
+		for (const auto &pt : layer.colwise())
+		{
+			result.col(i) = pt;
+			i++;
+		}
+	}
+	return result;
 }
 
 vector<float> computeSurfaceArea(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
-    vector<float> res;
+	vector<float> res;
 
-    for (const auto &[points, faces] : contour)
-    {
-        float surfaceArea = 0.0;
-        for (vector<int> face : faces)
-        {
-            Eigen::Vector3f v1 = points.at(face.at(1)) - points.at(face.at(0));
-            Eigen::Vector3f v2 = points.at(face.at(2)) - points.at(face.at(0));
-            surfaceArea += v1.cross(v2).norm();
-        }
-        res.push_back(0.5 * surfaceArea);
-    }
+	for (const auto &[points, faces] : contour)
+	{
+		float surfaceArea = 0.0;
+		for (vector<int> face : faces)
+		{
+			Eigen::Vector3f v1 = points.at(face.at(1)) - points.at(face.at(0));
+			Eigen::Vector3f v2 = points.at(face.at(2)) - points.at(face.at(0));
+			surfaceArea += v1.cross(v2).norm();
+		}
+		res.push_back(0.5 * surfaceArea);
+	}
 
-    return res;
+	return res;
 }
 
 vector<float> computeVolume(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
-    vector<float> res;
+	vector<float> res;
 
-    for (const auto &[points, faces] : contour)
-    {
-        float volume = 0.0;
-        for (vector<int> face : faces)
-        {
-            Eigen::Vector3f v1 = points.at(face.at(0));
-            Eigen::Vector3f v2 = points.at(face.at(1));
-            Eigen::Vector3f v3 = points.at(face.at(2));
-            volume += v1.cross(v2).dot(v3);
-        }
-        res.push_back(volume / 6);
-    }
+	for (const auto &[points, faces] : contour)
+	{
+		float volume = 0.0;
+		for (vector<int> face : faces)
+		{
+			Eigen::Vector3f v1 = points.at(face.at(0));
+			Eigen::Vector3f v2 = points.at(face.at(1));
+			Eigen::Vector3f v3 = points.at(face.at(2));
+			volume += v1.cross(v2).dot(v3);
+		}
+		res.push_back(volume / 6);
+	}
 
-    return res;
+	return res;
 }
 
 vector<int> connectedComponent(vector<pair<vector<Eigen::Vector3f>, vector<vector<int>>>> &contour)
 {
-    vector<int> res(contour.size(), 0);
+	vector<int> components;
+	vector<int> holes;
 
-    for (const auto &[points, faces] : contour)
-    {
-        int component_count = 0;
-        vector<bool> visited(points.size(), false);
-        int unvisited_count = points.size();
+	for (const auto &[points, faces] : contour)
+	{
+		Hash_Edge_to_Face hash(faces.size());
 
-        vector<set<int>> adjacency(points.size());
-        for (const vector<int> &face : faces)
+		for (int i = 0; i < faces.size(); i++)
+		{
+			const vector<int> &face = faces.at(i);
+			vector<pair<int, int>> edges = {
+				{face[0], face[1]},
+				{face[1], face[2]},
+				{face[2], face[0]}};
+
+			for (const pair<int, int> edge : edges)
+			{
+				if (edge.first < edge.second)
+				{
+					hash.at(edge.first, edge.second).first = i;
+				}
+				else
+				{
+					hash.at(edge.first, edge.second).second = i;
+				}
+			}
+		}
+
+		// register the adjacent faces for each face
+        vector<vector<int>> adjacent_faces(faces.size(), vector<int>(3));
+		for (int i = 0; i < faces.size(); i++)
+		{
+			const vector<int> &face = faces.at(i);
+			vector<pair<int, int>> edges = {
+				{face[0], face[1]},
+				{face[1], face[2]},
+				{face[2], face[0]}};
+
+			for (int j = 0; j < 3; j++)
+			{
+				if (edges.at(j).first < edges.at(j).second)
+				{
+					adjacent_faces.at(i).at(j) = hash.at(edges.at(j).first, edges.at(j).second).second;
+				}
+				else
+				{
+					adjacent_faces.at(i).at(j) = hash.at(edges.at(j).second, edges.at(j).first).first;
+				}
+			}
+		}
+
+        // flood
+        vector<bool> visited(faces.size(), false);
+        unordered_set<int> unvisited;
+        for (int a = 0; a < faces.size(); a++)
         {
-            for (const int p : face)
+            unvisited.insert(a);
+        }
+        int component = 0;
+        while (!unvisited.empty())
+        {
+            queue<int> q;
+            q.push(*unvisited.begin());
+            visited.at(*unvisited.begin()) = true;
+            unvisited.erase(unvisited.begin());
+
+            while (!q.empty())
             {
-                set<int> &s = adjacency.at(p);
-                copy(face.begin(), face.end(), inserter(s, s.end()));
+                int current = q.front();
+                q.pop();
+
+                for (int adjacent_face : adjacent_faces.at(current))
+                {
+                    if (!visited.at(adjacent_face))
+                    {
+                        q.push(adjacent_face);
+                        visited.at(adjacent_face) = true;
+                        unvisited.erase(adjacent_face);
+                    }
+                }
             }
+            component++;
         }
+        components.push_back(component);
+	}
 
-        while (unvisited_count)
-        {
-            auto it = std::find(visited.begin(), visited.end(), false);
-            int index = std::distance(visited.begin(), it);
-
-            
-        }
-
-        res.emplace_back(component_count);
-    }
-
-    return res;
+	return components;
 }

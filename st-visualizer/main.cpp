@@ -13,6 +13,8 @@ using namespace nlohmann;
 
 using std::string;
 using std::vector;
+using std::cout;
+using std::endl;
 
 // https://wias-berlin.de/software/tetgen/
 
@@ -38,7 +40,8 @@ int main(int argc, char *argv[])
 					"colIndex": 4,
 					"clusterIndex": 5,
 					"zDistance": 100,
-                    "objExport": true,
+                    "resultExport": false,
+                    "objExport": false,
                     "featureObj": "bin/features/",
                     "clusterObj": "bin/clusters/"
 				}
@@ -220,7 +223,7 @@ int main(int argc, char *argv[])
 
         return ctrs3dJson;
     };
-    log("Calculations complete. Writing to file.");
+
     json ret = json::object();
     ret["nat"] = results.values[0][0].size(); // nMat,
     ret["shrink"] = shrink;                   // shrink,
@@ -244,6 +247,8 @@ int main(int argc, char *argv[])
     ret["ctrs3Dclusters"] = convert3D(ctrs3dClusters);   // ctrs3Dclusters,
 //    ret["ctrsVolumeClusters"] = getVolumes(ctrs3dClusters);
 
+    log("Calculations complete.");
+
     if (config.at("objExport").get<bool>())
     {
         log("Exporting obj files.");
@@ -256,12 +261,20 @@ int main(int argc, char *argv[])
     ret["ctrsVolumeVals"] = computeVolume(ctrs3dVals);
     ret["ctrsVolumeClusters"] = computeVolume(ctrs3dClusters);
 
-    std::cout << ret["ctrsSurfaceAreaVals"] << std::endl;
-    std::cout << ret["ctrsSurfaceAreaClusters"] << std::endl;
-    std::cout << ret["ctrsVolumeVals"] << std::endl;
-    std::cout << ret["ctrsVolumeClusters"] << std::endl;
+    cout << "Computing connected components" << endl;
+    ret["strComponentsVals"] = connectedComponent(ctrs3dVals);
+    ret["strComponentsClusters"] = connectedComponent(ctrs3dClusters);
 
-    std::ofstream f(target);
-    f << ret;
-    log("Complete. Deconstructing.");
+    cout << ret["strComponentsVals"] << endl;
+    cout << ret["strComponentsClusters"] << endl;
+
+    if (config.at("resultExport").get<bool>())
+    {
+        log("Complete. Writing to file.");
+        std::ofstream f(target);
+        f << ret;
+    }
+
+    log("Complete. Exiting.");
+    return 0;
 }
