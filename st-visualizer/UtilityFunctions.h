@@ -45,7 +45,7 @@ struct coord3D
 struct Hash_Edge_to_Face
 {
     unordered_map<int, unordered_map<int, pair<int, int>>> table;
-    Hash_Edge_to_Face(int size);
+    size_t double_edge_count = 0;
 
     pair<int, int> &at(const int &a, const int &b)
     {
@@ -72,11 +72,6 @@ struct Hash_Edge_to_Face
         return table[a][b];
     }
 };
-
-inline Hash_Edge_to_Face::Hash_Edge_to_Face(int size)
-{
-    this->table.reserve(size);
-}
 
 colCoordMat listToMatrix(std::list<coord> source);
 
@@ -437,7 +432,7 @@ inline int exportObj(string path, vector<pair<vector<Eigen::Vector3f>, vector<ve
 
         // export the points
         vector<Eigen::Vector3f> &vertices = data.at(i).first;
-        Hash_Edge_to_Face hash(vertices.size());
+        Hash_Edge_to_Face hash;
         for (Eigen::Vector3f vertex : vertices)
         {
             std::stringstream ss;

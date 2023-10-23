@@ -10,6 +10,8 @@
 #include <stack>
 #include <unordered_set>
 
+using std::cout;
+using std::endl;
 using std::pair;
 using std::queue;
 using std::set;
@@ -377,7 +379,7 @@ pair<vector<int>, vector<int>> connectedComponent(vector<pair<vector<Eigen::Vect
 
 	for (const auto &[points, faces] : contour)
 	{
-		Hash_Edge_to_Face hash(faces.size());
+		Hash_Edge_to_Face hash;
 
 		for (int i = 0; i < faces.size(); i++)
 		{
@@ -397,6 +399,7 @@ pair<vector<int>, vector<int>> connectedComponent(vector<pair<vector<Eigen::Vect
 				{
 					hash.at(edge.first, edge.second).second = i;
 				}
+				//                hash.double_edge_count += 1;
 			}
 		}
 
@@ -463,7 +466,7 @@ pair<vector<int>, vector<int>> connectedComponent(vector<pair<vector<Eigen::Vect
 		int e = 3 * faces.size() / 2;
 		int f = faces.size();
 		int x = v - e + f;
-		int g = (2 - x) / 2;
+		int g = (2 + 2 * component - x) / 2 - 1;
 
 		handles.push_back(g);
 	}
