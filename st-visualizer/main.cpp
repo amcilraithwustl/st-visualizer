@@ -260,17 +260,19 @@ int main(int argc, char *argv[])
     ret["ctrsVolumeClusters"] = computeVolume(ctrs3dClusters);
 
     cout << "Computing connected components" << endl;
-//    auto [componentsVals, handlesVals] = connectedComponent(ctrs3dVals);
+    auto [componentsVals, handlesVals] = connectedComponent(ctrs3dVals);
     auto [componentsClusters, handlesClusters] = connectedComponent(ctrs3dClusters);
-//    ret["componentsVals"] = componentsVals;
+    ret["componentsVals"] = componentsVals;
     ret["componentsClusters"] = componentsClusters;
-//    ret["handlesVals"] = handlesVals;
+    ret["handlesVals"] = handlesVals;
     ret["handlesClusters"] = handlesClusters;
 
-    cout << ret["componentsVals"] << endl;
-    cout << ret["handlesVals"] << endl;
-    cout << ret["componentsClusters"] << endl;
-    cout << ret["handlesClusters"] << endl;
+    auto something = ret["ctrsSurfaceAreaVals"];
+    cout << something << endl;
+//    cout << ret["componentsVals"] << endl;
+//    cout << ret["handlesVals"] << endl;
+//    cout << ret["componentsClusters"] << endl;
+//    cout << ret["handlesClusters"] << endl;
 
     log("Calculations complete.");
 

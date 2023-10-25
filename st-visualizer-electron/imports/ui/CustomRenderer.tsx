@@ -130,8 +130,20 @@ export const CustomRenderer = ({
     data?.values,
     doClusters,
   ]);
-  const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
-  const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
+  
+  const ctrsSurfaceAreaClusters = data?.ctrsSurfaceAreaClusters.map(x => x.toFixed(2));
+  const ctrsSurfaceAreaVals = data?.ctrsSurfaceAreaVals.map(x => x.toFixed(2));
+  const ctrsVolumeClusters = data?.ctrsVolumeClusters.map(x => x.toFixed(2));
+  const ctrsVolumeVals = data?.ctrsVolumeVals.map(x => x.toFixed(2));
+
+  // const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
+  // const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
+
+  const surfaceArea = useMemo(() => (doClusters ? ctrsSurfaceAreaClusters : ctrsSurfaceAreaVals), [ctrsSurfaceAreaClusters, ctrsSurfaceAreaVals, doClusters]);
+  const volume = useMemo(() => (doClusters ? ctrsVolumeClusters : ctrsVolumeVals), [ctrsVolumeClusters, ctrsVolumeVals, doClusters]);
+
+  const components = useMemo(() => (doClusters ? data?.componentsClusters : data?.componentsVals), [data?.componentsClusters, data?.componentsVals, doClusters]);
+  const handles = useMemo(() => (doClusters ? data?.handlesClusters : data?.handlesVals), [data?.handlesClusters, data?.handlesVals, doClusters]);
 
   //Display User Settings
   const [activeSlices, setActiveSlices] = useState<
@@ -147,7 +159,7 @@ export const CustomRenderer = ({
   }, [sliceNames]);
 
   const [activeGroups, setActiveGroups] = useState<
-    { name: string; on: boolean; area: number; volume: number }[]
+    { name: string; on: boolean; area: number; volume: number; components: number; handles: number; }[]
   >([]);
   useEffect(() => {
     setActiveGroups(
@@ -156,6 +168,8 @@ export const CustomRenderer = ({
         on: i + 1 !== featureNames.length,
         area: surfaceArea ? surfaceArea[i] : 0,
         volume: volume ? volume[i] : 0,
+        components: components ? components[i] : 0,
+        handles: handles ? handles[i] : 0,
       })) || []
     );
   }, [featureNames, surfaceArea, volume]);
@@ -580,7 +594,7 @@ export const CustomRenderer = ({
                   }}
                 />
               </div>
-              <div style={{ flex: 1, width: "100px" }}>
+              <div style={{ flex: 1 }}>
                 <Typography>{active.name}</Typography>
               </div>
               {/* <div style={{ flex: 1 }}>
@@ -634,6 +648,18 @@ export const CustomRenderer = ({
       type: 'number',
       width: 120,
     },
+    {
+      field: 'components',
+      headerName: 'Connect Components',
+      type: 'number',
+      width: 120,
+    },
+    {
+      field: 'handles',
+      headerName: 'Handles',
+      type: 'number',
+      width: 120,
+    }
   ];
 
   const rows = activeGroups.map((active, i) =>
@@ -643,6 +669,8 @@ export const CustomRenderer = ({
     name: active.name,
     surfaceArea: active.area,
     volume: active.volume,
+    components: active.components,
+    handles:active.handles,
   })
   );
 
@@ -673,9 +701,13 @@ export const CustomRenderer = ({
     </div>
   );
 
-  const [value, setValue] = React.useState('1');
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-    setValue(newValue);
+  const [leftTabValue, setLeftTabValue] = React.useState('1');
+  const handleLeftTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setLeftTabValue(newValue);
+  };
+  const [rightTabValue, setRightTabValue] = React.useState('1');
+  const handleRightTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setRightTabValue(newValue);
   };
 
   return !data ? (
@@ -709,13 +741,13 @@ export const CustomRenderer = ({
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
           >
-            <TabContext value={value}>
+            <TabContext value={leftTabValue}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <TabList onChange={handleChange} aria-label="lab API tabs example">
+                <TabList onChange={handleLeftTabChange} aria-label="lab API tabs example">
                   <Tab label="Slices" value="1" />
                   <Tab label="Groups" value="2" />
                   <Tab label="Settings" value="3" />
-                  {/* <Tab label="Old Groups" value="4" /> */}
+                  <Tab label="Old Groups" value="4" />
                 </TabList>
               </Box>
               <TabPanel value="1">{sliceControl}</TabPanel>
@@ -731,7 +763,16 @@ export const CustomRenderer = ({
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
             elevation={9}
           >
-            {renderArea}
+            <TabContext value={rightTabValue}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <TabList onChange={handleRightTabChange} aria-label="lab API tabs example">
+                  <Tab label="View" value="1" />
+                  <Tab label="Data" value="2" />
+                </TabList>
+              </Box>
+              <TabPanel value="1">{renderArea}</TabPanel>
+              <TabPanel value="2">{tableTest}</TabPanel>
+            </TabContext>
           </Paper>
         </Grid>
       </Grid>

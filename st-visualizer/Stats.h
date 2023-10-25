@@ -466,7 +466,7 @@ pair<vector<int>, vector<int>> connectedComponent(vector<pair<vector<Eigen::Vect
 		int e = 3 * faces.size() / 2;
 		int f = faces.size();
 		int x = v - e + f;
-		int g = (2 + 2 * component - x) / 2 - 1;
+		int g = (2 * component - x) / 2;
 
 		handles.push_back(g);
 	}

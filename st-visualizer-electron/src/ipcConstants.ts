@@ -83,6 +83,7 @@ export const ipcHandlers = {
         colIndex: importState[colTypes.column],
         clusterIndex: importState[colTypes.cluster],
         zDistance: importState.z_distance,
+        resultExport: true,
         objExport: false,
         featureObj: null,
         clusterObj: null,

@@ -24,6 +24,10 @@ export type datatype = {
   ctrsSurfaceAreaClusters: number[];
   ctrsVolumeVals: number[]; 
   ctrsVolumeClusters: number[];
+  componentsVals: number[];
+  handlesVals: number[];
+  componentsClusters: number[];
+  handlesClusters: number[];
 };
 
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
