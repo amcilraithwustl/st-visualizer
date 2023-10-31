@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { DataGrid, GridColDef, GridValueGetterParams, GridRenderCellParams, GridRowSelectionModel } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridValueGetterParams, GridRenderCellParams, GridRowSelectionModel, GridValueFormatterParams } from '@mui/x-data-grid';
 import { GizmoHelper, GizmoViewport, OrbitControls } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import _, { toInteger } from "lodash";
@@ -130,17 +130,19 @@ export const CustomRenderer = ({
     data?.values,
     doClusters,
   ]);
-  
-  const ctrsSurfaceAreaClusters = data?.ctrsSurfaceAreaClusters.map(x => x.toFixed(2));
-  const ctrsSurfaceAreaVals = data?.ctrsSurfaceAreaVals.map(x => x.toFixed(2));
-  const ctrsVolumeClusters = data?.ctrsVolumeClusters.map(x => x.toFixed(2));
-  const ctrsVolumeVals = data?.ctrsVolumeVals.map(x => x.toFixed(2));
 
-  // const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
-  // const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
+  // FIXME: memeory leak
 
-  const surfaceArea = useMemo(() => (doClusters ? ctrsSurfaceAreaClusters : ctrsSurfaceAreaVals), [ctrsSurfaceAreaClusters, ctrsSurfaceAreaVals, doClusters]);
-  const volume = useMemo(() => (doClusters ? ctrsVolumeClusters : ctrsVolumeVals), [ctrsVolumeClusters, ctrsVolumeVals, doClusters]);
+  // const ctrsSurfaceAreaClusters = data?.ctrsSurfaceAreaClusters.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  // const ctrsSurfaceAreaVals = data?.ctrsSurfaceAreaVals.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  // const ctrsVolumeClusters = data?.ctrsVolumeClusters.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  // const ctrsVolumeVals = data?.ctrsVolumeVals.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+  // const surfaceArea = useMemo(() => (doClusters ? ctrsSurfaceAreaClusters : ctrsSurfaceAreaVals), [ctrsSurfaceAreaClusters, ctrsSurfaceAreaVals, doClusters]);
+  // const volume = useMemo(() => (doClusters ? ctrsVolumeClusters : ctrsVolumeVals), [ctrsVolumeClusters, ctrsVolumeVals, doClusters]);
+
+  const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
+  const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
 
   const components = useMemo(() => (doClusters ? data?.componentsClusters : data?.componentsVals), [data?.componentsClusters, data?.componentsVals, doClusters]);
   const handles = useMemo(() => (doClusters ? data?.handlesClusters : data?.handlesVals), [data?.handlesClusters, data?.handlesVals, doClusters]);
@@ -172,7 +174,7 @@ export const CustomRenderer = ({
         handles: handles ? handles[i] : 0,
       })) || []
     );
-  }, [featureNames, surfaceArea, volume]);
+  }, [featureNames, surfaceArea, volume, components, handles]);
 
   const [colors, setColors] = useState(defaultColorArray);
   const [opacity, setOpacity] = useState(1);
@@ -597,12 +599,6 @@ export const CustomRenderer = ({
               <div style={{ flex: 1 }}>
                 <Typography>{active.name}</Typography>
               </div>
-              {/* <div style={{ flex: 1 }}>
-                <Typography>{active.area}</Typography>
-              </div>
-              <div style={{ flex: 1 }}>
-                <Typography>{active.volume}</Typography>
-              </div> */}
             </div>
           ))}
         </FormGroup>
@@ -618,63 +614,67 @@ export const CustomRenderer = ({
       width: 30,
       description: 'Pick your color here',
       renderCell: (props: GridRenderCellParams) => (
-        <strong>
-          <input
-            style={{ width: 30 }}
-            type="color"
-            value={colors[props.row.id - 1] as string}
-            onChange={(e) => {
-              const c = [...colors];
-              c[props.row.id - 1] = e.target.value;
-              if (debounceRef.current) {
-                clearTimeout(debounceRef.current);
-              }
-              debounceRef.current = setTimeout(() => setColors(c), 100);
-            }}
-          />
-        </strong>
+        <input
+          style={{ width: 30 }}
+          type="color"
+          value={colors[props.row.id] as string}
+          onChange={async (e) => {
+            const c = [...colors];
+            c[props.row.id] = e.target.value;
+            if (debounceRef.current) {
+              clearTimeout(debounceRef.current);
+            }
+            debounceRef.current = setTimeout(() => setColors(c), 100);
+          }}
+        />
       )
     },
-    { field: 'name', headerName: 'Name', width: 130 },
+    { field: 'name', headerName: 'Name', width: 300 },
     {
       field: 'surfaceArea',
       headerName: 'Surface Area',
       type: 'number',
-      width: 120,
+      width: 150,
+      valueFormatter: (params: GridValueFormatterParams<number>) => {
+        return params.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      },
     },
     {
       field: 'volume',
       headerName: 'Volume',
       type: 'number',
-      width: 120,
+      width: 150,
+      valueFormatter: (params: GridValueFormatterParams<number>) => {
+        return params.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      },
     },
     {
       field: 'components',
-      headerName: 'Connect Components',
+      headerName: 'Components',
       type: 'number',
-      width: 120,
+      width: 100,
     },
     {
       field: 'handles',
       headerName: 'Handles',
       type: 'number',
-      width: 120,
+      width: 100,
     }
   ];
 
   const rows = activeGroups.map((active, i) =>
   ({
-    id: i + 1,
+    id: i,
     color: colors[i],
     name: active.name,
     surfaceArea: active.area,
     volume: active.volume,
     components: active.components,
-    handles:active.handles,
+    handles: active.handles,
   })
   );
 
-  const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>([]);
+  // const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>();
 
   const tableTest = (
     <div style={{ height: '100%', width: '100%' }}>
@@ -687,16 +687,17 @@ export const CustomRenderer = ({
           },
         }}
         pageSizeOptions={[10, 20]}
-        checkboxSelection
-        onRowSelectionModelChange={(newRowSelectionModel) => {
-          setRowSelectionModel(newRowSelectionModel);
-          newRowSelectionModel.forEach((e) => {
-            const oldData = activeGroups;
-            oldData[toInteger(e.toString) - 1].on = true;
-            setActiveGroups([...oldData]);
-          });
-        }}
-        rowSelectionModel={rowSelectionModel}
+        // checkboxSelection
+        // onRowSelectionModelChange={(newRowSelectionModel) => {
+        //   setRowSelectionModel(newRowSelectionModel);
+        //   newRowSelectionModel.forEach((e) => {
+        //     const oldData = activeGroups;
+        //     console.log(e.toString);
+        //     oldData[toInteger(e.toString) - 1].on = true;
+        //     setActiveGroups([...oldData]);
+        //   });
+        // }}
+        // rowSelectionModel={rowSelectionModel}
       />
     </div>
   );
@@ -735,7 +736,7 @@ export const CustomRenderer = ({
         <Button onClick={saveCanvas}>Download Picture</Button>
       </Stack>
 
-      <Grid item container md={12} lg={12} spacing={3}>
+      <Grid item container md={12} lg={12} spacing={3} style={{ overflow: scroll }}>
         <Grid item container md={6} lg={4}>
           <Paper
             style={{ width: "100%", height: "100%", boxSizing: "border-box", padding: 15 }}
