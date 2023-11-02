@@ -674,7 +674,14 @@ export const CustomRenderer = ({
   })
   );
 
-  // const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>();
+  const [rowSelectionModel, setRowSelectionModel] = React.useState<GridRowSelectionModel>([]);
+  useEffect(() => {
+    setRowSelectionModel(
+      activeGroups
+        .map((e, i) => (e.on ? i : -1))
+        .filter((e) => e !== -1)
+    );
+  }, [activeGroups]);
 
   const tableTest = (
     <div style={{ height: '100%', width: '100%' }}>
@@ -687,17 +694,16 @@ export const CustomRenderer = ({
           },
         }}
         pageSizeOptions={[10, 20]}
-        // checkboxSelection
-        // onRowSelectionModelChange={(newRowSelectionModel) => {
-        //   setRowSelectionModel(newRowSelectionModel);
-        //   newRowSelectionModel.forEach((e) => {
-        //     const oldData = activeGroups;
-        //     console.log(e.toString);
-        //     oldData[toInteger(e.toString) - 1].on = true;
-        //     setActiveGroups([...oldData]);
-        //   });
-        // }}
-        // rowSelectionModel={rowSelectionModel}
+        checkboxSelection
+        onRowSelectionModelChange={(newRowSelectionModel) => {
+          setRowSelectionModel(newRowSelectionModel);
+          const oldData = activeGroups;
+          oldData.forEach((e, i) => {
+            e.on = newRowSelectionModel.includes(i);
+          });
+          setActiveGroups([...oldData]);
+        }}
+        rowSelectionModel={rowSelectionModel}
       />
     </div>
   );
@@ -736,6 +742,7 @@ export const CustomRenderer = ({
         <Button onClick={saveCanvas}>Download Picture</Button>
       </Stack>
 
+      {/* FIXME: handle table overflow */}
       <Grid item container md={12} lg={12} spacing={3} style={{ overflow: scroll }}>
         <Grid item container md={6} lg={4}>
           <Paper
@@ -748,11 +755,11 @@ export const CustomRenderer = ({
                   <Tab label="Slices" value="1" />
                   <Tab label="Groups" value="2" />
                   <Tab label="Settings" value="3" />
-                  <Tab label="Old Groups" value="4" />
+                  {/* <Tab label="Old Groups" value="4" /> */}
                 </TabList>
               </Box>
               <TabPanel value="1">{sliceControl}</TabPanel>
-              <TabPanel value="4">{groupControl}</TabPanel>
+              {/* <TabPanel value="4">{groupControl}</TabPanel> */}
               <TabPanel value="3">{viewControl}</TabPanel>
               <TabPanel value="2">{tableTest}</TabPanel>
             </TabContext>
@@ -768,7 +775,7 @@ export const CustomRenderer = ({
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={handleRightTabChange} aria-label="lab API tabs example">
                   <Tab label="View" value="1" />
-                  <Tab label="Data" value="2" />
+                  <Tab label="Groups" value="2" />
                 </TabList>
               </Box>
               <TabPanel value="1">{renderArea}</TabPanel>
