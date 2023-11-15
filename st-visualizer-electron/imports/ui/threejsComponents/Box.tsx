@@ -12,7 +12,7 @@ function Box(props: JSX.IntrinsicElements["mesh"]) {
   useFrame((state, delta) => (ref.current.rotation.x += 0.01));
 
   const segs = 1 * 2;
-  console.log("totalItems", segs * segs * 6);
+  // console.log("totalItems", segs * segs * 6);
   return (
     <mesh
       {...props}

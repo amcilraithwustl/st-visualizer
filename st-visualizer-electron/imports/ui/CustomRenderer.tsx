@@ -220,7 +220,7 @@ export const CustomRenderer = ({
           const rawText = await file.text();
           const d = JSON.parse(rawText);
           setData(d.data || data);
-          console.log(d);
+          // console.log(d);
           setTimeout(() => {
             //Placeholder to deal with sideffects of data change
             setActiveGroups(d.activeGroups || activeGroups);

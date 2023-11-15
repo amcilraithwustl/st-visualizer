@@ -33,15 +33,15 @@ export type datatype = {
 export const pointToVector = (p: point) => new THREE.Vector3(p[0], p[1], p[2]);
 const getJsonData = async (path: string) => {
   const buffer = await window.electronAPI.getFile({ path });
-  console.log("STRING", buffer);
+  // console.log("STRING", buffer);
   return JSON.parse(buffer.toString());
 };
 //This is a temporary implementation and will need to be dramatically improved
 export const importPts = async (path: string) => {
   try {
-    console.log("TRYING TO DO JSON");
+    // console.log("TRYING TO DO JSON");
     const pts = await getJsonData(path);
-    console.log("PTS", pts);
+    // console.log("PTS", pts);
     return (pts as unknown) as datatype;
   } catch (error) {
     console.error("File Import Error", error);
@@ -69,6 +69,7 @@ export const blankImportState = {
   [colTypes.column]: 4,
   [colTypes.cluster]: 5,
   [colTypes.feature]: [] as number[],
+  alignmentData: [] as string[][],
   tsvData: [] as string[][],
   z_distance: 100,
 };
@@ -110,7 +111,5 @@ export const colors: Color[] = [...new Array(10)].flatMap(() => [
 ]);
 export const shrink = 0.007;
 export type active = { name: string; on: boolean };
-
 export const ipcCommands = { dialog: { openFile: "dialog:openFile" } } as const;
-
 export const customFileExtension = ".stvis";

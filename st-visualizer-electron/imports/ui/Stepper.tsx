@@ -10,6 +10,8 @@ import {
   calcTransforms,
   transformType,
 } from "./AligmentPage/AlignmentPage";
+import { PasteImportPage } from "./PasteImportPage/PasteImportPage";
+import { NewAlignmentPage } from "./NewAlignmentPage/NewAlignmentPage";
 import { ImportPage } from "./ImportPage/ImportPage";
 import { SettingsPage } from "./SettingsPage/SettingsPage";
 import {
@@ -18,7 +20,7 @@ import {
   colTypes,
   importPts,
 } from "../api/constants";
-import { Tooltip } from "@mui/material";
+import { Tooltip, Grid } from "@mui/material";
 import _ from "lodash";
 import { useState } from "react";
 import { Settings } from "@mui/icons-material";
@@ -38,7 +40,7 @@ export function CustomStepper({
   currentImages: transformType[];
   closeSelf: () => void;
 }) {
-  const steps = ["Upload", "Align", "Settings"];
+  const steps = ["Upload", "Import from Paste", "Align (Experimental)", "Align", "Settings"];
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -80,7 +82,7 @@ export function CustomStepper({
               setTimeout(async () => {
                 try {
                   if (!lengthsMatch) throw "Lengths Don't Match";
-                  console.log("BEGINNING");
+                  // console.log("BEGINNING");
                   setLoading(true);
                   const path = await window.electronAPI.doCalculation({
                     transforms: calcTransforms(currentImages),
@@ -101,10 +103,10 @@ export function CustomStepper({
             {lengthsMatch
               ? "Run Final Calculation"
               : "Run Final Calculation (" +
-                currentImages.length +
-                "/" +
-                numSlices +
-                " images uploaded)"}
+              currentImages.length +
+              "/" +
+              numSlices +
+              " images uploaded)"}
           </Button>
         </Tooltip>
       </div>
@@ -145,16 +147,25 @@ export function CustomStepper({
       importState={importState}
       setImportState={setImportState}
     />,
-
-    <AlignmentPage
+    <PasteImportPage
       key={2}
+      importState={importState}
+      setImportState={setImportState}
+    />,
+    <NewAlignmentPage
+      key={3}
+      importState={importState}
+      setImportState={setImportState}
+    />,
+    <AlignmentPage
+      key={4}
       setImportState={setImportState}
       currentImages={currentImages}
       setCurrentImages={setCurrentImages}
       importState={importState}
     />,
     <SettingsPage
-      key={3}
+      key={5}
       setImportState={setImportState}
       importState={importState}
     />,
@@ -184,9 +195,15 @@ export function CustomStepper({
     >
       {stepButton}
       <Stepper activeStep={activeStep}>{stepLabels}</Stepper>
+      {/* <Grid item style={{ paddingLeft: 10, paddingRight: 10 }}>
+        <Typography sx={{ mt: 2, mb: 1, py: 1 }}>
+          Step {activeStep + 1}
+        </Typography>
+      </Grid> */}
       {stepContent.at(activeStep)}
     </div>
   );
+
   return loading ? (
     <div
       style={{

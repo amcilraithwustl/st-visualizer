@@ -94,7 +94,7 @@ export const AlignmentPage = ({
   );
   //Slice to remove the title and the compact to remove undefined
   const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
-  console.log("CURRENT Transforms", transforms, sliceNames);
+  // console.log("CURRENT Transforms", transforms, sliceNames);
   const xCol = importState[colTypes.column];
   const yCol = importState[colTypes.row];
   const currentVals = importState.tsvData
@@ -108,10 +108,10 @@ export const AlignmentPage = ({
           }
     )
     .filter((v) => !!v);
-  console.log(currentVals);
+  // console.log(currentVals);
   useEffect(() => {
     const func = async () => {
-      console.log("RUNNING");
+      // console.log("RUNNING");
       const urls = await Promise.all(
         currentImages.map(
           (file) =>
@@ -256,7 +256,7 @@ export const AlignmentPage = ({
 
   const naturalHeight = height;
   const naturalWidth = width;
-  console.log(naturalWidth, naturalHeight);
+  // console.log(naturalWidth, naturalHeight);
 
   const displayArea = alignments &&
     selectedImg &&

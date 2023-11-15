@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-
+import FileOpenIcon from '@mui/icons-material/FileOpen';
 import { getValue, importStateType, colTypes } from "../../api/constants";
 export const ImportPage = ({
   importState,
@@ -45,7 +45,7 @@ export const ImportPage = ({
 
   const columns = (
     <Grid item container>
-      <Typography variant="h4">Column Management</Typography>
+      <Typography variant="h4" style={{ paddingTop: "15px", paddingBottom: "15px" }}>Column Management</Typography>
       <Grid item container spacing={1}>
         {[...new Array(nCols)].map((_, i) => (
           <Grid item key={i}>
@@ -74,42 +74,49 @@ export const ImportPage = ({
     </Grid>
   );
   const metadata = (
-    <Grid item>
-      <Typography variant="h4">Calculation Data</Typography>
-      <TextField
-        id="outlined-number"
-        type="number"
-        label={"Shrink (microns)"}
-        value={importState.shrink}
-        onChange={(e) =>
-          setImportState((s) => ({ ...s, shrink: parseFloat(e.target.value) }))
-        }
-        InputLabelProps={{
-          shrink: true,
-        }}
-      />
-      <TextField
-        //Set of widths rather than a single constant one
-        id="outlined-number"
-        type="number"
-        label={"Slice Width (Microns)"}
-        value={importState.z_distance}
-        onChange={(e) =>
-          setImportState((s) => ({
-            ...s,
-            z_distance: parseInt(e.target.value),
-          }))
-        }
-        InputLabelProps={{
-          shrink: true,
-        }}
-      />
+    <Grid item container>
+      <Typography variant="h4" style={{ paddingTop: "15px", paddingBottom: "15px" }}>Configurations</Typography>
+      <Grid item container spacing={1}>
+        <Grid item>
+          <TextField
+            id="outlined-number"
+            type="number"
+            label={"Shrink (microns)"}
+            value={importState.shrink}
+            onChange={(e) =>
+              setImportState((s) => ({ ...s, shrink: parseFloat(e.target.value) }))
+            }
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Grid>
+        <Grid item>
+          <TextField
+            //Set of widths rather than a single constant one
+            id="outlined-number"
+            type="number"
+            label={"Slice Width (Microns)"}
+            value={importState.z_distance}
+            onChange={(e) =>
+              setImportState((s) => ({
+                ...s,
+                z_distance: parseInt(e.target.value),
+              }))
+            }
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+        </Grid>
+      </Grid>
     </Grid>
   );
+
   return (
     <Stack style={{ padding: 20 }}>
-      <Button variant="contained" component="label">
-        Data File
+      <Button variant="contained" component="label" startIcon={<FileOpenIcon />} style={{textTransform: 'none'}}>
+        Data File {importState.fileName ? importState.fileName : null}
         <input
           hidden
           multiple={false}

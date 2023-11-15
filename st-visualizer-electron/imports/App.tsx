@@ -11,12 +11,12 @@ import { transformType } from "./ui/AligmentPage/AlignmentPage";
 export const App = () => {
   const [data, setData] = useState<datatype | undefined>(undefined);
 
-  console.log(window.electronAPI);
+  // console.log(window.electronAPI);
   const [currentImages, setCurrentImages] = useState<transformType[]>([]);
   const [importState, setImportState] = useState<importStateType>({
     ...blankImportState,
   });
-  console.log("DATA", importState);
+  // console.log("DATA", importState);
 
   //Slice to remove the title and the compact to remove undefined
   const [isOpen, setIsOpen] = useState(false);

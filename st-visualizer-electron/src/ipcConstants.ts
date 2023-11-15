@@ -68,7 +68,7 @@ export const ipcHandlers = {
         )
       )
     );
-    console.log("___BEGIN PROCESS___");
+    // console.log("___BEGIN PROCESS___");
     try {
       const configOptions = {
         fileName: importState.fileName,
@@ -101,8 +101,8 @@ export const ipcHandlers = {
         );
       });
       console.log(runResults);
-      console.log("___COMPLETE___");
-      console.log("Data output to ", outputPath);
+      // console.log("___COMPLETE___");
+      // console.log("Data output to ", outputPath);
 
       return outputPath;
     } catch (e) {
