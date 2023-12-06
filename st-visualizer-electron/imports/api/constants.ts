@@ -61,8 +61,11 @@ export enum colTypes {
 export const blankImportState = {
   sliceOrder: [] as number[],
   shrink: 0,
+  numSlices: 0,
   alignmentFile: "",
   fileName: "",
+  pasteFiles: [] as string[],
+  pasteData: [] as JSON[],
   [colTypes.slice]: 1,
   [colTypes.tissue]: 2,
   [colTypes.row]: 3,

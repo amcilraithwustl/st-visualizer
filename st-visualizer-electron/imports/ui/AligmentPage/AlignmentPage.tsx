@@ -10,8 +10,11 @@ import {
   Typography,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
+import ImageIcon from '@mui/icons-material/Image';
+import fs from "fs";
 import { importStateType, colTypes } from "../../api/constants";
 import _ from "lodash";
+
 export type transformType = {
   file: File;
   alignments: {
@@ -76,8 +79,8 @@ export const AlignmentPage = ({
 }: {
   importState: importStateType;
   setImportState: React.Dispatch<React.SetStateAction<importStateType>>;
-  setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
   currentImages: transformType[];
+  setCurrentImages: React.Dispatch<React.SetStateAction<transformType[]>>;
 }): JSX.Element => {
   const sliceNames = _.compact(
     _.uniq(
@@ -89,11 +92,10 @@ export const AlignmentPage = ({
   const [selectedImg, setSelectedImg] = useState<number | null>(null);
   const [imgUrls, setImgUrls] = useState<string[]>([]);
   const transforms = calcTransforms(currentImages);
-  const slicesRow = importState.tsvData.map(
-    (row) => row[importState[colTypes.slice]]
-  );
+
   //Slice to remove the title and the compact to remove undefined
-  const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
+  const numSlices = importState.numSlices;
+
   // console.log("CURRENT Transforms", transforms, sliceNames);
   const xCol = importState[colTypes.column];
   const yCol = importState[colTypes.row];
@@ -102,10 +104,10 @@ export const AlignmentPage = ({
       i === 0
         ? undefined
         : {
-            x: parseFloat(row[xCol]),
-            y: parseFloat(row[yCol]),
-            slice: importState.tsvData[importState[colTypes.slice]],
-          }
+          x: parseFloat(row[xCol]),
+          y: parseFloat(row[yCol]),
+          slice: importState.tsvData[importState[colTypes.slice]],
+        }
     )
     .filter((v) => !!v);
   // console.log(currentVals);
@@ -128,8 +130,9 @@ export const AlignmentPage = ({
     };
     func();
   }, [currentImages]);
+
   const imageOrdering = (
-    <Stack>
+    <Stack style={{ paddingTop: "15px", paddingBottom: "15px" }}>
       <Stack direction="row">
         {imgUrls?.map((img, i) => {
           return (
@@ -139,8 +142,8 @@ export const AlignmentPage = ({
               style={{
                 borderBottom:
                   selectedImg !== null &&
-                  (i === selectedImg || i === selectedImg - 1)
-                    ? "solid 1px black"
+                    (i === selectedImg || i === selectedImg - 1)
+                    ? "solid 5px black"
                     : undefined,
               }}
             >
@@ -265,9 +268,11 @@ export const AlignmentPage = ({
         style={{ width: "100%", position: "relative" }}
         direction="row"
         spacing={2}
+        item
+        container
+        xs={12}
       >
-        {/* Image Display */}
-        <Grid item>
+        <Grid item xs={6}>
           <div
             style={{
               width: "500px",
@@ -310,12 +315,10 @@ export const AlignmentPage = ({
             />
           </div>
         </Grid>
-        {/* Control Area */}
-        <Grid item container sx={{ minWidth: 300 }} xs={12}>
+
+        <Grid item container sx={{ minWidth: 300 }} xs={6}>
           <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>
-              <em>Bottom</em>
-            </Typography>
+            <Typography>Bottom</Typography>
             <Grid item xs>
               <Slider
                 color="secondary"
@@ -326,15 +329,12 @@ export const AlignmentPage = ({
                 onChange={(_, n) => typeof n === "number" && setOpacity(n)}
               />
             </Grid>
-            <Typography>
-              <em>Top</em>
-            </Typography>
+            <Typography>Top</Typography>
           </Grid>
 
           {/* X Position */}
           <Grid container item spacing={2} alignItems="center" xs={12}>
             <Typography>X: </Typography>
-
             <Grid item xs>
               <Slider
                 min={-naturalWidth}
@@ -423,8 +423,8 @@ export const AlignmentPage = ({
 
   return (
     <Stack style={{ padding: 20 }}>
-      <Button variant="contained" component="label">
-        Alignment Images ({numSlices} needed)
+      <Button variant="contained" component="label" startIcon={<ImageIcon />} style={{ textTransform: 'none' }}>
+        Alignment Images ({numSlices} Required, {currentImages.length} Imported, {numSlices - currentImages.length} Missing)
         <input
           hidden
           multiple
@@ -432,16 +432,23 @@ export const AlignmentPage = ({
           type="file"
           onChange={(e) => {
             const files = e.target.files;
-
             if (!files) return;
             setCurrentImages(
-              [...new Array(files.length)]
-                .map((_, i) => files[i])
-                .map((f) => ({
+              [...new Array(files.length)].map((_, i) => files[i]).map((f, i) => {
+                const alignments = importState.pasteData[i]
+                  ? {
+                      x: importState.pasteData[i]["px"] as number,
+                      y: importState.pasteData[i]["py"] as number,
+                      rotZ: importState.pasteData[i]["theta"] as number,
+                    }
+                  : { x: 0, y: 0, rotZ: 0 };
+                return {
                   file: f,
-                  alignments: { x: 0, y: 0, rotZ: 0 },
-                }))
+                  alignments: alignments,
+                };
+              })
             );
+
             setImportState((s) => ({
               ...s,
               sliceOrder: [...new Array(numSlices)].map((_, i) => i),

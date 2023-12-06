@@ -131,16 +131,6 @@ export const CustomRenderer = ({
     doClusters,
   ]);
 
-  // FIXME: memeory leak
-
-  // const ctrsSurfaceAreaClusters = data?.ctrsSurfaceAreaClusters.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  // const ctrsSurfaceAreaVals = data?.ctrsSurfaceAreaVals.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  // const ctrsVolumeClusters = data?.ctrsVolumeClusters.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  // const ctrsVolumeVals = data?.ctrsVolumeVals.map(x => x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-
-  // const surfaceArea = useMemo(() => (doClusters ? ctrsSurfaceAreaClusters : ctrsSurfaceAreaVals), [ctrsSurfaceAreaClusters, ctrsSurfaceAreaVals, doClusters]);
-  // const volume = useMemo(() => (doClusters ? ctrsVolumeClusters : ctrsVolumeVals), [ctrsVolumeClusters, ctrsVolumeVals, doClusters]);
-
   const surfaceArea = useMemo(() => (doClusters ? data?.ctrsSurfaceAreaClusters : data?.ctrsSurfaceAreaVals), [data?.ctrsSurfaceAreaClusters, data?.ctrsSurfaceAreaVals, doClusters]);
   const volume = useMemo(() => (doClusters ? data?.ctrsVolumeClusters : data?.ctrsVolumeVals), [data?.ctrsVolumeClusters, data?.ctrsVolumeVals, doClusters]);
 

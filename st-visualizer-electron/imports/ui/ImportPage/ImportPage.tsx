@@ -12,6 +12,8 @@ import {
 import React from "react";
 import FileOpenIcon from '@mui/icons-material/FileOpen';
 import { getValue, importStateType, colTypes } from "../../api/constants";
+import _ from "lodash";
+
 export const ImportPage = ({
   importState,
   setImportState,
@@ -128,13 +130,19 @@ export const ImportPage = ({
             const tsvPath = file.path;
             const rawText = await file.text();
             const tsvData = rawText.split("\n").map((l) => l.split("\t"));
+            const slicesRow = tsvData.map(
+              (row) => row[importState[colTypes.slice]]
+            );
+            const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
             setImportState((s) => ({
               ...s,
+              numSlices: numSlices,
               tsvData: tsvData,
               fileName: tsvPath,
               [colTypes.feature]: [...new Array(tsvData[0].length - 6)].map(
                 (_, i) => i + 6
               ),
+              pasteFiles: [...new Array<string>(numSlices - 1)],
             }));
           }}
         />

@@ -37,7 +37,10 @@ export const ipcHandlers = {
       ? path.resolve(process.resourcesPath)
       : path.resolve(__dirname, "../../imports/static/");
 
-    const exePath = path.resolve(staticsPath, "./st-visualizer");
+    // FIXME: this only works for mac and windows at the moment
+    const exePath = process.platform === "win32"
+      ? path.resolve(staticsPath, "./st-visualizer.exe")
+      : path.resolve(staticsPath, "./st-visualizer");
 
     const split = transforms.map(
       (slice) =>
@@ -68,7 +71,7 @@ export const ipcHandlers = {
         )
       )
     );
-    // console.log("___BEGIN PROCESS___");
+
     try {
       const configOptions = {
         fileName: importState.fileName,

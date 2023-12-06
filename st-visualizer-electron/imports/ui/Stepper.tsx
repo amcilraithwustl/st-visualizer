@@ -25,7 +25,7 @@ import _ from "lodash";
 import { useState } from "react";
 import { Settings } from "@mui/icons-material";
 
-export function CustomStepper({
+export const CustomStepper = ({
   importState,
   setImportState,
   setCurrentImages,
@@ -39,9 +39,9 @@ export function CustomStepper({
   setData: React.Dispatch<React.SetStateAction<datatype>>;
   currentImages: transformType[];
   closeSelf: () => void;
-}) {
+}): JSX.Element => {
   const steps = ["Upload", "Import from Paste", "Align (Experimental)", "Align", "Settings"];
-
+  const [skipped, setSkipped] = React.useState(new Set<number>());
   const [activeStep, setActiveStep] = React.useState(0);
 
   const handleNext = () => {
@@ -52,11 +52,7 @@ export function CustomStepper({
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const slicesRow = importState.tsvData.map(
-    (row) => row[importState[colTypes.slice]]
-  );
-  const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
-
+  const numSlices = importState.numSlices;
   const lengthsMatch = numSlices !== 0 && currentImages.length === numSlices;
   const [loading, setLoading] = useState(false);
   const stepButton =
@@ -111,7 +107,7 @@ export function CustomStepper({
         </Tooltip>
       </div>
     ) : (
-      <div style={{ display: "flex", flexDirection: "row", paddingTop: 2 }}>
+      <div style={{ display: "flex", flexDirection: "row", paddingTop: 5, paddingBottom: 5 }}>
         <Button
           color="inherit"
           disabled={activeStep === 0}
@@ -195,11 +191,6 @@ export function CustomStepper({
     >
       {stepButton}
       <Stepper activeStep={activeStep}>{stepLabels}</Stepper>
-      {/* <Grid item style={{ paddingLeft: 10, paddingRight: 10 }}>
-        <Typography sx={{ mt: 2, mb: 1, py: 1 }}>
-          Step {activeStep + 1}
-        </Typography>
-      </Grid> */}
       {stepContent.at(activeStep)}
     </div>
   );
@@ -217,12 +208,12 @@ export function CustomStepper({
       }}
     >
       <CircularProgress color="secondary" />
-      <Typography variant={"h6"}>Computing Geometry....</Typography>
+      <Typography variant={"h6"}>Computing Geometry</Typography>
       <Typography variant={"subtitle1"}>
-        This could take a few minutes. Thank you for your patience.
+        Wait for it...
       </Typography>
     </div>
   ) : (
     finalStepper
   );
-}
+};

@@ -13,9 +13,7 @@ export const App = () => {
 
   // console.log(window.electronAPI);
   const [currentImages, setCurrentImages] = useState<transformType[]>([]);
-  const [importState, setImportState] = useState<importStateType>({
-    ...blankImportState,
-  });
+  const [importState, setImportState] = useState<importStateType>({...blankImportState});
   // console.log("DATA", importState);
 
   //Slice to remove the title and the compact to remove undefined
