@@ -17,6 +17,8 @@ import OpacityIcon from '@mui/icons-material/Opacity';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import LoopIcon from '@mui/icons-material/Loop';
+import ClearIcon from '@mui/icons-material/Clear';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { importStateType, colTypes } from "../../api/constants";
 import _ from "lodash";
 
@@ -323,7 +325,7 @@ export const AlignmentPage = ({
 
         <Grid item container sx={{ minWidth: 500 }} xs={6}>
           <Paper elevation={9} style={{ padding: 20 }}>
-            
+
             <Box sx={{ width: 500 }}>
               <Typography id="input-slider" gutterBottom>
                 Opacity
@@ -476,6 +478,25 @@ export const AlignmentPage = ({
               </Grid>
             </Box>
 
+            <Stack direction="row" spacing={2} style={{ width: "100%", paddingTop: 30 }}>
+              <Button component="label" variant="contained" startIcon={<ClearIcon />} color="warning"
+                onClick={e => {
+                  handleXChange(null, 0);
+                  handleYChange(null, 0);
+                  handleRotZChange(null, 0);
+                }}>
+                Reset Alignment
+              </Button>
+              <div style={{ flex: "1 1 auto" }} />
+              <Button component="label" variant="contained" startIcon={<ReplayIcon />}
+                onClick={e => {
+                  handleXChange(null, importState.pasteData[selectedImg]["px"] as number);
+                  handleYChange(null, importState.pasteData[selectedImg]["py"] as number);
+                  handleRotZChange(null, importState.pasteData[selectedImg]["theta"] as number);
+                }}>
+                Reload from Paste
+              </Button>
+            </Stack>
           </Paper>
         </Grid>
 

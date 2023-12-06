@@ -33,10 +33,6 @@ slice_names = [
     "20201201-NMK-F-Fc1U4Z1B1"
 ]
 num_slices = len(slices)
-slide1_path = "/Users/yin/Code/masters-project/mouse-kidney/Spaceranger/20201201-NMK-F/20201201-NMK-F-Fc1U1Z1B1/outs"
-slide2_path = "/Users/yin/Code/masters-project/mouse-kidney/Spaceranger/20201201-NMK-F/20201201-NMK-F-Fc1U2Z1B1/outs"
-slide1_name = "20201201-NMK-F-Fc1U1Z1B1"
-slide2_name = "20201201-NMK-F-Fc1U2Z1B1"
 out_root = "/Users/yin/Code/tmp/paste_test"
 run_part = "1"
 max_iter = 1000
@@ -45,7 +41,7 @@ args_paste = {
     "cost": "kl",
 }
 spot_size = 70
-mode = "r"
+mode = "w"
 
 
 def angle_from_sin_cos(sin_val, cos_val):
@@ -107,8 +103,8 @@ def preprocess(path1, path2, name1, name2):
         os.makedirs(out_path)
 
     # Load visium data
-    slice1 = load_and_preprocess(slide1_path)
-    slice2 = load_and_preprocess(slide2_path)
+    slice1 = load_and_preprocess(path1)
+    slice2 = load_and_preprocess(path2)
 
     return slice1, slice2, out_path
 
@@ -408,17 +404,20 @@ def run_paste_2_partial_pairwise_histology(slice1, slice2, name1, name2, mode, o
 # def preprocess_all(slices, slice_names):
 
 # TODO: Need some cleanup here
-# Run PASTE1
-for i in range(num_slices - 1):
-    slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
-    run_paste_1(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
+def run_all():
+    # Run PASTE1
+    for i in range(num_slices - 1):
+        slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
+        run_paste_1(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
 
-# Run PASTE2 Partial Pairwise
-for i in range(num_slices - 1):
-    slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
-    run_paste_2_partial_pairwise(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
+    # Run PASTE2 Partial Pairwise
+    for i in range(num_slices - 1):
+        slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
+        run_paste_2_partial_pairwise(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
 
-# Run PASTE2 Partial Pairwise Histology
-for i in range(num_slices - 1):
-    slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
-    run_paste_2_partial_pairwise_histology(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
+    # Run PASTE2 Partial Pairwise Histology
+    for i in range(num_slices - 1):
+        slice1, slice2, out_path = preprocess(slices[i], slices[i + 1], slice_names[i], slice_names[i + 1])
+        run_paste_2_partial_pairwise_histology(slice1, slice2, slice_names[i], slice_names[i + 1], mode, out_path)
+
+run_all()
