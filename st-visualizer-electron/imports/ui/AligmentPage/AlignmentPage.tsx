@@ -8,10 +8,15 @@ import {
   Slider,
   Input,
   Typography,
+  Box,
+  Paper,
 } from "@mui/material";
 import { ArrowLeft, ArrowRight } from "@mui/icons-material";
 import ImageIcon from '@mui/icons-material/Image';
-import fs from "fs";
+import OpacityIcon from '@mui/icons-material/Opacity';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import LoopIcon from '@mui/icons-material/Loop';
 import { importStateType, colTypes } from "../../api/constants";
 import _ from "lodash";
 
@@ -316,108 +321,164 @@ export const AlignmentPage = ({
           </div>
         </Grid>
 
-        <Grid item container sx={{ minWidth: 300 }} xs={6}>
-          <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>Bottom</Typography>
-            <Grid item xs>
-              <Slider
-                color="secondary"
-                value={opacity}
-                step={0.01}
-                min={0}
-                max={1}
-                onChange={(_, n) => typeof n === "number" && setOpacity(n)}
-              />
-            </Grid>
-            <Typography>Top</Typography>
-          </Grid>
+        <Grid item container sx={{ minWidth: 500 }} xs={6}>
+          <Paper elevation={9} style={{ padding: 20 }}>
+            
+            <Box sx={{ width: 500 }}>
+              <Typography id="input-slider" gutterBottom>
+                Opacity
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                  <OpacityIcon />
+                </Grid>
+                <Grid item xs>
+                  <Slider
+                    value={opacity}
+                    onChange={(_, n) => typeof n === "number" && setOpacity(n)}
+                    aria-labelledby="input-slider"
+                    step={0.01}
+                    min={0}
+                    max={1}
+                  />
+                </Grid>
+                <Grid item>
+                  <Input
+                    style={{ width: 80 }}
+                    value={opacity}
+                    size="small"
+                    onChange={(e) =>
+                      setOpacity(parseFloat(e.target.value))
+                    }
+                    inputProps={{
+                      step: 10,
+                      min: 0,
+                      max: 100,
+                      type: 'number',
+                      'aria-labelledby': 'input-slider',
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
-          {/* X Position */}
-          <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>X: </Typography>
-            <Grid item xs>
-              <Slider
-                min={-naturalWidth}
-                max={naturalWidth + Math.max(naturalWidth, naturalHeight)} //To handle all rotations
-                step={0.1}
-                value={alignments.x}
-                onChange={handleXChange}
-              />
-            </Grid>
-            <Grid item>
-              <Input
-                size="small"
-                inputProps={{
-                  step: 0.01,
-                  type: "number",
-                }}
-                onChange={(e) =>
-                  handleXChange(null, parseFloat(e.target.value))
-                }
-                value={alignments.x}
-              />
-            </Grid>
-          </Grid>
+            <Box sx={{ width: 500 }}>
+              <Typography id="input-slider" gutterBottom>
+                X Position
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                  <SwapHorizIcon />
+                </Grid>
+                <Grid item xs>
+                  <Slider
+                    onChange={(_, n) => handleXChange(null, n)}
+                    aria-labelledby="input-slider"
+                    min={-naturalWidth}
+                    max={naturalWidth + Math.max(naturalWidth, naturalHeight)} //To handle all rotations
+                    step={0.1}
+                    value={alignments.x}
+                  />
+                </Grid>
+                <Grid item>
+                  <Input
+                    style={{ width: 80 }}
+                    value={alignments.x}
+                    size="small"
+                    onChange={(e) =>
+                      handleXChange(null, parseFloat(e.target.value))
+                    }
+                    inputProps={{
+                      step: 1,
+                      min: -naturalWidth,
+                      max: naturalWidth + Math.max(naturalWidth, naturalHeight),
+                      type: 'number',
+                      'aria-labelledby': 'input-slider',
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
-          {/* Y Position */}
-          <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>Y: </Typography>
+            <Box sx={{ width: 500 }}>
+              <Typography id="input-slider" gutterBottom>
+                Y Position
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                  <SwapVertIcon />
+                </Grid>
+                <Grid item xs>
+                  <Slider
+                    aria-labelledby="input-slider"
+                    min={-naturalHeight - Math.max(naturalWidth, naturalHeight)} //To handle all rotation angles
+                    max={naturalHeight}
+                    step={0.1}
+                    value={-alignments.y}
+                    onChange={(_, n) => handleYChange(null, -n)}
+                  />
+                </Grid>
+                <Grid item>
+                  <Input
+                    style={{ width: 80 }}
+                    value={alignments.y}
+                    size="small"
+                    onChange={(e) =>
+                      handleXChange(null, parseFloat(e.target.value))
+                    }
+                    inputProps={{
+                      step: 1,
+                      min: -naturalWidth,
+                      max: naturalWidth + Math.max(naturalWidth, naturalHeight),
+                      type: 'number',
+                      'aria-labelledby': 'input-slider',
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
-            <Grid item xs>
-              <Slider
-                //Inverted for UI feel
-                min={-naturalHeight - Math.max(naturalWidth, naturalHeight)} //To handle all rotation angles
-                max={naturalHeight}
-                step={0.1}
-                value={-alignments.y}
-                onChange={(_, n) => handleYChange(null, -n)}
-              />
-            </Grid>
-            <Grid item>
-              <Input
-                size="small"
-                inputProps={{
-                  step: 0.01,
-                  type: "number",
-                }}
-                onChange={(e) =>
-                  handleYChange(null, -parseFloat(e.target.value))
-                }
-                value={-alignments.y}
-              />
-            </Grid>
-          </Grid>
+            <Box sx={{ width: 500 }}>
+              <Typography id="input-slider" gutterBottom>
+                Rotation
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
+                  <LoopIcon />
+                </Grid>
+                <Grid item xs>
+                  <Slider
+                    aria-labelledby="input-slider"
+                    min={-180}
+                    max={180}
+                    step={0.1}
+                    value={alignments.rotZ}
+                    onChange={handleRotZChange}
+                  />
+                </Grid>
+                <Grid item>
+                  <Input
+                    style={{ width: 80 }}
+                    value={alignments.rotZ}
+                    size="small"
+                    onChange={(e) =>
+                      handleRotZChange(null, parseFloat(e.target.value))
+                    }
+                    inputProps={{
+                      step: 0.1,
+                      min: -180,
+                      max: 180,
+                      type: 'number',
+                      'aria-labelledby': 'input-slider',
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
-          {/* Z Rotation */}
-          <Grid container item spacing={2} alignItems="center" xs={12}>
-            <Typography>Rotation: </Typography>
-
-            <Grid item xs>
-              <Slider
-                min={-180}
-                max={180}
-                step={0.1}
-                value={alignments.rotZ}
-                onChange={handleRotZChange}
-              />
-            </Grid>
-            <Grid item>
-              <Input
-                size="small"
-                inputProps={{
-                  step: 0.01,
-                  min: -180,
-                  max: 180,
-                  type: "number",
-                }}
-                onChange={(e) =>
-                  handleRotZChange(null, parseFloat(e.target.value))
-                }
-                value={alignments.rotZ}
-              />
-            </Grid>
-          </Grid>
+          </Paper>
         </Grid>
+
       </Grid>
     );
 
@@ -437,10 +498,10 @@ export const AlignmentPage = ({
               [...new Array(files.length)].map((_, i) => files[i]).map((f, i) => {
                 const alignments = importState.pasteData[i]
                   ? {
-                      x: importState.pasteData[i]["px"] as number,
-                      y: importState.pasteData[i]["py"] as number,
-                      rotZ: importState.pasteData[i]["theta"] as number,
-                    }
+                    x: importState.pasteData[i]["px"] as number,
+                    y: importState.pasteData[i]["py"] as number,
+                    rotZ: importState.pasteData[i]["theta"] as number,
+                  }
                   : { x: 0, y: 0, rotZ: 0 };
                 return {
                   file: f,
