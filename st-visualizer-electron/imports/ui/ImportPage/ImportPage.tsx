@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import FileOpenIcon from '@mui/icons-material/FileOpen';
 import { getValue, importStateType, colTypes } from "../../api/constants";
 import _ from "lodash";
@@ -49,7 +49,7 @@ export const ImportPage = ({
     <Grid item container>
       <Typography variant="h4" style={{ paddingTop: "15px", paddingBottom: "15px" }}>Column Management</Typography>
       <Grid item container spacing={1}>
-        {[...new Array(nCols)].map((_, i) => (
+        {[...new Array(nCols)].map((e, i) => (
           <Grid item key={i}>
             <FormControl>
               <InputLabel>{tsvLabels[i]}</InputLabel>
@@ -57,7 +57,20 @@ export const ImportPage = ({
                 label={tsvLabels[i]}
                 style={{ minWidth: 130 }}
                 value={getValue(importState, i)}
-                onChange={(e) => changeSelection(i, e.target.value as colTypes)}
+                onChange={(e) => {
+                  changeSelection(i, e.target.value as colTypes);
+                  if (e.target.value === colTypes.slice) {
+                    const slicesRow = importState.tsvData.map(
+                      (row) => row[i]
+                    );
+                    console.log(slicesRow)
+                    const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
+                    setImportState((s) => ({
+                      ...s,
+                      numSlices: numSlices,
+                    }));
+                  }
+                }}
               >
                 <MenuItem value={colTypes.none}>
                   <em>None</em>
@@ -134,6 +147,7 @@ export const ImportPage = ({
               (row) => row[importState[colTypes.slice]]
             );
             const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
+            // console.log(tsvData);
             setImportState((s) => ({
               ...s,
               numSlices: numSlices,
