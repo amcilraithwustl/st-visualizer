@@ -40,7 +40,8 @@ export const CustomStepper = ({
   currentImages: transformType[];
   closeSelf: () => void;
 }): JSX.Element => {
-  const steps = ["Upload", "Import from Paste", "Align (Experimental)", "Align", "Settings"];
+  // const steps = ["Upload", "Import from Paste", "Align (Experimental)", "Align", "Settings"];
+  const steps = ["Upload", "Import from Paste", "Align"];
   const [skipped, setSkipped] = React.useState(new Set<number>());
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -63,6 +64,7 @@ export const CustomStepper = ({
           alignItems: "center",
           justifyContent: "center",
           width: "100%",
+          padding: 5
         }}
       >
         <Tooltip
@@ -107,7 +109,7 @@ export const CustomStepper = ({
         </Tooltip>
       </div>
     ) : (
-      <div style={{ display: "flex", flexDirection: "row", paddingTop: 5, paddingBottom: 5 }}>
+      <div style={{ display: "flex", flexDirection: "row", padding: 5}}>
         <Button
           color="inherit"
           disabled={activeStep === 0}
@@ -148,23 +150,23 @@ export const CustomStepper = ({
       importState={importState}
       setImportState={setImportState}
     />,
-    <NewAlignmentPage
-      key={3}
-      importState={importState}
-      setImportState={setImportState}
-    />,
+    // <NewAlignmentPage
+    //   key={3}
+    //   importState={importState}
+    //   setImportState={setImportState}
+    // />,
     <AlignmentPage
-      key={4}
+      key={3}
       setImportState={setImportState}
       currentImages={currentImages}
       setCurrentImages={setCurrentImages}
       importState={importState}
     />,
-    <SettingsPage
-      key={5}
-      setImportState={setImportState}
-      importState={importState}
-    />,
+    // <SettingsPage
+    //   key={5}
+    //   setImportState={setImportState}
+    //   importState={importState}
+    // />,
   ];
   const stepLabels = steps.map((label) => {
     const stepProps: { completed?: boolean } = {};
@@ -190,7 +192,7 @@ export const CustomStepper = ({
       }}
     >
       {stepButton}
-      <Stepper activeStep={activeStep}>{stepLabels}</Stepper>
+      <Stepper activeStep={activeStep} style={{padding: 5}}>{stepLabels}</Stepper>
       {stepContent.at(activeStep)}
     </div>
   );

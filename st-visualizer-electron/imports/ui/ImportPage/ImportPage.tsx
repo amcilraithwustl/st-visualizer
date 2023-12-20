@@ -63,7 +63,7 @@ export const ImportPage = ({
                     const slicesRow = importState.tsvData.map(
                       (row) => row[i]
                     );
-                    console.log(slicesRow)
+                    // console.log(slicesRow)
                     const numSlices = _.compact(_.uniq(slicesRow.slice(1))).length;
                     setImportState((s) => ({
                       ...s,
